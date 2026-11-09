@@ -1,0 +1,35 @@
+ticker,yahoo,sector_pdf,peer_group,is_core
+AKBNK,AKBNK.IS,Banking,Banking,1
+GARAN,GARAN.IS,Banking,Banking,0
+ISCTR,ISCTR.IS,Banking,Banking,0
+YKBNK,YKBNK.IS,Banking,Banking,0
+KCHOL,KCHOL.IS,Holding / Investment,Other Financials,1
+ISMEN,ISMEN.IS,Brokerage / Capital Markets,Other Financials,1
+TURSG,TURSG.IS,Insurance,Other Financials,1
+THYAO,THYAO.IS,Transportation / Airlines,Transportation,1
+PGSUS,PGSUS.IS,Transportation / Airlines,Transportation,1
+TAVHL,TAVHL.IS,Transportation / Airports,Transportation,0
+BIMAS,BIMAS.IS,Retail Trade,Retail & Consumer,1
+MGROS,MGROS.IS,Retail Trade,Retail & Consumer,1
+MAVI,MAVI.IS,Retail / Apparel,Retail & Consumer,1
+CCOLA,CCOLA.IS,Food & Beverage,Retail & Consumer,1
+TUPRS,TUPRS.IS,Petroleum / Refining,Chemicals & Energy,1
+SASA,SASA.IS,Chemicals / Plastics,Chemicals & Energy,1
+GUBRF,GUBRF.IS,Chemicals / Fertilizer,Chemicals & Energy,1
+PETKM,PETKM.IS,Petrochemicals,Chemicals & Energy,1
+EREGL,EREGL.IS,Basic Metals / Steel,Metals & Mining,1
+KRDMD,KRDMD.IS,Basic Metals / Steel,Metals & Mining,1
+TRALT,TRALT.IS,Mining,Metals & Mining,1
+FROTO,FROTO.IS,Automotive,Automotive & Durables,1
+TOASO,TOASO.IS,Automotive,Automotive & Durables,1
+ARCLK,ARCLK.IS,Durables / Machinery,Automotive & Durables,1
+ASELS,ASELS.IS,Technology / Defense,Tech Telecom & Defense,1
+TCELL,TCELL.IS,Telecommunications,Tech Telecom & Defense,1
+TTKOM,TTKOM.IS,Telecommunications,Tech Telecom & Defense,1
+ENKAI,ENKAI.IS,Construction,Construction RE & Utilities,1
+OYAKC,OYAKC.IS,Cement,Construction RE & Utilities,1
+EKGYO,EKGYO.IS,Real Estate Investment Trust,Construction RE & Utilities,1
+ENJSA,ENJSA.IS,Electric Utilities,Construction RE & Utilities,1
+AKSEN,AKSEN.IS,Electric Utilities,Construction RE & Utilities,1
+MPARK,MPARK.IS,Healthcare,Healthcare,1
+ECILC,ECILC.IS,Healthcare / Pharmaceuticals,Healthcare,1

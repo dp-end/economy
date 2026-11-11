@@ -11,6 +11,7 @@ from src.data.prices import get_index_history
 
 URL = "https://www.kap.org.tr/tr/api/disclosure/list/main"
 CACHE = Path("data/kap")
+KAP_CSV = "reports/kap_disclosure_dates.csv"
 FIRST_WINDOW = pd.Timestamp("2022-04-01")   # 2022/3 bilançosu en erken Nisan 2022'de yayınlanır
 WINDOW_DAYS = 90                            # KAP sorgu aralığı sınırı
 PAUSE = 4.0                                 # istekler arası bekleme (saniye)
@@ -131,10 +132,20 @@ def kap_table(tickers=None, today=None) -> pd.DataFrame:
     return out.sort_values(["ticker", "period_end"]).reset_index(drop=True)
 
 
+def load_kap_table(path=KAP_CSV) -> pd.DataFrame:
+    """Kaydedilmiş KAP tarih tablosu (KAP'a istek atmaz)."""
+    return pd.read_csv(path, parse_dates=["period_end", "window_start", "deadline", "publish_time", "event_day"])
+
+
+def visible_asof_kap(table: pd.DataFrame, date) -> pd.DataFrame:
+    """Analiz tarihi 'date' (gün kapanışı) iken kullanılabilecek bilançolar: event_day <= date."""
+    return table[table["event_day"] <= pd.Timestamp(date)]
+
+
 if __name__ == "__main__":
     pd.set_option("display.width", 200)
     out = kap_table()
-    out.to_csv("reports/kap_disclosure_dates.csv", index=False)
+    out.to_csv(KAP_CSV, index=False)
     found = out["publish_time"].notna()
     print(f"satır: {len(out)}  KAP tarihi bulunan: {found.sum()}  bulunamayan: {(~found).sum()}")
     print("\nBulunamayanlar (hisse başına):")

@@ -1,7 +1,8 @@
 
 import pandas as pd
 
-from src.data.kap_dates import KAP_OID, WINDOW_DAYS, event_day, parse, windows
+from src.data.kap_dates import (KAP_OID, WINDOW_DAYS, event_day, load_kap_table, parse,
+                                visible_asof_kap, windows)
 from src.data.universe import load_universe
 
 
@@ -41,3 +42,14 @@ def test_event_day_after_close_goes_to_next_trading_day():
     out = event_day(t, days)
     assert out.iloc[:4].tolist() == list(pd.to_datetime(["2026-10-28", "2026-10-27", "2026-10-30", "2026-11-02"]))
     assert pd.isna(out.iloc[4])
+
+
+def test_visible_asof_kap_no_lookahead():
+    tab = load_kap_table()
+    assert len(tab) == 545 and tab["publish_time"].notna().all()
+    for d in pd.to_datetime(["2022-05-10", "2024-03-11", "2024-05-10", "2025-11-10"]):
+        v = visible_asof_kap(tab, d)
+        assert (v["publish_time"] <= d + pd.Timedelta(hours=18)).all()   # yayınlanmamış bilanço görünmez
+    a = tab[(tab["ticker"] == "ASELS") & (tab["period_end"] == "2026-09-30")]
+    assert len(visible_asof_kap(a, "2026-10-27")) == 0     # 27 Ekim 18:34'te yayınlandı
+    assert len(visible_asof_kap(a, "2026-10-28")) == 1     # ertesi işlem günü görünür

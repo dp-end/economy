@@ -36,6 +36,7 @@ TECH_RECENT = 3              # son 3 işlem günündeki teknik olaylar "güncel"
 FUND_RECENT = 63             # bilanço açıklamasından sonra ~3 ay "güncel"
 TECH_H, SECTOR_H = 5, 10     # tarihsel başarı ufku (işlem günü)
 SPEECH_DAYS = 30
+TERCILE_TR = {"ust": "üst", "orta": "orta", "alt": "alt"}
 WARNING_TEXT = "Yalnızca tarihsel kanıt; gelecek getiri garantisi ve yatırım tavsiyesi değildir."
 
 
@@ -271,7 +272,8 @@ def committed_evidence(action: str, secondary: list, cond: dict, b: dict) -> lis
     if "FUNDAMENTAL_IMPROVEMENT_CANDIDATE" in focus or action in ("INVESTIGATE", "REJECT_SIGNAL"):
         if fu.get("period_end") is not None:
             add(f"Son açıklanan bilanço {pd.Timestamp(fu['period_end']).date()} ({pd.Timestamp(fu['event_day']).date()} "
-                f"görünür): yıllık net kâr değişimi {_pct(fu['ni_yoy'])}, aynı çeyrekte '{fu['tercile']}' üçte bir"
+                f"görünür): yıllık net kâr değişimi {_pct(fu['ni_yoy'])}; aynı çeyrekte 30 hisse içinde (sektör içi değil) "
+                f"{TERCILE_TR.get(fu['tercile'], 'sırasız')} üçte birde"
                 f"{', zarar' if fu['loss'] else ''}", fu["ni_yoy"], "calculate_fundamental_change")
         f_h = h.get("fundamental") or {}
         if "FUNDAMENTAL_IMPROVEMENT_CANDIDATE" in focus and f_h.get("n"):

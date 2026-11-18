@@ -342,12 +342,15 @@ def run_backtest(strategy: str, start: str = None, end: str = None, cost: float 
     bm = benchmarks(ret)
     perf = calculate_performance(bt, bm["esit_agirlik"])
     perf["xu100_getiri"] = float((1 + bm["xu100"].fillna(0)).prod() - 1)
+    perf["xu100_farki"] = perf["toplam_getiri"] - perf["xu100_getiri"]          # model hesaplamasın, araç hesaplar
+    perf["esit_agirlik_getiri"], perf["esit_agirlik_farki"] = perf.pop("kiyas_getiri"), perf.pop("fark")
     w = variants[strategy].reindex(ret.index)
     last = w.iloc[-1]
     return to_json(dict(strategy=strategy, start=str(ret.index[0].date()), end=str(ret.index[-1].date()),
                         cost_one_way=float(cost), performance=perf,
                         last_positions=last[last > 0].round(4).to_dict(),
-                        note="Sinyal t kapanışında, işlem t+1 getirisine uygulanır; universe 30 çekirdek hisse."))
+                        note="Sinyal t kapanışında, işlem t+1 getirisine uygulanır; universe 30 çekirdek hisse. "
+                             "Getiriler oran (2.41 = %241). esit_agirlik = 30 hissenin eşit ağırlıklı al-tut kıyası."))
 
 
 def check_data_quality(ticker: str, asof: str = None) -> dict:

@@ -19,6 +19,7 @@ from src.harness.evidence import ACTIONS, run_analysis
 from src.harness.quality_gate import GATE_OUTPUTS
 
 DB = Path("reports/decision_log.sqlite")
+DEMO_DB = Path("reports/decision_log_demo.sqlite")      # örnek kayıtlar gerçek günlüğe karışmaz
 REVIEW_DECISIONS = ("ACCEPT", "MODIFY", "REJECT")
 DATA_FILES = ("reports/technical_events.parquet", "reports/sector_events.parquet", "reports/earnings_events.parquet",
               "reports/kap_disclosure_dates.csv", "reports/news_events.parquet", "reports/speech_features.parquet",
@@ -48,6 +49,9 @@ CREATE TABLE IF NOT EXISTS analyses (
 CREATE TABLE IF NOT EXISTS human_reviews (
     review_id INTEGER PRIMARY KEY AUTOINCREMENT, analysis_id TEXT, reviewed_at TEXT, reviewer TEXT,
     decision TEXT, final_action TEXT, reason TEXT,
+    FOREIGN KEY (analysis_id) REFERENCES analyses (analysis_id));
+CREATE TABLE IF NOT EXISTS harness_traces (
+    analysis_id TEXT PRIMARY KEY, created_at TEXT, llm TEXT, summary TEXT, trace TEXT,
     FOREIGN KEY (analysis_id) REFERENCES analyses (analysis_id));
 """
 
@@ -137,6 +141,22 @@ def record_review(analysis_id: str, decision: str, reason: str, final_action: st
                     (analysis_id, str(pd.Timestamp.now().floor("s")), reviewer, decision, final_action, reason))
 
 
+def log_trace(analysis_id: str, llm: str, summary: dict, trace: dict, db: Path = DB) -> None:
+    """Harness izi: durum sırası, araç çağrıları (izinsizler dahil), ajan notları ve sayı kontrolleri."""
+    with connect(db) as con:
+        con.execute("INSERT OR REPLACE INTO harness_traces VALUES (?, ?, ?, ?, ?)",
+                    (analysis_id, str(pd.Timestamp.now().floor("s")), llm, dumps(summary), dumps(trace)))
+
+
+def load_trace(analysis_id: str, db: Path = DB) -> dict:
+    with connect(db) as con:
+        row = con.execute("SELECT llm, summary, trace FROM harness_traces WHERE analysis_id = ?",
+                          (analysis_id,)).fetchone()
+    if row is None:
+        raise ValueError(f"iz bulunamadı: {analysis_id}")
+    return dict(llm=row[0], summary=json.loads(row[1]), trace=json.loads(row[2]))
+
+
 def load_analysis(analysis_id: str, db: Path = DB) -> dict:
     with connect(db) as con:
         con.row_factory = sqlite3.Row
@@ -179,6 +199,8 @@ def past_cases(ticker: str = None, action: str = None, db: Path = DB) -> pd.Data
 if __name__ == "__main__":
     pd.set_option("display.width", 200)
     pd.set_option("display.max_colwidth", 80)
+    DEMO_DB.unlink(missing_ok=True)
+    print(f"Demo kayıtları {DEMO_DB} dosyasına yazılır (gerçek günlük {DB} değişmez).")
     demo = [("ASELS", "2026-11-06", "ACCEPT", "Bilanço ve sözleşme haberleri tutarlı; backtest al-tut'u geçmiyor, sadece izlenecek.", None),
             ("TURSG", "2026-11-06", "ACCEPT", "Şok ve yönetim ayrılıkları var; inceleme gerekiyor.", None),
             ("AKBNK", "2026-11-06", "MODIFY", "Teknik olayların geçmiş başarısı %50'nin altında; aday yerine izle.", "WATCH"),
@@ -186,14 +208,14 @@ if __name__ == "__main__":
     ids = []
     for t, d, dec, reason, final in demo:
         rec = run_analysis(t, d)
-        aid = log_decision(rec)
-        record_review(aid, dec, reason, final)
+        aid = log_decision(rec, db=DEMO_DB)
+        record_review(aid, dec, reason, final, reviewer="demo", db=DEMO_DB)
         ids.append(aid)
         print(f"{t} {d}: {rec['action']} (kapı {rec['gate']['status']}) -> insan: {dec} | id {aid}")
     print("\nTekrar oynatma (replay):")
     for aid in ids:
-        r = replay_analysis(aid)
+        r = replay_analysis(aid, db=DEMO_DB)
         print(f"  {aid}: aynı={r['same']}  eylem {r['stored_action']} -> {r['new_action']}  "
               f"değişen veri={r['changed_data_files']}")
     print("\nEpizodik hafıza (geçmiş vakalar):")
-    print(past_cases().tail(8).to_string(index=False))
+    print(past_cases(db=DEMO_DB).tail(8).to_string(index=False))

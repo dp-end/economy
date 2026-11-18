@@ -9,6 +9,8 @@ COMMON = (
     "4) Bilgi eksikse 'veri yok' de. Türkçe, en fazla 120 kelime, madde işaretli yaz. Kanıt kimlikleri (E1, E2) "
     "dışında İngilizce etiket ya da alan adı kullanma.\n"
     "5) Ek bilgi gerekiyorsa yalnızca sana açılan araçları isteyebilirsin; başka araç isteme.\n"
+    "6) Sayıları verildiği gibi kopyala; kısaltacaksan doğru yuvarla (49,959 -> 49,96), son basamağı kesme.\n"
+    "7) Kanıt kimliklerini (E1, E2 ...) yalnızca Orchestrator kullanır; diğer ajanlar kimlik yazmaz.\n"
 )
 
 AGENTS = {

@@ -54,17 +54,42 @@ def context_numbers(*objs) -> list:
     return vals
 
 
-def supported(x: float, d: int, allowed: list) -> bool:
+SCALES = (1, 100, 1 / 100, 1e-3, 1e-6, 1e-9)   # oran<->yüzde, bin / milyon / milyar çevirmesi
+
+
+def _candidates(allowed: list):
     for a in allowed:
-        for cand in (a, a * 100, a / 100, abs(a), abs(a) * 100):
-            if round(cand, d) == round(x, d) or round(abs(cand), d) == round(abs(x), d):
-                return True
-    return False
+        for k in SCALES:
+            if k < 1e-2 and abs(a) < 1e3:            # ölçek çevirmesi yalnızca büyük sayılarda anlamlı
+                continue
+            yield abs(a * k)
+
+
+def classify(x: float, d: int, allowed: list) -> str:
+    """'destekli': bağlamdaki bir sayının doğru yuvarlanmışı. 'yuvarlama': son basamakta en fazla 1 fark
+    (örn. 49,959 -> 49,95 kesme). 'uydurma': bağlamda karşılığı yok."""
+    ax, unit = abs(x), 10 ** (-d)
+    near = False
+    for c in _candidates(allowed):
+        r = round(c, d)
+        if r == round(ax, d):
+            return "destekli"
+        if abs(c - ax) <= unit + 1e-12:
+            near = True
+    return "yuvarlama" if near else "uydurma"
+
+
+def supported(x: float, d: int, allowed: list) -> bool:
+    return classify(x, d, allowed) == "destekli"
 
 
 def check_numbers(text: str, *context) -> dict:
-    """{'n_numbers', 'unsupported': [yazım,...], 'rate'} - rate: desteksiz sayı oranı."""
+    """{'n_numbers', 'unsupported': uydurma yazımlar, 'rounding': yuvarlama hataları, 'rate', 'rounding_rate'}"""
     allowed = context_numbers(*context)
     nums = [(v, d, raw) for v, d, raw in numbers_in(text) if not (d == 0 and abs(v) < 10)]
-    bad = [raw for v, d, raw in nums if not supported(v, d, allowed)]
-    return dict(n_numbers=len(nums), unsupported=bad, rate=(len(bad) / len(nums)) if nums else 0.0)
+    cls = [(raw, classify(v, d, allowed)) for v, d, raw in nums]
+    bad = [raw for raw, c in cls if c == "uydurma"]
+    rnd = [raw for raw, c in cls if c == "yuvarlama"]
+    n = len(nums)
+    return dict(n_numbers=n, unsupported=bad, rounding=rnd, rate=len(bad) / n if n else 0.0,
+                rounding_rate=len(rnd) / n if n else 0.0)

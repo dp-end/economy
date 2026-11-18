@@ -56,6 +56,9 @@ AGENT_AT = {"RUN_PATTERN_AND_REVERSAL_ANALYSIS": "market", "LOAD_MACRO_CONTEXT":
 SAFE_PATH = ["RISK_GATE", "GENERATE_EXPLANATION", "HUMAN_REVIEW", "LOG_AND_CLOSE"]
 MANDATORY = {"CHECK_DATA_QUALITY", "RISK_GATE", "HUMAN_REVIEW", "LOG_AND_CLOSE"}
 MAX_TOOL_ROUNDS = 2
+CLAIM_TR = {"VERIFIED": "veriyle_dogrulanan", "CONSISTENT_WITH_HISTORY": "gecmis_degerle_tutarli",
+            "CONTRADICTED": "veriyle_celisen", "NO_TOOL": "veri_araci_olmayan",
+            "FORECAST_OR_TARGET": "tahmin_veya_politika_hedefi (fiyat hedefi degil)"}
 PREVIEW_VARIANTS = ["A_teknik", "B_sektor", "C_temel", "D_makro", "E_haber"]
 
 
@@ -149,7 +152,7 @@ class Harness:
         chk = check_numbers(note, context, *extra)
         self.trace["llm"].append(dict(state=state, agent=agent, tool_rounds=rounds, cached=r.get("cached", False),
                                       latency=round(time.time() - t0, 2), numbers=chk["n_numbers"],
-                                      unsupported=chk["unsupported"]))
+                                      unsupported=chk["unsupported"], rounding=chk["rounding"]))
         self.trace["notes"][agent] = note
         return note
 
@@ -218,7 +221,8 @@ class Harness:
             recent = [s["source_id"] for s in srcs if m30 <= s["publish_time"][:10] <= str(d.date())]
             ctx["speech"] = [await T("get_speech_features", source_id=s) for s in recent]
             speech = [dict(source_id=s["source_id"], speaker=s["speaker"], publish_time=s["publish_time"],
-                           stance=s["stance"], claim_status=s["claim_status"], warnings=s["warnings"],
+                           stance=s["stance"], warnings=s["warnings"],
+                           iddia_turleri={CLAIM_TR.get(k, k): v for k, v in s["claim_status"].items()},
                            verified=[dict(metin=c["text"][:160], konusmadaki_deger=c["values"], veri_degeri=c["tool_value"],
                                           degisken=c["variable"]) for c in s["claims"] if c["status"] == "VERIFIED"])
                       for s in ctx["speech"]]
@@ -282,10 +286,10 @@ class Harness:
         t0 = time.time()
         r = self.llm.chat(msgs)
         text, chk, retried = r["content"], check_numbers(r["content"], data), False
-        if chk["unsupported"]:
+        if chk["unsupported"] or chk["rounding"]:
             retried = True
             msgs += [dict(role="assistant", content=text),
-                     dict(role="user", content=FIX_PROMPT.format(bad=", ".join(chk["unsupported"])))]
+                     dict(role="user", content=FIX_PROMPT.format(bad=", ".join(chk["unsupported"] + chk["rounding"])))]
             r = self.llm.chat(msgs)
             text, chk2 = r["content"], check_numbers(r["content"], data)
         else:
@@ -294,7 +298,9 @@ class Harness:
         self.trace["llm"].append(dict(state="GENERATE_EXPLANATION", agent="orchestrator", tool_rounds=0,
                                       cached=r.get("cached", False), latency=round(time.time() - t0, 2),
                                       numbers=chk["n_numbers"], unsupported=chk["unsupported"],
-                                      retried=retried, unsupported_after_retry=chk2["unsupported"]))
+                                      rounding=chk["rounding"], retried=retried,
+                                      unsupported_after_retry=chk2["unsupported"],
+                                      rounding_after_retry=chk2["rounding"]))
         if not verified:
             text = "[DOĞRULANMAMIŞ AÇIKLAMA: kanıtta olmayan sayı içeriyor: " + ", ".join(chk2["unsupported"]) + "]\n" + text
         ctx["explanation"], ctx["explanation_verified"] = text, verified
@@ -338,10 +344,12 @@ class Harness:
         tr = self.trace
         nums = sum(x["numbers"] for x in tr["llm"])
         bad = sum(len(x["unsupported"]) for x in tr["llm"])
+        rnd = sum(len(x.get("rounding", [])) for x in tr["llm"])
         return dict(states=len(tr["states"]), tool_calls=len(tr["tool_calls"]),
                     invalid_tool_calls=len(tr["invalid_tool_calls"]), tool_errors=len(tr["tool_errors"]),
-                    llm_calls=len(tr["llm"]), numbers=nums, unsupported_numbers=bad,
+                    llm_calls=len(tr["llm"]), numbers=nums, unsupported_numbers=bad, rounding_errors=rnd,
                     hallucination_rate=round(bad / nums, 3) if nums else 0.0,
+                    rounding_rate=round(rnd / nums, 3) if nums else 0.0,
                     latency_total=tr.get("latency_total"))
 
 

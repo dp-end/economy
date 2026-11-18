@@ -81,7 +81,10 @@ def test_validator_skips_written_dates_and_years():
     text = "Şirket 7, 8, 23, 26 Ekim ve 3 Kasım 2026 tarihlerinde sözleşme duyurdu; 28 Ekim 2026'da Fed %3,75-%4 dedi."
     r = check_numbers(text, {"konusmadaki_deger": [3.75, 4.0]})
     assert r["unsupported"] == [] and r["n_numbers"] == 1                       # yalnızca 3,75 sayıldı
-    assert check_numbers("USD/TRY 49,95", {"usdtry": 49.9589})["unsupported"] == ["49,95"]   # yanlış yuvarlama yakalanır
+    r = check_numbers("USD/TRY 49,95", {"usdtry": 49.9589})
+    assert r["unsupported"] == [] and r["rounding"] == ["49,95"]                 # kesme = yuvarlama hatası, uydurma değil
+    r = check_numbers("Net kâr 11,2 milyar TL, özkaynak 335,0 milyar", {"net_income": 11227246450.9, "equity": 334974960000.0})
+    assert r["unsupported"] == [] and r["rounding"] == []                       # milyar çevirmesi tanınır
 
 
 def test_backtest_tool_computes_benchmark_differences():

@@ -1,0 +1,111 @@
+import copy
+import itertools
+
+import pandas as pd
+import pytest
+
+import src.harness.evidence as evidence
+from src.harness.decision_log import (load_analysis, log_decision, past_cases, record_review, replay_analysis)
+from src.harness.evidence import ACTIONS, analysis_day, build_evidence_bundle, decide, run_analysis
+from src.harness.quality_gate import GATE_OUTPUTS, check_data_quality
+
+MCP_TOOLS = {"get_stock_history", "get_index_history", "calculate_indicators", "detect_reversal_events",
+             "find_support_resistance", "rank_sector_relative_strength", "test_weekday_pattern",
+             "get_fundamental_metrics", "calculate_fundamental_change", "get_macro_context", "get_news_events",
+             "get_speech_features", "run_backtest", "check_data_quality", "build_evidence_bundle"}
+
+
+@pytest.fixture(scope="module")
+def asels():
+    return run_analysis("ASELS", "2026-11-06")
+
+
+def test_action_never_leaves_finite_set():
+    keys = ["laggard", "sector_strong", "recovering", "weak_earnings", "catch_up", "fundamental", "technical",
+            "shock", "negative_news"]
+    for vals in itertools.product([False, True], repeat=len(keys)):
+        for gate in GATE_OUTPUTS:
+            action, secondary = decide(dict(zip(keys, vals)), gate)
+            assert action in ACTIONS and set(secondary) <= set(ACTIONS)
+
+
+def test_decide_rules():
+    base = dict(laggard=False, catch_up=False, fundamental=False, technical=False, shock=False, negative_news=False)
+    assert decide({**base, "fundamental": True}, "HARD_BLOCK")[0] == "ANALYSIS_UNSAFE"
+    assert decide({**base, "catch_up": True, "shock": True}, "PASS")[0] == "REJECT_SIGNAL"
+    assert decide({**base, "negative_news": True}, "PASS")[0] == "INVESTIGATE"
+    assert decide({**base, "catch_up": True, "technical": True}, "PASS") == (
+        "POTENTIAL_CATCH_UP_CANDIDATE", ["TECHNICAL_REVERSAL_CANDIDATE"])
+    assert decide({**base, "laggard": True}, "PASS")[0] == "WATCH"
+    assert decide(base, "PASS")[0] == "HOLD"
+
+
+def test_corrupted_bundle_hard_block(asels):
+    b = copy.deepcopy(asels)
+    asof = pd.Timestamp(b["meta"]["asof"])
+    b["source_dates"]["bilanco_event_day"] = asof + pd.Timedelta(days=30)        # gelecekteki bilanço
+    g = check_data_quality(b)
+    assert g["status"] == "HARD_BLOCK" and any("gelecek bilgisi" in h for h in g["hard_blocks"])
+    b = copy.deepcopy(asels)
+    b["observed"]["fundamentals"]["period_end"] = asof + pd.Timedelta(days=60)
+    assert check_data_quality(b)["status"] == "HARD_BLOCK"                        # dönem uyumsuzluğu
+    b = copy.deepcopy(asels)
+    b["observed"]["price"]["max_abs_ret_250"] = 0.5                               # bozuk fiyat (bölünme vb.)
+    assert check_data_quality(b)["status"] == "HARD_BLOCK"
+    b = copy.deepcopy(asels)
+    b["backtest"]["end"] = b["source_dates"]["backtest_bitis"] = asof + pd.Timedelta(days=5)
+    assert check_data_quality(b)["status"] == "HARD_BLOCK"                        # backtest gelecek veriyi kullanmış
+
+
+def test_future_statement_never_enters_bundle(monkeypatch):
+    """Tabloya sonradan yayınlanacak sahte bir bilanço eklense bile o günün paketine giremez."""
+    t = dict(evidence._tables())
+    fake = t["earnings"][t["earnings"]["ticker"] == "ASELS"].tail(1).copy()
+    fake["period_end"], fake["event_day"], fake["tercile"] = pd.Timestamp("2026-12-31"), pd.Timestamp("2027-02-20"), "alt"
+    t["earnings"] = pd.concat([t["earnings"], fake], ignore_index=True)
+    monkeypatch.setattr(evidence, "_tables", lambda: t)
+    b = build_evidence_bundle("ASELS", "2026-11-06")
+    assert pd.Timestamp(b["observed"]["fundamentals"]["period_end"]) == pd.Timestamp("2026-09-30")
+    assert check_data_quality(b)["status"] != "HARD_BLOCK"
+
+
+def test_point_in_time_fundamentals():
+    before = build_evidence_bundle("ASELS", "2026-10-27")["observed"]["fundamentals"]
+    after = build_evidence_bundle("ASELS", "2026-10-28")["observed"]["fundamentals"]
+    assert pd.Timestamp(before["period_end"]) == pd.Timestamp("2026-06-30")       # 2026/9 bilançosu 27 Ekim 18:34'te
+    assert pd.Timestamp(after["period_end"]) == pd.Timestamp("2026-09-30")        # ertesi işlem günü görünür
+
+
+def test_unknown_ticker_and_quake_are_safe_failures():
+    r = run_analysis("YOKBOYLE", "2026-11-06")
+    assert r["gate"]["status"] == "HARD_BLOCK" and r["action"] == "ANALYSIS_UNSAFE" and r["committed"] == []
+    q = run_analysis("ASELS", "2023-02-15")
+    assert q["gate"]["status"] == "ANALYSIS_UNSAFE" and q["action"] == "ANALYSIS_UNSAFE"
+
+
+def test_bundle_dates_and_evidence(asels):
+    asof = pd.Timestamp(asels["meta"]["asof"])
+    assert pd.Timestamp(asels["backtest"]["end"]) <= asof
+    assert all(pd.Timestamp(h["last_date"]) <= asof for h in asels["history"].values() if h)
+    ids = [e["id"] for e in asels["committed"]]
+    assert ids == [f"E{i}" for i in range(1, len(ids) + 1)]
+    assert all(e["text"] and e["tool"] in MCP_TOOLS for e in asels["committed"])  # her kanıt bir araca dayanır
+    assert analysis_day("2026-11-08") == pd.Timestamp("2026-11-06")               # Pazar -> Cuma
+
+
+def test_decision_log_review_and_replay(tmp_path, asels):
+    db = tmp_path / "log.sqlite"
+    aid = log_decision(asels, db=db)
+    record_review(aid, "MODIFY", "Backtest al-tut'u geçmiyor.", final_action="WATCH", db=db)
+    with pytest.raises(ValueError):
+        record_review(aid, "BUY", "x", db=db)                                     # sınırlı karar kümesi
+    with pytest.raises(ValueError):
+        record_review(aid, "MODIFY", "x", final_action="BUY_NOW", db=db)         # sınırlı eylem kümesi
+    with pytest.raises(ValueError):
+        record_review(aid, "ACCEPT", "  ", db=db)                                 # gerekçe zorunlu
+    stored = load_analysis(aid, db)
+    assert stored["action"] == asels["action"] and stored["committed"][0]["id"] == "E1"
+    r = replay_analysis(aid, db)
+    assert r["same"] and r["new_action"] == r["stored_action"] and not r["procedure_changed"]
+    cases = past_cases("ASELS", db=db)
+    assert len(cases) == 1 and cases.iloc[0]["final_action"] == "WATCH"

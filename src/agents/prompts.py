@@ -40,12 +40,26 @@ AGENTS = {
                      "çelişki varsa belirt. Geçmiş insan kararları kanıt değildir: varsa ayrı bir maddede tarih, karar ve gerekçeyi "
                      "aynen aktar, yorum ekleme, '(Geçmiş karar)' diye etiketle. Son satıra şu uyarıyı aynen yaz: 'Yalnızca tarihsel kanıt; gelecek getiri "
                      "garantisi ve yatırım tavsiyesi değildir.'"),
+    "orchestrator_free": ("Financial Orchestrator Agent (C sürümü)",
+                          "Ajan notları ve araç özetlerine bakarak izinli eylemlerden BİRİNİ seç ve açıkla. "
+                          + "{JSON}"),
+    "raw": ("Ham LLM (A sürümü)",
+            "Sana metin olarak verilen ham verilere bakarak izinli eylemlerden BİRİNİ seç ve açıkla. Araç yok. "
+            + "{JSON}"),
+    "tools_free": ("Araçlı LLM (B sürümü)",
+                   "Soruyu yanıtlamak için gerekli araçları kendin seç ve çağır (en fazla 8 tur). Analiz gününden "
+                   "sonraki veriyi kullanma; tarih alan araçlara analiz gününü ver. Sonunda izinli eylemlerden BİRİNİ "
+                   "seç. " + "{JSON}"),
 }
+JSON_RULE = ('Yanıtı YALNIZCA şu JSON biçiminde ver: {"action": "<izinli eylem>", "explanation": "<en fazla 120 '
+             'kelime Türkçe açıklama>"}. İzinli eylemler: HOLD, WATCH, INVESTIGATE, POTENTIAL_CATCH_UP_CANDIDATE, '
+             'TECHNICAL_REVERSAL_CANDIDATE, FUNDAMENTAL_IMPROVEMENT_CANDIDATE, REJECT_SIGNAL, ANALYSIS_UNSAFE. '
+             'Veri yoksa ya da güvenilmezse ANALYSIS_UNSAFE seç.')
 
 
 def system_prompt(agent: str) -> str:
     title, role = AGENTS[agent]
-    return f"{COMMON}\nRolün: {title}. {role}"
+    return f"{COMMON}\nRolün: {title}. {role.replace('{JSON}', JSON_RULE)}"
 
 
 FIX_PROMPT = ("DÜZELT: Açıklamandaki şu sayılar verilen kanıtlarda/araç çıktılarında yok: {bad}. "

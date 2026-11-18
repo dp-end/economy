@@ -62,16 +62,55 @@ CLAIM_TR = {"VERIFIED": "veriyle_dogrulanan", "CONSISTENT_WITH_HISTORY": "gecmis
 PREVIEW_VARIANTS = ["A_teknik", "B_sektor", "C_temel", "D_makro", "E_haber"]
 
 
-def allowed_next(state: str, hard_blocked: bool) -> str:
-    """Bir sonraki durum. Kesin engelde güvenli yola geçilir; başka sapma yoktur."""
-    if state == "LOG_AND_CLOSE":
+# Adım 14 deney sürümleri: C = araçlar + durum makinesi (kanıt/kapı/insan yok, eylemi LLM seçer),
+# D = C + kanıt paketi + kalite kapısı (eylemi kurallar seçer), E = D + hafıza + insan incelemesi + kayıt (tam sistem).
+VERSION_STATES = {
+    "C": [s for s in STATES if s not in ("BUILD_EVIDENCE", "RISK_GATE", "HUMAN_REVIEW", "LOG_AND_CLOSE")],
+    "D": [s for s in STATES if s not in ("HUMAN_REVIEW", "LOG_AND_CLOSE")],
+    "E": STATES,
+}
+VERSION_MANDATORY = {"C": set(), "D": {"CHECK_DATA_QUALITY", "RISK_GATE"}, "E": MANDATORY}
+
+
+def allowed_next(state: str, hard_blocked: bool, version: str = "E") -> str:
+    """Bir sonraki durum. Kesin engelde güvenli yola geçilir (C sürümünde kapı olmadığı için geçilmez)."""
+    seq = VERSION_STATES[version]
+    if state == seq[-1]:
         return None
-    if hard_blocked:
+    if hard_blocked and version != "C":
         if STATES.index(state) < STATES.index("CHECK_DATA_QUALITY"):
             return "CHECK_DATA_QUALITY"                  # kalite kontrolü engelde bile atlanmaz
         if state == "CHECK_DATA_QUALITY" or state not in SAFE_PATH:
             return "RISK_GATE"
-    return STATES[STATES.index(state) + 1]
+    return seq[seq.index(state) + 1]
+
+
+def reason_hint(rec: dict) -> str:
+    """İnsan incelemesi için gerekçe rehberi + bu vakanın kanıtlarından üretilmiş örnek (kararı insan verir)."""
+    ids = [e["id"] for e in rec.get("committed", [])]
+    g = rec.get("gate", {})
+    weak = g.get("hard_blocks") or g.get("unsafe") or g.get("soft_warnings") or []
+    bt = rec.get("backtest") or {}
+    if not weak and bt.get("fark") is not None and bt["fark"] < 0:
+        weak = ["strateji backtest'te eşit ağırlıklı al-tut'un gerisinde"]
+    support = ", ".join(ids[:2]) or "kanıt yok"
+    example = (f"'{support} sonucu destekliyor; ancak {weak[0] if weak else 'belirgin bir uyarı yok'}; "
+               f"bu yüzden <kararın ve kısa nedeni>.'")
+    return ("Gerekçe yazarken üç şeyi söyle: (1) kararını hangi kanıtlara dayandırdığını (E numarası), "
+            "(2) sonucu zayıflatan uyarı, çelişki veya risk, (3) neden kabul ettiğin/değiştirdiğin/reddettiğin.\n"
+            f"Örnek kalıp (kendi sözlerinle yaz): {example}")
+
+
+def parse_answer(text: str) -> tuple:
+    """LLM'in {"action": ..., "explanation": ...} yanıtı. Geçersizse eylem 'GECERSIZ' olur (sayılır, düzeltilmez)."""
+    import re as _re
+    m = _re.search(r"\{.*\}", text or "", _re.S)
+    try:
+        obj = json.loads(m.group()) if m else {}
+    except json.JSONDecodeError:
+        obj = {}
+    action = str(obj.get("action", "")).strip().upper()
+    return (action if action in ACTIONS else "GECERSIZ"), str(obj.get("explanation") or text or "")
 
 
 def describe_history(history) -> dict:
@@ -102,8 +141,10 @@ def _short(x, n=4000) -> str:
 
 
 class Harness:
-    def __init__(self, llm, review: dict = None, log: bool = True, db=None):
-        self.llm, self.review, self.log, self.db = llm, review, log, db
+    def __init__(self, llm, review: dict = None, log: bool = True, db=None, version: str = "E"):
+        self.llm, self.review, self.db, self.version = llm, review, db, version
+        self.log = log and version == "E"                   # yalnızca tam sistem kayıt tutar
+        self.memory = version == "E"
 
     # ---------- araç ----------
     async def tool(self, state: str, name: str, args: dict, by: str = "harness"):
@@ -168,8 +209,8 @@ class Harness:
             while state:
                 self.trace["states"].append(state)
                 hard = await self.step(state, ticker, asof, ctx) or hard
-                state = allowed_next(state, hard)
-        missing = MANDATORY - set(self.trace["states"])
+                state = allowed_next(state, hard, self.version)
+        missing = VERSION_MANDATORY[self.version] - set(self.trace["states"])
         assert not missing, f"zorunlu durum atlandı: {missing}"
         self.trace["latency_total"] = round(time.time() - t_start, 2)
         ctx["summary"] = self.summary()
@@ -269,10 +310,15 @@ class Harness:
     async def explain(self, t: str, asof: str, ctx: dict):
         rec = run_analysis(t, asof)
         ctx["record"] = rec
+        if self.version == "C":
+            return await self.explain_free(t, asof, ctx)
+        ctx["action"] = rec["action"]
         b = ctx.get("bundle") or {}
         if b and b.get("action") != rec["action"]:
             raise RuntimeError("araç çıktısı ile doğrudan analiz farklı eylem verdi")
-        memory = past_cases(t, db=self.db).tail(3).to_dict("records") if self.db else past_cases(t).tail(3).to_dict("records")
+        memory = []
+        if self.memory:
+            memory = (past_cases(t, db=self.db) if self.db else past_cases(t)).tail(3).to_dict("records")
         data = dict(ticker=t, asof=asof, action=rec["action"], secondary=rec["secondary"],
                     gate=dict(status=rec["gate"]["status"], warnings=rec["gate"]["soft_warnings"],
                               hard_blocks=rec["gate"]["hard_blocks"], unsafe=rec["gate"]["unsafe"]),
@@ -306,6 +352,36 @@ class Harness:
         ctx["explanation"], ctx["explanation_verified"] = text, verified
         self.trace["notes"]["orchestrator"] = text
 
+    async def explain_free(self, t: str, asof: str, ctx: dict):
+        """C sürümü: kanıt paketi ve kapı yok; Orchestrator ajan notları ve araç özetlerinden eylemi kendisi seçer."""
+        data = dict(ticker=t, asof=asof, allowed_actions=list(ACTIONS), agent_notes=self.trace["notes"],
+                    quality_check=ctx.get("gate_pre"), fundamentals=ctx.get("fund"),
+                    sector=ctx.get("sector"), reversal_summary=(ctx.get("reversal") or {}).get("summary"))
+        msgs = [dict(role="system", content=system_prompt("orchestrator_free")),
+                dict(role="user", content=f"{t} için {asof} itibarıyla analiz durumunu seç ve açıkla.\n\n"
+                                          f"VERİ:\n{_short(data, 9000)}")]
+        t0 = time.time()
+        r = self.llm.chat(msgs)
+        action, text = parse_answer(r["content"])
+        chk, retried = check_numbers(text, data), False
+        if chk["unsupported"] or chk["rounding"]:
+            retried = True
+            msgs += [dict(role="assistant", content=r["content"]),
+                     dict(role="user", content=FIX_PROMPT.format(bad=", ".join(chk["unsupported"] + chk["rounding"]))
+                          + " Yanıtı yine aynı JSON biçiminde ver.")]
+            r = self.llm.chat(msgs)
+            action, text = parse_answer(r["content"])
+        chk2 = check_numbers(text, data)
+        self.trace["llm"].append(dict(state="GENERATE_EXPLANATION", agent="orchestrator", tool_rounds=0,
+                                      cached=r.get("cached", False), latency=round(time.time() - t0, 2),
+                                      numbers=chk["n_numbers"], unsupported=chk["unsupported"],
+                                      rounding=chk["rounding"], retried=retried,
+                                      unsupported_after_retry=chk2["unsupported"],
+                                      rounding_after_retry=chk2["rounding"]))
+        ctx["action"], ctx["explanation"] = action, text
+        ctx["explanation_verified"] = not chk2["unsupported"]
+        self.trace["notes"]["orchestrator"] = text
+
     # ---------- insan ----------
     def ask_review(self, ctx: dict) -> dict:
         if self.review:
@@ -317,6 +393,7 @@ class Harness:
         for e in rec["committed"]:
             print(f"  {e['id']}: {e['text']}")
         print("\nAçıklama:\n" + ctx["explanation"])
+        print("\n" + reason_hint(rec))
         while True:
             dec = input(f"\nKarar {REVIEW_DECISIONS}: ").strip().upper()
             if dec in REVIEW_DECISIONS:

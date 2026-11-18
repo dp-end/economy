@@ -81,8 +81,10 @@ class MockLLM:
     request_tool=(ad, argümanlar) -> ilk çağrıda bu aracı ister (izinsiz araç testi için)."""
     name = "mock"
 
-    def __init__(self, hallucinate: bool = False, fix_on_retry: bool = True, request_tool: tuple = None):
+    def __init__(self, hallucinate: bool = False, fix_on_retry: bool = True, request_tool: tuple = None,
+                 json_action: str = "WATCH"):
         self.hallucinate, self.fix_on_retry, self.request_tool = hallucinate, fix_on_retry, request_tool
+        self.json_action = json_action
         self.calls = self.cache_hits = 0
         self.log = []
 
@@ -100,4 +102,6 @@ class MockLLM:
         body = "Kanıtlar " + ", ".join(dict.fromkeys(ids)) + " bu sonucu destekliyor." if ids else "Bağlam özeti hazır."
         if self.hallucinate and not (retry and self.fix_on_retry):
             body += " Hedef fiyat 987,65 TL."
+        if "JSON" in messages[0].get("content", ""):
+            body = json.dumps(dict(action=self.json_action, explanation=body), ensure_ascii=False)
         return dict(content=body, tool_calls=[], cached=False, latency=0.0)

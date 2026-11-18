@@ -1,0 +1,34 @@
+source_id,segment_no,start,end,values,variable,status,tool_value,text
+fed_20261028,0,8.88,26.26,"[3.75, 4.0]",fed_faiz_araligi,VERIFIED,"(3.75, 4.0)",Good day This morning the FOMC decided to maintain the target rate for the federal funds rate at three and three quarters to four percent in support of the Federal Reserve's dual mandate Economic activity is expanding at a strong pace
+fed_20261028,2,49.28,71.2,[2.0],,FORECAST_OR_TARGET,,The committee believes that the accumulation of more information Will help it determine the policy stance appropriate to ensure a timely return of inflation to the two percent goal the committee will deliver price stability At each policy meeting my colleagues and I assess the economy by looking at the window
+fed_20261028,4,83.12,100.84,"[1.8, 2.4]",,NO_TOOL,,Economic growth has strengthened The GDP increase in the first half of this year rule was revised up from an earlier estimate of 1.8% up to 2.4% and the third quarter appears to have brought an even more rapid advance
+fed_20261028,5,101.36,127.04,[3.0],,NO_TOOL,,led by healthy consumer spending likely running above 3% growth and Business investment investment likely rising at about a double-digit pace Capital expenditures are at a historically high share of GDP High-tech investment is leading the acceleration But there's also been a broadening in other categories and these trends bear watching
+fed_20261028,21,411.62,426.42,[2.0],,FORECAST_OR_TARGET,,There's been essentially no progress toward the 2% inflation target The labor market remains stable as you suggested in your opening statement And most of your colleagues seem to be on board with raising rates in December So why not just raise rates today?
+fed_20261028,27,498.02,515.22,[2.0],,FORECAST_OR_TARGET,,First thing we did when we showed up with my colleagues is we doubled down on the 2% inflation target We said we own it. We're taking responsibility for it And if you think that we're tolerating some inflation target somewhere in the twos let us disabuse you of it
+fed_20261028,35,620.82,641.77,[2.0],,FORECAST_OR_TARGET,,"You're right about that, but we're working on it Thank you chair worship So if I could this statement says that the accumulation of more information will help the committee determine the policy stance Appropriate to ensure a timely return of inflation to the 2% goal"
+fed_20261028,72,1157.56,1173.08,[2.0],,FORECAST_OR_TARGET,,"Um, so the economy strong inflation is well above two percent You're saying inflation expectations are going the right way But service show that households expect inflation to remain about the best Goal and not just for the short term using height today"
+fed_20261028,75,1200.84,1218.92,[2.0],,FORECAST_OR_TARGET,,There's no implicit inflation target. There's a target of price stability and it's two percent as measured by pce It took six years to for inflation to Have the effect on consumers that you reference But I would say this
+tcmb_20261112,38,,,[2.3],,NO_TOOL,,"Yılın ikinci çeyreğinde büyüme yıllık yüzde 2,3 oranında gerçekleşerek yavaşladı."
+tcmb_20261112,78,,,[29.8],tufe_yillik,VERIFIED,29.768749175924203,"Ekim ayında yıllık tüketici enflasyonu yüzde 29,8 olarak gerçekleşti."
+tcmb_20261112,89,,,[51.4],,NO_TOOL,,"Bu grupta yıllık enflasyon her çeyrekte güçlenerek ekim ayında yüzde 51,4’e ulaştı."
+tcmb_20261112,96,,,"[43.0, 17.0]",,NO_TOOL,,"Şubat ayından bu yana enerji fiyatları yüzde 43 artarken, ana eğilimdeki artış yüzde 17 ile daha sınırlı oldu."
+tcmb_20261112,97,,,[28.0],,NO_TOOL,,Enerjinin doğrudan maliyet unsuru olduğu ulaştırma hizmetlerinde fiyatlar yüzde 28 artarak hizmet grubu genelinin üzerinde seyretti.
+tcmb_20261112,98,,,[11.0],,NO_TOOL,,Temel mallarda ise artış yüzde 11 ile sınırlı kaldı.
+tcmb_20261112,106,,,"[0.87, 0.89]",,NO_TOOL,,"Geçen yıl kasım ve aralık aylarında, sebze fiyatlarındaki olumlu seyrin de etkisiyle aylık tüketici enflasyonu sırasıyla yüzde 0,87 ve yüzde 0,89 ile düşük gerçekleşmişti."
+tcmb_20261112,114,,,[36.6],,NO_TOOL,,"Ekim itibarıyla hizmet grubunda yıllık enflasyon yüzde 36,6’ya geriledi."
+tcmb_20261112,115,,,"[33.0, 30.9]",,NO_TOOL,,"Son üç aylık yıllıklandırılmış eğilim ise eylüldeki yüzde 33 seviyesinden ekimde yüzde 30,9'a inerek, yıllık hizmet enflasyonunun yaklaşık 6 puan altında gerçekleşti."
+tcmb_20261112,120,,,"[23.0, 43.0]",,NO_TOOL,,Geçen yıl yüzde 23 olan haberleşme hizmetleri enflasyonu belirgin şekilde yükselerek bu yıl yüzde 43 oldu.
+tcmb_20261112,122,,,[42.5],,NO_TOOL,,"Akaryakıt fiyatlarındaki artışın etkileriyle, ulaştırma hizmetlerinde de yıllık enflasyon yüzde 42,5 ile geçen yılın bir miktar üzerinde seyrediyor."
+tcmb_20261112,127,,,[30.0],,NO_TOOL,,Kirada yıllıklandırılmış yakın dönem eğilim yüzde 30’un altına inerek tüketici enflasyonu seviyesine ulaştı.
+tcmb_20261112,132,,,[11.5],,NO_TOOL,,"Nitekim, temel mal grubunda yıllıklandırılmış yakın dönem eğilim yüzde 11,5 ile, yıllık enflasyonun altına gerilemiş durumda."
+tcmb_20261112,137,,,"[2.1, 2.3, 1.8]",,NO_TOOL,,"Aylık ana eğilim ilk çeyrekte ortalama yüzde 2,1, ikinci çeyrekte yüzde 2,3 iken üçüncü çeyrekte yüzde 1,8’e geriledi."
+tcmb_20261112,139,,,[30.0],,NO_TOOL,,"Yıllıklandırılmış ana eğilim ise, savaş döneminde yüzde 30’lar seviyesine çıkmıştı."
+tcmb_20261112,140,,,[23.7],,NO_TOOL,,"Ekim ayı itibarıyla yüzde 23,7’ye gerileyerek yıllık enflasyonun yaklaşık 6 puan altına indi."
+tcmb_20261112,144,,,"[2.2, 1.7]",,NO_TOOL,,"Yılın başında aylık yüzde 2,2 civarında seyreden bu gösterge, son aylarda belirgin şekilde gerileyerek ekimde yüzde 1,7’ye indi."
+tcmb_20261112,154,,,"[40.0, 37.0]",tcmb_politika_faizi,CONSISTENT_WITH_HISTORY,36.0,"Böylece para piyasalarında gecelik vadeli faiz oranları, yüzde 40 olan üst bant seviyesinden yüzde 37 olan politika faizine geriledi."
+tcmb_20261112,155,,,[36.0],tcmb_politika_faizi,VERIFIED,36.0,Ekim ayı PPK toplantısında politika faizini 100 baz puan indirimle yüzde 36’ya getirdik.
+tcmb_20261112,175,,,"[35.0, 20.0]",,NO_TOOL,,Sonuç olarak şubat sonunda yüzde 35 olan toplam kredi büyümesi yüzde 20 civarına geriledi.
+tcmb_20261112,176,,,"[34.0, 15.0]",,NO_TOOL,,"Kredi türleri bazında büyüme oranlarına baktığımızda, TL ticari kredilerin yüzde 34 seviyesinde büyüdüğünü, bireysel kredilerde ise büyümenin belirgin şekilde gerileyerek yüzde 15 seviyelerine düştüğünü görüyoruz."
+tcmb_20261112,177,,,[9.0],,NO_TOOL,,Kur etkisinden arındırılmış yabancı para kredi büyümesi ise yüzde 9 ile ılımlı bir seyir izliyor.
+tcmb_20261112,202,,,[29.5],,FORECAST_OR_TARGET,,"Tahminlerimize geçecek olursak; 2026 yıl sonu enflasyon tahminimizi yüzde 29,5 olarak yukarı yönlü güncelledik."
+tcmb_20261112,203,,,"[21.0, 13.5, 9.0, 5.0]",,FORECAST_OR_TARGET,,"Enflasyonun 2027 yıl sonunda ara hedeflerimiz olan yüzde 21’e, 2028 yıl sonunda yüzde 13,5’e, 2029 yıl sonunda yüzde 9’a geriledikten sonra orta vadede enflasyon hedefi olan yüzde 5 seviyesinde istikrar kazanacağını öngörüyoruz."

@@ -39,24 +39,24 @@ KAP_OID = {
 }
 
 
-def windows(today=None) -> list:
+def windows(today=None, first=FIRST_WINDOW) -> list:
     """90 günlük dilimler: (başlangıç, bitiş). KAP daha uzun aralıkta hata veriyor."""
     today = pd.Timestamp(today or pd.Timestamp.today().normalize())
-    starts = pd.date_range(FIRST_WINDOW, today, freq=f"{WINDOW_DAYS}D")
+    starts = pd.date_range(pd.Timestamp(first), today, freq=f"{WINDOW_DAYS}D")
     return [(s, min(s + pd.Timedelta(days=WINDOW_DAYS - 1), today)) for s in starts]
 
 
-def cache_file(ticker: str, start, end) -> Path:
-    return CACHE / f"{ticker}_{start:%Y%m%d}_{end:%Y%m%d}.json"
+def cache_file(ticker: str, start, end, cache: Path = CACHE) -> Path:
+    return cache / f"{ticker}_{start:%Y%m%d}_{end:%Y%m%d}.json"
 
 
-def fetch(ticker: str, start, end) -> list:
-    """Bir hisse + bir aralık için KAP Finansal Rapor bildirimleri. Her yanıt diske kaydedilir."""
-    f = cache_file(ticker, start, end)
+def fetch(ticker: str, start, end, types=("FR",), cache: Path = CACHE) -> list:
+    """Bir hisse + bir aralık için KAP bildirimleri (varsayılan: Finansal Rapor). Her yanıt diske kaydedilir."""
+    f = cache_file(ticker, start, end, cache)
     if f.exists():                          # daha önce indiyse KAP'a tekrar sorulmaz
         return json.loads(f.read_text())
     body = {"fromDate": f"{start:%d.%m.%Y}", "toDate": f"{end:%d.%m.%Y}",
-            "disclosureTypes": ["FR"], "memberTypes": ["IGS"], "mkkMemberOid": KAP_OID[ticker]}
+            "disclosureTypes": list(types), "memberTypes": ["IGS"], "mkkMemberOid": KAP_OID[ticker]}
     r = None
     for _ in range(MAX_RETRY):
         try:
@@ -77,7 +77,7 @@ def fetch(ticker: str, start, end) -> list:
     data = r.json()
     if not isinstance(data, list):
         raise RuntimeError(f"KAP beklenmeyen yanıt ({ticker} {start:%Y-%m-%d}): {str(data)[:200]}")
-    CACHE.mkdir(parents=True, exist_ok=True)     # dosya adında bitiş tarihi var; ertesi gün yeniden sorulur
+    cache.mkdir(parents=True, exist_ok=True)     # dosya adında bitiş tarihi var; ertesi gün yeniden sorulur
     f.write_text(json.dumps(data, ensure_ascii=False))
     time.sleep(PAUSE)
     return data

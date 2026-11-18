@@ -6,7 +6,7 @@ yfinance
 pyarrow
 openpyxl
 matplotlib
-mcp
+mcp>=2.3,<3
 openai
 python-dotenv
 feedparser

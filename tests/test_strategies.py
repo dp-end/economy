@@ -29,7 +29,7 @@ def test_pick_top():
 
 def test_weights_valid_and_weekly():
     ws = generate_strategy_variants()
-    assert set(ws) == {"A_teknik", "B_sektor", "C_temel", "D_makro", "D_makro_oynaklik", "D_makro_faiz"}
+    assert set(ws) == {"A_teknik", "B_sektor", "C_temel", "D_makro", "D_makro_oynaklik", "D_makro_faiz", "E_haber"}
     for name, w in ws.items():
         assert (w >= 0).all().all() and (w.sum(axis=1) <= 1 + 1e-9).all(), name
         assert ((w > 0).sum(axis=1) <= TOP_K).all(), name
@@ -50,6 +50,8 @@ def test_filters_respected():
     assert not (held_c & p["weak_earnings"][reb]).any().any()            # bilançosu alt üçte birde olan alınmaz
     held_a = (ws["A_teknik"] > 0)[reb]
     assert not (held_a & (p["st_dir"][reb] <= 0)).any().any()
+    held_e = (ws["E_haber"] > 0)[reb]
+    assert not (held_e & p["neg_news"][reb]).any().any()                 # olumsuz haberli hisse alınmaz
 
 
 def test_no_lookahead_in_weights():
@@ -65,7 +67,7 @@ def test_no_lookahead_in_weights():
 
 def test_evaluate_shape_and_costs():
     res = evaluate()
-    assert len(res) == 6 * 3 and len(load_returns()) - WARMUP == 1008
+    assert len(res) == 7 * 3 and len(load_returns()) - WARMUP == 1008
     free, high = evaluate(cost=0.0), evaluate(cost=0.003)
     a = ("A_teknik", "tum")
     assert free.loc[a, "toplam_getiri"] > res.loc[a, "toplam_getiri"] > high.loc[a, "toplam_getiri"]

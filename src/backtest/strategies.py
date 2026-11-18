@@ -10,6 +10,7 @@ from src.data.fundamentals import load_all
 from src.data.macro import macro_panel
 from src.data.prices import get_index_history
 from src.events.earnings_reaction import earnings_events
+from src.events.news_reaction import news_flags
 from src.indicators.features import full_features
 
 TOP_K = 10                 # portföyde en fazla hisse; her biri 1/TOP_K ağırlık, boş kalan pay nakit
@@ -19,6 +20,7 @@ TREND_SMA = 200            # piyasa trend filtresi: XU100 200 günlük ortalamas
 FX_WINDOW, FX_LOOKBACK, FX_PCT = 20, 250, 0.90   # kur: 20 günlük artış, kendi son 250 gününün %90'lık diliminde mi
 RATE_LOOKBACK = 126        # faiz döngüsü: politika faizi ~6 ay öncesinden yüksek mi
 COSTS = (0.0, COST_ONE_WAY, 2 * COST_ONE_WAY)
+POS_NEWS_BONUS = 0.5      # E: son 10 günde olumlu KAP haberi olan hisse sıralamada bu kadar öne alınır (sonuçtan önce sabitlendi)
 
 
 @lru_cache(maxsize=1)
@@ -38,6 +40,7 @@ def panels() -> dict:
         s = g.drop_duplicates("event_day", keep="last").set_index("event_day")["tercile"].map(lambda x: float(x == "alt"))
         weak[t] = s.reindex(close.index.union(s.index)).ffill().reindex(close.index)
     p["weak_earnings"] = weak.fillna(0).astype(bool)
+    p["neg_news"], p["pos_news"] = news_flags(close.index, tickers)     # event_day'den itibaren 10 işlem günü
     return p
 
 
@@ -86,6 +89,8 @@ def generate_strategy_variants() -> dict:
     c_ok = b_ok & ~p["weak_earnings"]
     idx = p["close"].index
     inv_vol = 1 / (p["atr"] / p["close"])
+    e_ok = c_ok & ~p["neg_news"]                                              # olumsuz haberli hisse dışarıda
+    e_score = b_score + POS_NEWS_BONUS * p["pos_news"].astype(float)
     w = {
         "A_teknik": pick_top(a_ok, rel_rank),
         "B_sektor": pick_top(b_ok, b_score),
@@ -93,6 +98,7 @@ def generate_strategy_variants() -> dict:
         "D_makro": pick_top(c_ok, b_score).mul(macro_scale(idx), axis=0),
         "D_makro_oynaklik": pick_top(c_ok, b_score, weight_by=inv_vol).mul(macro_scale(idx), axis=0),
         "D_makro_faiz": pick_top(c_ok, b_score).mul(macro_scale(idx, use_rate=True), axis=0),
+        "E_haber": pick_top(e_ok, e_score).mul(macro_scale(idx), axis=0),
     }
     return {k: weekly(v) for k, v in w.items()}
 

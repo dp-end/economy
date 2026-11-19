@@ -61,3 +61,13 @@ def test_report_3_builds_with_single_multiple_testing_family():
     for k in ("Table 1. Portfolio return by weekday", "Table 8. Wednesday-buy", "correcting all 180 tests",
               "fig/03_wed_thu_costs.png"):
         assert k in text
+
+
+def test_report_4_builds_with_clean_tables():
+    from src.reports.r4_earnings import build
+    text = open(build(), encoding="utf-8").read()
+    assert "not written yet" not in text
+    for k in ("Table 2. Top-minus-bottom", "Table 5. Top-minus-bottom third spread by metric", "Table 8. Net-income third",
+              "fig/04_car_path.png"):
+        assert k in text
+    assert "|AR|" not in text                                     # boru karakteri tabloyu bozmamalı

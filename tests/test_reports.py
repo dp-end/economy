@@ -71,3 +71,15 @@ def test_report_4_builds_with_clean_tables():
               "fig/04_car_path.png"):
         assert k in text
     assert "|AR|" not in text                                     # boru karakteri tabloyu bozmamalı
+
+
+def test_report_5_builds_and_only_verified_claims_enter_evidence():
+    import pandas as pd
+    from src.reports.r5_macro_context import build
+    f = pd.read_parquet("reports/speech_features.parquet")
+    assert (f.loc[f["in_evidence"], "status"] == "VERIFIED").all()
+    text = open(build(), encoding="utf-8").read()
+    assert "not written yet" not in text
+    for k in ("Table 2. Year by year", "Table 5. Sector FX sensitivity", "Table 13. Claims that entered",
+              "fig/05_macro_timeline.png"):
+        assert k in text

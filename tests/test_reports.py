@@ -35,3 +35,15 @@ def test_report_1_builds_without_missing_notes():
     assert "not written yet" not in text
     for s in ("## 1. Research question", "Table 2.", "Table 7.", "## 12. Limitations", "fig/01_regimes.png"):
         assert s in text
+
+
+def test_report_2_builds_and_uses_point_in_time_earnings():
+    from src.reports.r2_sector import build, load_events
+    s = load_events()
+    seen = s.dropna(subset=["event_day"])
+    assert (seen["event_day"] <= seen["date"]).all()                 # bilanço olay gününden önce açıklanmış olmalı
+    assert not s["quake_window"].any()
+    text = open(build(), encoding="utf-8").read()
+    assert "not written yet" not in text
+    for k in ("Table 2. Filter ladder", "Table 6. Worst cases", "Table 8. Backtest", "fig/02_filter_ladder.png"):
+        assert k in text

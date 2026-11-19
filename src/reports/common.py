@@ -61,8 +61,8 @@ def md_table(df: pd.DataFrame, fmt: dict = None, index: bool = True, default: st
     num = [pd.api.types.is_numeric_dtype(d[c]) and not pd.api.types.is_bool_dtype(d[c]) for c in d.columns]
     lines = ["| " + " | ".join(cols) + " |",
              "|" + "|".join("---:" if n else ":---" for n in num) + "|"]
-    for _, r in d.iterrows():
-        lines.append("| " + " | ".join(_cell(r[c], fmt.get(c, default)) for c in d.columns) + " |")
+    for i in range(len(d)):             # iterrows kullanılmaz: karışık satırda tam sayıları ondalığa çevirir
+        lines.append("| " + " | ".join(_cell(d[c].iat[i], fmt.get(c, default)) for c in d.columns) + " |")
     return "\n".join(lines)
 
 

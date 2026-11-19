@@ -47,3 +47,17 @@ def test_report_2_builds_and_uses_point_in_time_earnings():
     assert "not written yet" not in text
     for k in ("Table 2. Filter ladder", "Table 6. Worst cases", "Table 8. Backtest", "fig/02_filter_ladder.png"):
         assert k in text
+
+
+def test_md_table_keeps_integers_in_mixed_rows():
+    df = pd.DataFrame({"trades": [7500], "ret": [0.123]})
+    assert md_table(df, index=False).splitlines()[2] == "| 7,500 | 0.12 |"
+
+
+def test_report_3_builds_with_single_multiple_testing_family():
+    from src.reports.r3_weekday import build
+    text = open(build(), encoding="utf-8").read()
+    assert "not written yet" not in text
+    for k in ("Table 1. Portfolio return by weekday", "Table 8. Wednesday-buy", "correcting all 180 tests",
+              "fig/03_wed_thu_costs.png"):
+        assert k in text

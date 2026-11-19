@@ -20,7 +20,7 @@ import time
 import pandas as pd
 from mcp import Client
 
-from src.agents.llm import MockLLM, tool_schemas
+from src.agents.llm import MockLLM, assistant_message, tool_schemas
 from src.agents.prompts import FIX_PROMPT, system_prompt
 from src.agents.validate import check_numbers
 from src.data.universe import load_universe
@@ -176,10 +176,7 @@ class Harness:
         rounds = 0
         while r["tool_calls"] and rounds < MAX_TOOL_ROUNDS:
             rounds += 1
-            msgs.append(dict(role="assistant", content=r["content"] or None,
-                             tool_calls=[dict(id=c["id"], type="function",
-                                              function=dict(name=c["name"], arguments=c["arguments"]))
-                                         for c in r["tool_calls"]]))
+            msgs.append(assistant_message(r))
             for c in r["tool_calls"]:
                 try:
                     args = json.loads(c["arguments"] or "{}")
@@ -318,7 +315,8 @@ class Harness:
             raise RuntimeError("araç çıktısı ile doğrudan analiz farklı eylem verdi")
         memory = []
         if self.memory:
-            memory = (past_cases(t, db=self.db) if self.db else past_cases(t)).tail(3).to_dict("records")
+            kw = dict(db=self.db) if self.db else {}
+            memory = past_cases(t, before=asof, **kw).tail(3).to_dict("records")      # yalnızca asof öncesi
         data = dict(ticker=t, asof=asof, action=rec["action"], secondary=rec["secondary"],
                     gate=dict(status=rec["gate"]["status"], warnings=rec["gate"]["soft_warnings"],
                               hard_blocks=rec["gate"]["hard_blocks"], unsafe=rec["gate"]["unsafe"]),

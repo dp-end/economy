@@ -14,7 +14,9 @@ from pathlib import Path
 CACHE = Path("data/llm_cache")
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 DEFAULT_MODEL = "gemini-2.5-flash"
-MAX_RETRY, RETRY_WAIT = 4, 20          # 429 (kota) gelirse 20, 40, 60 sn bekle
+MAX_RETRY, RETRY_WAIT = 4, 20          # geçici hatada 20, 40, 60 sn bekle
+RETRY_CODES = ("429", "500", "503")     # 429 kota, 500/503 Google tarafı geçici yoğunluk
+TIMEOUT = 90                            # sn; cevap gelmezse kes ve yeniden dene (varsayılan 600 sn idi)
 
 
 def clean_schema(x):
@@ -32,6 +34,24 @@ def tool_schemas(tools) -> list:
                                                 parameters=clean_schema(t.input_schema))) for t in tools]
 
 
+def transient(e: Exception) -> bool:
+    """Geçici hata mı: 429/500/503 ya da bağlantı kopması / zaman aşımı (APIConnectionError, APITimeoutError)."""
+    from openai import APIConnectionError
+    return isinstance(e, APIConnectionError) or any(c in str(e) for c in RETRY_CODES)
+
+
+def assistant_message(r: dict) -> dict:
+    """Modelin araç isteğini geçmişe ekler. Gemini 3 modelleri araç çağrısıyla bir 'thought_signature'
+    gönderir (extra_content.google); sonraki istekte geri verilmezse 400 döner, bu yüzden aynen korunur."""
+    calls = []
+    for c in r["tool_calls"]:
+        d = dict(id=c["id"], type="function", function=dict(name=c["name"], arguments=c["arguments"]))
+        if c.get("extra_content"):
+            d["extra_content"] = c["extra_content"]
+        calls.append(d)
+    return dict(role="assistant", content=r["content"] or None, tool_calls=calls)
+
+
 class GeminiLLM:
     """Gerçek model. Bu sınıfı oluşturmak .env'deki anahtarı okur: komutu kullanıcı çalıştırır."""
     name = "gemini"
@@ -41,7 +61,7 @@ class GeminiLLM:
         from openai import OpenAI
         load_dotenv()
         self.model = model or os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)
-        self.client = OpenAI(api_key=os.environ["GEMINI_API_KEY"], base_url=BASE_URL)
+        self.client = OpenAI(api_key=os.environ["GEMINI_API_KEY"], base_url=BASE_URL, timeout=TIMEOUT)
         self.cache, self.temperature = cache, temperature
         self.calls = self.cache_hits = 0
 
@@ -57,22 +77,28 @@ class GeminiLLM:
         kwargs = dict(model=self.model, messages=messages, temperature=self.temperature)
         if tools:
             kwargs["tools"] = tools
+        waited = 0                                       # bekleme süresi gecikme ölçümüne katılmaz
         for i in range(MAX_RETRY):
             try:
                 resp = self.client.chat.completions.create(**kwargs)
                 break
-            except Exception as e:                       # openai.RateLimitError vb.
-                if "429" not in str(e) or i == MAX_RETRY - 1:
+            except Exception as e:                       # RateLimitError, InternalServerError vb.
+                if not transient(e) or i == MAX_RETRY - 1:
+                    print("Gemini hata ayrıntısı:", getattr(e, "body", None) or e)   # anahtar içermez
                     raise
-                time.sleep(RETRY_WAIT * (i + 1))
+                wait = RETRY_WAIT * (i + 1)
+                print(f"Geçici hata ({str(e)[:40]}...), {wait} sn bekleniyor, deneme {i + 2}/{MAX_RETRY}")
+                time.sleep(wait)
+                waited += wait
         msg = resp.choices[0].message
         out = dict(content=msg.content or "",
-                   tool_calls=[dict(id=c.id, name=c.function.name, arguments=c.function.arguments or "{}")
+                   tool_calls=[dict(id=c.id, name=c.function.name, arguments=c.function.arguments or "{}",
+                                    extra_content=(c.model_extra or {}).get("extra_content"))
                                for c in (msg.tool_calls or [])])
         self.calls += 1
         self.cache.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(out, ensure_ascii=False))
-        return {**out, "cached": False, "latency": round(time.time() - t0, 2)}
+        return {**out, "cached": False, "latency": round(time.time() - t0 - waited, 2)}
 
 
 class MockLLM:
@@ -94,7 +120,8 @@ class MockLLM:
         last = messages[-1]
         if self.request_tool and last["role"] == "user" and self.calls == 1:
             name, args = self.request_tool
-            return dict(content="", tool_calls=[dict(id="c1", name=name, arguments=json.dumps(args))],
+            return dict(content="", tool_calls=[dict(id="c1", name=name, arguments=json.dumps(args),
+                                                     extra_content={"google": {"thought_signature": "MOCK_SIG"}})],
                         cached=False, latency=0.0)
         text = last.get("content") or ""
         retry = "DÜZELT" in text

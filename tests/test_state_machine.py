@@ -102,3 +102,61 @@ def test_history_described_with_explicit_names():
                           "tech:kama_turn_up": dict(n=10, horizon=5, last_date="x", hit=0.47, mean_exc=0.001)})
     assert set(h) == {"bilanco_ucte_bir_tepkisi", "teknik_olay_kama_turn_up"}
     assert h["bilanco_ucte_bir_tepkisi"]["ust_ucte_bir_ortalama_fazla_getiri"] == 0.0074
+
+
+def test_thought_signature_is_sent_back():
+    """Gemini 3: araç çağrısındaki thought_signature bir sonraki istekte assistant mesajında geri gitmeli."""
+    llm = MockLLM(request_tool=("detect_reversal_events", {"ticker": "ASELS", "start": "2026-10-01",
+                                                           "end": "2026-11-06"}))
+    run_harness("ASELS", "2026-11-06", llm, REVIEW, log=False)
+    second = llm.log[1]["messages"]
+    asst = [m for m in second if m["role"] == "assistant"][0]
+    assert asst["tool_calls"][0]["extra_content"] == {"google": {"thought_signature": "MOCK_SIG"}}
+
+
+@pytest.mark.parametrize("code,retried", [("503", True), ("500", True), ("429", True), ("401", False),
+                                          ("conn", True), ("timeout", True)])
+def test_gemini_retries_only_transient_errors(tmp_path, monkeypatch, code, retried):
+    """503/500/429 beklenip yeniden denenir (bekleme gecikmeye sayılmaz); 401 gibi kalıcı hata hemen yükselir."""
+    from types import SimpleNamespace
+    import src.agents.llm as L
+    monkeypatch.setattr(L.time, "sleep", lambda s: None)
+    calls = []
+
+    def create(**kw):
+        calls.append(1)
+        if len(calls) == 1:
+            import openai
+            import httpx2
+            req = httpx2.Request("POST", "https://x")
+            if code == "conn":
+                raise openai.APIConnectionError(request=req)          # "Server disconnected" durumu
+            if code == "timeout":
+                raise openai.APITimeoutError(request=req)
+            raise RuntimeError(f"Error code: {code}")
+        msg = SimpleNamespace(content="tamam", tool_calls=None)
+        return SimpleNamespace(choices=[SimpleNamespace(message=msg)])
+
+    llm = object.__new__(L.GeminiLLM)                       # anahtar okumadan kur
+    llm.model, llm.temperature, llm.cache, llm.calls, llm.cache_hits = "test", 0.0, tmp_path, 0, 0
+    llm.client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    if retried:
+        r = llm.chat([dict(role="user", content="x")])
+        assert r["content"] == "tamam" and len(calls) == 2 and r["latency"] < 5
+    else:
+        with pytest.raises(RuntimeError):
+            llm.chat([dict(role="user", content="x")])
+        assert len(calls) == 1
+
+
+def test_memory_never_shows_future_decisions(tmp_path):
+    """Adım 14'te bulunan hata: 2023 analizi 2026'da verilmiş insan kararını 'geçmiş karar' diye görüyordu."""
+    db = tmp_path / "log.sqlite"
+    run_harness("ASELS", "2026-11-06", MockLLM(), REVIEW, db=db)                     # 2026 kararı kaydedildi
+    assert len(past_cases("ASELS", db=db)) == 1
+    assert len(past_cases("ASELS", db=db, before="2023-02-15")) == 0               # 2023'ten bakınca görünmez
+    assert len(past_cases("ASELS", db=db, before="2026-11-07")) == 1               # sonrasından bakınca görünür
+    llm = MockLLM()
+    run_harness("ASELS", "2023-02-15", llm, REVIEW, db=db)
+    sent = " ".join(m.get("content") or "" for call in llm.log for m in call["messages"])
+    assert "2026-11-06" not in sent                                                 # modele gelecek tarih gitmedi

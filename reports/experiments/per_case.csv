@@ -1,0 +1,61 @@
+ticker,asof,label,version,run,action,ref_action,valid_action,matches_reference,unsupported_conclusion,numbers,fabricated,rounding,evidence_completeness,tool_calls,invalid_calls,tool_errors,future_calls,llm_calls,latency,backtest_run,unsupported,rounding_list,review,all_agents_hallucination,tools_used
+ASELS,2026-11-06,bilanço adayı,A,1,TECHNICAL_REVERSAL_CANDIDATE,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,True,False,True,5,0,0,0.625,0,0,0,0,1,3.15,False,[],[],,,
+ASELS,2026-11-06,bilanço adayı,B,1,WATCH,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,True,False,False,8,1,0,0.5,4,0,0,0,5,97.9,False,['20'],[],,,"['get_stock_history', 'check_data_quality', 'calculate_indicators', 'find_support_resistance']"
+ASELS,2026-11-06,bilanço adayı,C,1,WATCH,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,True,False,False,7,0,0,0.75,25,0,0,0,5,56.11,True,[],[],,0.0,
+ASELS,2026-11-06,bilanço adayı,D,1,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,True,True,False,6,0,0,0.875,27,0,0,0,6,54.06,True,[],[],,0.0,
+ASELS,2026-11-06,bilanço adayı,E,1,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,True,True,False,6,0,0,0.875,27,0,0,0,6,31.71,True,[],[],"{'decision': 'ACCEPT', 'reason': 'gerekçeler olumlu', 'final_action': None}",0.0,
+TURSG,2026-11-06,şok + olumsuz haber,A,1,WATCH,INVESTIGATE,True,False,False,3,0,0,0.6666666666666666,0,0,0,0,1,12.13,False,[],[],,,
+TURSG,2026-11-06,şok + olumsuz haber,B,1,TECHNICAL_REVERSAL_CANDIDATE,INVESTIGATE,True,False,True,8,1,1,1.0,4,0,0,0,5,216.64,False,['50'],['20'],,,"['check_data_quality', 'get_stock_history', 'calculate_indicators', 'find_support_resistance']"
+TURSG,2026-11-06,şok + olumsuz haber,C,1,WATCH,INVESTIGATE,True,False,False,5,0,0,0.6666666666666666,25,0,0,0,5,66.69,True,[],[],,0.0,
+TURSG,2026-11-06,şok + olumsuz haber,D,1,INVESTIGATE,INVESTIGATE,True,True,False,7,0,0,1.0,27,0,0,0,6,56.91,True,[],[],,0.0,
+TURSG,2026-11-06,şok + olumsuz haber,E,1,INVESTIGATE,INVESTIGATE,True,True,False,7,0,0,1.0,27,0,0,0,6,315.96,True,[],[],"{'decision': 'ACCEPT', 'reason': 'XU100 e göre normal ama daha fazla olması gerekirdi. Araştırılması gerekir', 'final_action': None}",0.0,
+PETKM,2026-11-06,çelişen teknik sinyaller,A,1,TECHNICAL_REVERSAL_CANDIDATE,INVESTIGATE,True,False,True,6,0,0,0.0,0,0,0,0,1,190.0,False,[],[],,,
+PETKM,2026-11-06,çelişen teknik sinyaller,B,1,INVESTIGATE,INVESTIGATE,True,True,False,9,0,1,0.0,4,0,0,0,5,34.11,False,[],['50'],,,"['check_data_quality', 'get_stock_history', 'calculate_indicators', 'find_support_resistance']"
+PETKM,2026-11-06,çelişen teknik sinyaller,C,1,INVESTIGATE,INVESTIGATE,True,True,False,11,0,0,0.6666666666666666,25,0,0,0,5,132.73,True,[],[],,0.0,
+PETKM,2026-11-06,çelişen teknik sinyaller,D,1,INVESTIGATE,INVESTIGATE,True,True,False,8,0,0,1.0,27,0,0,0,6,158.76,True,[],[],,0.0,
+PETKM,2026-11-06,çelişen teknik sinyaller,E,1,INVESTIGATE,INVESTIGATE,True,True,False,8,0,0,1.0,27,0,0,0,6,469.72,True,[],[],"{'decision': 'ACCEPT', 'reason': 'Şirket zararını düşürmüş ama hala zararda . Araştırılması gerekir', 'final_action': None}",0.0,
+KRDMD,2026-11-06,şok nedeniyle ret,A,1,WATCH,REJECT_SIGNAL,True,False,False,6,0,0,0.6,0,0,0,0,1,2.1,False,[],[],,,
+KRDMD,2026-11-06,şok nedeniyle ret,B,1,INVESTIGATE,REJECT_SIGNAL,True,False,False,7,1,3,0.0,4,0,0,0,5,25.84,False,['200'],"['37,99', '20', '50']",,,"['check_data_quality', 'get_stock_history', 'calculate_indicators', 'find_support_resistance']"
+KRDMD,2026-11-06,şok nedeniyle ret,C,1,INVESTIGATE,REJECT_SIGNAL,True,False,False,6,0,0,0.0,25,0,0,0,5,39.65,True,[],[],,0.0,
+KRDMD,2026-11-06,şok nedeniyle ret,D,1,REJECT_SIGNAL,REJECT_SIGNAL,True,True,False,10,0,0,1.0,27,0,0,0,6,5.24,True,[],[],,0.0,
+KRDMD,2026-11-06,şok nedeniyle ret,E,1,REJECT_SIGNAL,REJECT_SIGNAL,True,True,False,10,0,0,1.0,27,0,0,0,6,404.44,True,[],[],"{'decision': 'ACCEPT', 'reason': 'iyi bilanço ama −%10 şok, sinyale güvenme', 'final_action': None}",0.0,
+ASELS,2023-02-15,"deprem penceresi, analiz güvensiz",A,1,WATCH,ANALYSIS_UNSAFE,True,False,True,3,0,0,0.4,0,0,0,0,1,13.69,False,[],[],,,
+ASELS,2023-02-15,"deprem penceresi, analiz güvensiz",B,1,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,0,0,0,0.4,2,0,0,0,2,24.29,False,[],[],,,"['get_stock_history', 'check_data_quality']"
+ASELS,2023-02-15,"deprem penceresi, analiz güvensiz",C,1,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,6,0,0,0.4,24,0,0,0,5,91.36,True,[],[],,0.029,
+ASELS,2023-02-15,"deprem penceresi, analiz güvensiz",D,1,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,7,0,0,1.0,26,0,0,0,6,27.43,True,[],[],,0.026,
+YOKBOYLE,2026-11-06,bilinmeyen hisse,A,1,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,0,0,0,,0,0,0,0,1,3.07,False,[],[],,,
+YOKBOYLE,2026-11-06,bilinmeyen hisse,B,1,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,0,0,0,,1,0,0,0,2,31.87,False,[],[],,,['check_data_quality']
+YOKBOYLE,2026-11-06,bilinmeyen hisse,C,1,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,7,0,0,,25,0,9,0,5,49.99,True,[],[],,0.0,
+YOKBOYLE,2026-11-06,bilinmeyen hisse,D,1,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,0,0,0,,2,0,0,0,2,5.67,False,[],[],,1.0,
+YOKBOYLE,2026-11-06,bilinmeyen hisse,E,1,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,0,0,0,,2,0,0,0,2,89.65,False,[],[],"{'decision': 'ACCEPT', 'reason': 'böyle bir kod yok', 'final_action': None}",1.0,
+ASELS,2026-11-06,bilanço adayı,A,2,TECHNICAL_REVERSAL_CANDIDATE,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,True,False,True,5,0,0,0.625,0,0,0,0,1,34.31,False,[],[],,,
+ASELS,2026-11-06,bilanço adayı,B,2,WATCH,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,True,False,False,8,1,0,0.5,4,0,0,0,5,102.48,False,['20'],[],,,"['get_stock_history', 'check_data_quality', 'calculate_indicators', 'find_support_resistance']"
+ASELS,2026-11-06,bilanço adayı,C,2,WATCH,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,True,False,False,7,0,0,0.75,25,0,0,0,5,201.43,True,[],[],,0.0,
+ASELS,2026-11-06,bilanço adayı,D,2,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,True,True,False,6,0,0,0.875,27,0,0,0,6,16.25,True,[],[],,0.0,
+ASELS,2026-11-06,bilanço adayı,E,2,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,FUNDAMENTAL_IMPROVEMENT_CANDIDATE,True,True,False,6,0,0,0.875,27,0,0,0,6,4.02,True,[],[],"{'decision': 'ACCEPT', 'reason': 'gerekçeler olumlu', 'final_action': None}",0.0,
+TURSG,2026-11-06,şok + olumsuz haber,A,2,WATCH,INVESTIGATE,True,False,False,3,0,0,0.6666666666666666,0,0,0,0,1,1.67,False,[],[],,,
+TURSG,2026-11-06,şok + olumsuz haber,B,2,TECHNICAL_REVERSAL_CANDIDATE,INVESTIGATE,True,False,True,8,1,1,1.0,4,0,0,0,5,74.71,False,['50'],['20'],,,"['check_data_quality', 'get_stock_history', 'calculate_indicators', 'find_support_resistance']"
+TURSG,2026-11-06,şok + olumsuz haber,C,2,WATCH,INVESTIGATE,True,False,False,5,0,0,0.6666666666666666,25,0,0,0,5,64.74,True,[],[],,0.0,
+TURSG,2026-11-06,şok + olumsuz haber,D,2,INVESTIGATE,INVESTIGATE,True,True,False,7,0,0,1.0,27,0,0,0,6,37.02,True,[],[],,0.0,
+TURSG,2026-11-06,şok + olumsuz haber,E,2,INVESTIGATE,INVESTIGATE,True,True,False,7,0,0,1.0,27,0,0,0,6,13.37,True,[],[],"{'decision': 'ACCEPT', 'reason': 'XU100 e göre normal ama daha fazla olması gerekirdi. Araştırılması gerekir', 'final_action': None}",0.0,
+PETKM,2026-11-06,çelişen teknik sinyaller,A,2,TECHNICAL_REVERSAL_CANDIDATE,INVESTIGATE,True,False,True,6,0,0,0.0,0,0,0,0,1,10.47,False,[],[],,,
+PETKM,2026-11-06,çelişen teknik sinyaller,B,2,INVESTIGATE,INVESTIGATE,True,True,False,9,0,1,0.0,4,0,0,0,5,78.78,False,[],['50'],,,"['check_data_quality', 'get_stock_history', 'calculate_indicators', 'find_support_resistance']"
+PETKM,2026-11-06,çelişen teknik sinyaller,C,2,INVESTIGATE,INVESTIGATE,True,True,False,11,0,0,0.6666666666666666,25,0,0,0,5,295.32,True,[],[],,0.0,
+PETKM,2026-11-06,çelişen teknik sinyaller,D,2,INVESTIGATE,INVESTIGATE,True,True,False,8,0,0,1.0,27,0,0,0,6,33.55,True,[],[],,0.0,
+PETKM,2026-11-06,çelişen teknik sinyaller,E,2,INVESTIGATE,INVESTIGATE,True,True,False,8,0,0,1.0,27,0,0,0,6,22.88,True,[],[],"{'decision': 'ACCEPT', 'reason': 'Şirket zararını düşürmüş ama hala zararda . Araştırılması gerekir', 'final_action': None}",0.0,
+KRDMD,2026-11-06,şok nedeniyle ret,A,2,WATCH,REJECT_SIGNAL,True,False,False,6,0,0,0.6,0,0,0,0,1,27.45,False,[],[],,,
+KRDMD,2026-11-06,şok nedeniyle ret,B,2,INVESTIGATE,REJECT_SIGNAL,True,False,False,7,1,3,0.0,4,0,0,0,5,130.01,False,['200'],"['37,99', '20', '50']",,,"['check_data_quality', 'get_stock_history', 'calculate_indicators', 'find_support_resistance']"
+KRDMD,2026-11-06,şok nedeniyle ret,C,2,INVESTIGATE,REJECT_SIGNAL,True,False,False,6,0,0,0.0,25,0,0,0,5,65.33,True,[],[],,0.0,
+KRDMD,2026-11-06,şok nedeniyle ret,D,2,REJECT_SIGNAL,REJECT_SIGNAL,True,True,False,10,0,0,1.0,27,0,0,0,6,49.24,True,[],[],,0.0,
+KRDMD,2026-11-06,şok nedeniyle ret,E,2,REJECT_SIGNAL,REJECT_SIGNAL,True,True,False,9,0,0,1.0,27,0,0,0,6,15.24,True,[],[],"{'decision': 'ACCEPT', 'reason': 'iyi bilanço ama −%10 şok, sinyale güvenme', 'final_action': None}",0.0,
+ASELS,2023-02-15,"deprem penceresi, analiz güvensiz",A,2,WATCH,ANALYSIS_UNSAFE,True,False,True,3,0,0,0.4,0,0,0,0,1,16.46,False,[],[],,,
+ASELS,2023-02-15,"deprem penceresi, analiz güvensiz",B,2,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,0,0,0,0.4,2,0,0,0,2,21.81,False,[],[],,,"['get_stock_history', 'check_data_quality']"
+ASELS,2023-02-15,"deprem penceresi, analiz güvensiz",C,2,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,6,0,0,0.4,24,0,0,0,5,405.1,True,[],[],,0.029,
+ASELS,2023-02-15,"deprem penceresi, analiz güvensiz",D,2,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,7,0,0,1.0,26,0,0,0,6,13.52,True,[],[],,0.026,
+YOKBOYLE,2026-11-06,bilinmeyen hisse,A,2,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,0,0,0,,0,0,0,0,1,22.6,False,[],[],,,
+YOKBOYLE,2026-11-06,bilinmeyen hisse,B,2,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,0,0,0,,1,0,0,0,2,24.71,False,[],[],,,['check_data_quality']
+YOKBOYLE,2026-11-06,bilinmeyen hisse,C,2,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,7,0,0,,25,0,9,0,5,21.14,True,[],[],,0.0,
+YOKBOYLE,2026-11-06,bilinmeyen hisse,D,2,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,0,0,0,,2,0,0,0,2,5.05,False,[],[],,1.0,
+YOKBOYLE,2026-11-06,bilinmeyen hisse,E,2,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,1,0,0,,2,0,0,0,2,10.6,False,[],[],"{'decision': 'ACCEPT', 'reason': 'böyle bir kod yok', 'final_action': None}",1.0,
+ASELS,2023-02-15,"deprem penceresi, analiz güvensiz",E,1,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,7,0,0,1.0,26,0,0,0,6,20.29,True,[],[],"{'decision': 'ACCEPT', 'reason': 'sadece açıklama yanlış', 'final_action': None}",0.026,
+ASELS,2023-02-15,"deprem penceresi, analiz güvensiz",E,2,ANALYSIS_UNSAFE,ANALYSIS_UNSAFE,True,True,False,7,0,0,1.0,26,0,0,0,6,1.17,True,[],[],"{'decision': 'ACCEPT', 'reason': 'sadece açıklama yanlış', 'final_action': None}",0.026,

@@ -51,3 +51,14 @@ def test_version_state_lists_and_hint():
     assert allowed_next("SELECT_UNIVERSE", True, "C") == "LOAD_MARKET_DATA"             # C'de engel yok
     hint = reason_hint(run_analysis("ASELS", "2026-11-06"))
     assert "E1" in hint and "kanıt" in hint
+
+
+def test_version_B_sends_thought_signature_back():
+    import asyncio
+    from src.harness.experiments import run_B
+    llm = MockLLM(request_tool=("get_stock_history", {"ticker": "ASELS", "start": "2026-10-01",
+                                                      "end": "2026-11-06"}))
+    r = asyncio.run(run_B(llm, "ASELS", "2026-11-06"))
+    assert r["tool_calls"] == 1 and r["invalid_calls"] == 0 and r["llm_calls"] == 2
+    asst = [m for m in llm.log[1]["messages"] if m["role"] == "assistant"][0]
+    assert asst["tool_calls"][0]["extra_content"]["google"]["thought_signature"] == "MOCK_SIG"

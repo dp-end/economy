@@ -182,8 +182,10 @@ def replay_analysis(analysis_id: str, db: Path = DB) -> dict:
                 changed_data_files=changed_data, procedure_changed=procedure_version() != old["procedure_version"])
 
 
-def past_cases(ticker: str = None, action: str = None, db: Path = DB) -> pd.DataFrame:
-    """Episodik hafıza: geçmiş vakalar ve varsa insan kararı."""
+def past_cases(ticker: str = None, action: str = None, db: Path = DB, before=None) -> pd.DataFrame:
+    """Episodik hafıza: geçmiş vakalar ve varsa insan kararı.
+    before verilirse yalnızca analiz tarihi (asof) ondan ÖNCE olan vakalar döner: 2023 tarihli bir analiz
+    2026'da verilmiş bir kararı göremez (geleceğe bakma engeli; Adım 14 deneyinde bulundu)."""
     q = ("SELECT a.analysis_id, a.created_at, a.ticker, a.asof, a.action, a.gate_status, "
          "r.decision, r.final_action, r.reason FROM analyses a "
          "LEFT JOIN human_reviews r ON a.analysis_id = r.analysis_id WHERE 1=1")
@@ -192,6 +194,8 @@ def past_cases(ticker: str = None, action: str = None, db: Path = DB) -> pd.Data
         q, params = q + " AND a.ticker = ?", params + [ticker]
     if action:
         q, params = q + " AND a.action = ?", params + [action]
+    if before is not None:
+        q, params = q + " AND a.asof < ?", params + [str(pd.Timestamp(before).date())]
     with connect(db) as con:
         return pd.read_sql_query(q + " ORDER BY a.created_at", con, params=params)
 

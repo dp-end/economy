@@ -25,7 +25,7 @@ import pandas as pd
 from mcp import Client
 from mcp.server.mcpserver.exceptions import ToolError
 
-from src.agents.llm import CACHE, MockLLM, tool_schemas
+from src.agents.llm import CACHE, MockLLM, assistant_message, tool_schemas
 from src.agents.prompts import FIX_PROMPT, system_prompt
 from src.agents.validate import check_numbers, classify, numbers_in
 from src.harness.evidence import ACTIONS, CANDIDATES, run_analysis
@@ -115,10 +115,7 @@ async def run_B(llm, t: str, d: str) -> dict:
         for _ in range(MAX_B_ROUNDS):
             if not r["tool_calls"]:
                 break
-            msgs.append(dict(role="assistant", content=r["content"] or None,
-                             tool_calls=[dict(id=x["id"], type="function",
-                                              function=dict(name=x["name"], arguments=x["arguments"]))
-                                         for x in r["tool_calls"]]))
+            msgs.append(assistant_message(r))
             for x in r["tool_calls"]:
                 try:
                     args = json.loads(x["arguments"] or "{}")

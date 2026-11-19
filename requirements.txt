@@ -15,3 +15,4 @@ ipykernel
 yt-dlp
 faster-whisper
 pypdf
+markdown

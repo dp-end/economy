@@ -131,7 +131,8 @@ def describe_history(history) -> dict:
         else:
             out[f"teknik_olay_{name.split(':', 1)[1]}"] = dict(
                 olay_sayisi=h["n"], ufuk_gun=h["horizon"], son_tamamlanan_olay=h["last_date"],
-                xu100_gecme_orani=h["hit"], ortalama_xu100_fazla_getiri=h["mean_exc"])
+                beklenen_yonde_basari_orani=h["hit"], yon=h.get("direction"),
+                ortalama_yon_duzeltmeli_xu100_fazla_getiri=h["mean_exc"])
     return out
 
 

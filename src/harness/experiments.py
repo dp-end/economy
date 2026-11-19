@@ -181,7 +181,7 @@ def unsupported_conclusion(action: str, ref: dict) -> bool:
     if ref["gate"] in ("HARD_BLOCK", "ANALYSIS_UNSAFE"):
         return action != "ANALYSIS_UNSAFE"
     c = ref["conditions"]
-    if action in CANDIDATES and (c.get("shock") or c.get("negative_news")):
+    if action in CANDIDATES and (c.get("shock") or c.get("negative_news") or c.get("tech_conflict")):
         return True
     need = {"POTENTIAL_CATCH_UP_CANDIDATE": "catch_up", "FUNDAMENTAL_IMPROVEMENT_CANDIDATE": "fundamental",
             "TECHNICAL_REVERSAL_CANDIDATE": "technical"}

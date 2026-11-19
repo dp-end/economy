@@ -178,8 +178,12 @@ def observe(ticker: str, day: pd.Timestamp) -> tuple:
 def tech_history(event: str, day: pd.Timestamp) -> dict:
     te = _tables()["tech"]
     cut = shift_days(day, TECH_H)                          # 5 günlük ileri pencere analiz gününe kadar kapanmış olmalı
-    h = te[(te["event"] == event) & (te["date"] <= cut) & ~te["quake_window"]][f"exc_{TECH_H}"].dropna()
-    return dict(n=int(len(h)), hit=_f((h > 0).mean()), mean_exc=_f(h.mean()), last_date=cut, horizon=TECH_H)
+    g = te[(te["event"] == event) & (te["date"] <= cut) & ~te["quake_window"]]
+    # Yön düzeltmeli: ayı olayında "başarı" hissenin XU100'ün GERİSİNDE kalmasıdır (Adım 15'te bulunan hata:
+    # önceden yön yok sayılıyor, ayı olaylarında oran ters çıkıyordu, ör. kama_turn_down %49 yerine %51).
+    h = (g["direction"] * g[f"exc_{TECH_H}"]).dropna()
+    return dict(n=int(len(h)), hit=_f((h > 0).mean()), mean_exc=_f(h.mean()), last_date=cut, horizon=TECH_H,
+                direction=int(g["direction"].iloc[0]) if len(g) else None)
 
 
 def catchup_history(day: pd.Timestamp) -> dict:
@@ -227,19 +231,22 @@ def conditions(obs: dict) -> dict:
         fundamental=fu.get("tercile") == "ust" and not fu.get("loss") and (fu.get("days_since") or 999) <= FUND_RECENT,
         technical=any(e["direction"] == 1 for e in tch["recent_events"])
         and not any(e["direction"] == -1 for e in tch["recent_events"]),          # çelişen ayı olayı varsa aday değil
+        tech_conflict=any(e["direction"] == 1 for e in tch["recent_events"])       # aynı pencerede hem boğa hem ayı
+        and any(e["direction"] == -1 for e in tch["recent_events"]),
         shock=pr["shock"], negative_news=len(nw["negative"]) > 0,
     )
 
 
 def decide(cond: dict, gate_status: str) -> tuple:
-    """(action, secondary). Sıra: kapı -> engelleyici -> aday -> izle/bekle."""
+    """(action, secondary). Sıra: kapı -> engelleyici -> çelişki/inceleme -> aday -> izle/bekle.
+    Çelişen teknik sinyal (son 3 işlem gününde boğa + ayı olay) eylemi INVESTIGATE yapar (Adım 15 kararı)."""
     cands = [a for a, k in zip(CANDIDATES, ("catch_up", "fundamental", "technical")) if cond[k]]
     blockers = cond["shock"] or cond["negative_news"]
     if gate_status in ("HARD_BLOCK", "ANALYSIS_UNSAFE"):
         return "ANALYSIS_UNSAFE", cands
     if cands and blockers:
         return "REJECT_SIGNAL", cands
-    if blockers or gate_status == "INVESTIGATE":
+    if blockers or gate_status == "INVESTIGATE" or cond.get("tech_conflict"):
         return "INVESTIGATE", cands
     if cands:
         return cands[0], cands[1:]
@@ -308,10 +315,22 @@ def committed_evidence(action: str, secondary: list, cond: dict, b: dict) -> lis
     if "TECHNICAL_REVERSAL_CANDIDATE" in focus:
         for e in tch["recent_events"]:
             th = h.get(f"tech:{e['event']}") or {}
-            hist = (f"; geçmişte XU100'ü {th['horizon']} günde %{th['hit'] * 100:.0f} oranında geçti (n={th['n']})"
+            verb = "XU100'ü geçti" if e["direction"] == 1 else "XU100'ün gerisinde kaldı"
+            hist = (f"; geçmişte beklenen yönde {th['horizon']} günde %{th['hit'] * 100:.0f} oranında {verb} (n={th['n']})"
                     if th.get("n") else "")
             add(f"{pd.Timestamp(e['date']).date()} teknik olay: {e['event']} "
                 f"({'boğa' if e['direction'] == 1 else 'ayı'}){hist}", e["event"], "detect_reversal_events")
+    if cond.get("tech_conflict"):
+        def ev_list(d):
+            out = []
+            for e in tch["recent_events"]:
+                if e["direction"] == d:
+                    th = h.get(f"tech:{e['event']}") or {}
+                    rate = f" %{th['hit'] * 100:.0f}" if th.get("hit") is not None else ""
+                    out.append(f"{e['event']} ({pd.Timestamp(e['date']).date()}{rate})")
+            return ", ".join(out)
+        add(f"Çelişen teknik sinyaller (son {TECH_RECENT} işlem günü): boğa {ev_list(1)}; ayı {ev_list(-1)} "
+            f"(parantezde geçmişte beklenen yönde {TECH_H} günlük başarı oranı)", True, "detect_reversal_events")
     if cond["shock"]:
         p = o["price"]
         add(f"Şok bayrağı: {pd.Timestamp(p['shock_day']).date()} günlük {_pct(p['shock_ret'])} "

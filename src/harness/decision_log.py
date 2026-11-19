@@ -35,6 +35,7 @@ PROCEDURE = dict(
            "Eylem kurallarla seçilir; LLM yalnızca committed evidence'a dayanarak açıklar.",
            "HARD_BLOCK veya ANALYSIS_UNSAFE kapısında eylem ANALYSIS_UNSAFE olur.",
            "Şok veya olumsuz KAP haberi olan aday REJECT_SIGNAL olur.",
+           "Son 3 işlem gününde hem boğa hem ayı teknik olay varsa (çelişen sinyal) eylem INVESTIGATE olur.",
            "Kalite kapısı ve backtest durumları atlanamaz.",
            "İnsan kararı olmadan hiçbir sonuç gerçek işleme dönüşmez; broker bağlantısı yoktur."],
 )

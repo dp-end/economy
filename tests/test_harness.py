@@ -22,7 +22,7 @@ def asels():
 
 def test_action_never_leaves_finite_set():
     keys = ["laggard", "sector_strong", "recovering", "weak_earnings", "catch_up", "fundamental", "technical",
-            "shock", "negative_news"]
+            "shock", "negative_news", "tech_conflict"]
     for vals in itertools.product([False, True], repeat=len(keys)):
         for gate in GATE_OUTPUTS:
             action, secondary = decide(dict(zip(keys, vals)), gate)
@@ -136,3 +136,29 @@ def test_profit_direction_words():
     p = run_analysis("PETKM", "2026-11-06")
     text = next(e["text"] for e in p["committed"] if e["text"].startswith("Son açıklanan"))
     assert "zarar küçüldü" in text and "bir yıl önce" in text
+
+
+def test_tech_history_is_direction_adjusted():
+    """Ayı olayında başarı = hisse XU100'ün gerisinde kalır. Yön yok sayılırsa oran ters çıkar (Adım 15 bulgusu)."""
+    from src.harness.evidence import shift_days, tech_history
+    day = pd.Timestamp("2026-11-06")
+    te = pd.read_parquet("reports/technical_events.parquet")
+    g = te[(te["event"] == "kama_turn_down") & (te["date"] <= shift_days(day, 5)) & ~te["quake_window"]]["exc_5"].dropna()
+    h = tech_history("kama_turn_down", day)
+    assert h["direction"] == -1 and h["n"] == len(g)
+    assert abs(h["hit"] - (g < 0).mean()) < 1e-12 and abs(h["mean_exc"] + g.mean()) < 1e-12
+    up = tech_history("kama_turn_up", day)
+    assert up["direction"] == 1 and up["hit"] < 0.5                     # boğa olayı değişmez: %46,7
+
+
+def test_conflicting_technical_signals_mean_investigate():
+    """Son 3 günde hem boğa hem ayı teknik olay -> INVESTIGATE; şok/haberli aday yine REJECT_SIGNAL (Adım 15 kararı)."""
+    base = dict(laggard=False, catch_up=False, fundamental=False, technical=False, shock=False, negative_news=False)
+    assert decide({**base, "tech_conflict": True}, "PASS") == ("INVESTIGATE", [])
+    assert decide({**base, "fundamental": True, "tech_conflict": True}, "PASS") == \
+        ("INVESTIGATE", ["FUNDAMENTAL_IMPROVEMENT_CANDIDATE"])
+    assert decide({**base, "fundamental": True, "shock": True, "tech_conflict": True}, "PASS")[0] == "REJECT_SIGNAL"
+    p = run_analysis("PETKM", "2026-11-06")                       # kama_turn_up + kama_turn_down + support_break
+    assert p["conditions"]["tech_conflict"] and p["action"] == "INVESTIGATE"
+    txt = next(e["text"] for e in p["committed"] if e["text"].startswith("Çelişen teknik"))
+    assert "boğa kama_turn_up" in txt and "support_break" in txt

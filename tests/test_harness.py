@@ -93,6 +93,18 @@ def test_bundle_dates_and_evidence(asels):
     assert analysis_day("2026-11-08") == pd.Timestamp("2026-11-06")               # Pazar -> Cuma
 
 
+def test_shock_evidence_has_direction_and_month_return():
+    """Şok kanıtı yönü (düşüş/yükseliş), günü ve 20 günlük hisse/XU100 getirisini söylemeli (Adım 14 bulgusu)."""
+    k = run_analysis("KRDMD", "2026-11-06")
+    p = k["observed"]["price"]
+    assert k["conditions"]["shock"] and p["shock_ret"] <= -0.095
+    assert pd.Timestamp(p["shock_day"]) == pd.Timestamp("2026-11-05")
+    assert p["ret_20d"] < p["xu100_ret_20d"] < 0                                   # hisse endeksten çok düştü
+    shock = [e for e in k["committed"] if e["text"].startswith("Şok bayrağı")]
+    assert len(shock) == 1 and "2026-11-05" in shock[0]["text"] and "düşüş" in shock[0]["text"]
+    assert "XU100" in shock[0]["text"] and shock[0]["value"] == p["shock_ret"]
+
+
 def test_decision_log_review_and_replay(tmp_path, asels):
     db = tmp_path / "log.sqlite"
     aid = log_decision(asels, db=db)
@@ -109,3 +121,18 @@ def test_decision_log_review_and_replay(tmp_path, asels):
     assert r["same"] and r["new_action"] == r["stored_action"] and not r["procedure_changed"]
     cases = past_cases("ASELS", db=db)
     assert len(cases) == 1 and cases.iloc[0]["final_action"] == "WATCH"
+
+
+def test_profit_direction_words():
+    """Yüzde tek başına yanıltır (PETKM: zarar küçüldü ama +%48); cümle yönü sözle söylemeli."""
+    from src.harness.evidence import profit_direction
+    assert profit_direction(11.2e9, 6.2e9) == "kâr arttı"
+    assert profit_direction(1e9, 2e9) == "kâr azaldı"
+    assert profit_direction(-5.4e9, 5.0e9) == "kârdan zarara geçti"           # TURSG
+    assert profit_direction(0.27e9, -0.88e9) == "zarardan kâra geçti"         # KRDMD
+    assert profit_direction(-0.82e9, -1.58e9) == "zarar küçüldü (hâlâ zarar)"  # PETKM
+    assert profit_direction(-2e9, -1e9) == "zarar büyüdü"
+    assert profit_direction(None, 1e9) is None
+    p = run_analysis("PETKM", "2026-11-06")
+    text = next(e["text"] for e in p["committed"] if e["text"].startswith("Son açıklanan"))
+    assert "zarar küçüldü" in text and "bir yıl önce" in text

@@ -265,7 +265,7 @@ def run_all(mock: bool = False, versions=VERSIONS, runs=(1, 2), cases=CASES) -> 
                         review = dict(decision="ACCEPT", reason="sahte model denemesi") if mock else (
                             stored_review(t, d) if run > 1 else None)  # 1. tekrarda insan karar verir
                     res = run_harness_version(llm, t, d, v, review)
-                row = dict(ticker=t, asof=d, label=label, version=v, run=run, **score(res, ref),
+                row = dict(ticker=t, asof=d, label=label, version=v, run=run, model=llm.name, **score(res, ref),
                            explanation=res["explanation"], unsupported=res["check"]["unsupported"],
                            rounding_list=res["check"]["rounding"], review=res.get("review"),
                            all_agents_hallucination=res.get("all_agents_hallucination"),

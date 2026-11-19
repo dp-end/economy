@@ -61,6 +61,7 @@ class GeminiLLM:
         from openai import OpenAI
         load_dotenv()
         self.model = model or os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)
+        self.name = f"gemini:{self.model}"          # karar günlüğüne hangi modelin çalıştığı yazılır
         self.client = OpenAI(api_key=os.environ["GEMINI_API_KEY"], base_url=BASE_URL, timeout=TIMEOUT)
         self.cache, self.temperature = cache, temperature
         self.calls = self.cache_hits = 0

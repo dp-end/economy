@@ -88,12 +88,16 @@ def observe(ticker: str, day: pd.Timestamp) -> tuple:
     close = f["Close"]
     ret = close.pct_change()
     src = {"fiyat": f.index[-1]}
+    xu = get_index_history("XU100")["Close"].loc[:day]
+    last = ret.iloc[-SHOCK_DAYS:]
+    big = last.abs().idxmax()                     # son 10 günün en büyük (mutlak) hareketi; yönü işaretinde
 
     price = dict(date=f.index[-1], close=_f(r["Close"]), ret_5d=_f(close.iloc[-1] / close.iloc[-6] - 1),
                  ret_20d=_f(close.iloc[-1] / close.iloc[-21] - 1), vol_20d=_f(r["vol_20d"]),
+                 xu100_ret_20d=_f(xu.iloc[-1] / xu.iloc[-21] - 1),
                  rel_xu_10=_f(r["rel_xu_10"]), rel_xu_20=_f(r["rel_xu_20"]),
                  max_abs_ret_250=_f(ret.iloc[-250:].abs().max()),
-                 shock=bool((ret.iloc[-SHOCK_DAYS:].abs() >= SHOCK_LIMIT).any()))
+                 shock=bool((last.abs() >= SHOCK_LIMIT).any()), shock_day=big, shock_ret=_f(last.loc[big]))
     technical = dict(rsi_14=_f(r["rsi_14"]), macd_hist=_f(r["macd_hist"]), bb_pctb=_f(r["bb_pctb"]),
                      bb_bandwidth=_f(r["bb_bandwidth"]), st_dir=_f(r["st_dir"]), kama_slope=_f(r["kama_slope"]),
                      above_kama=bool(r["Close"] > r["kama"]), cloud_state=_f(r["cloud_state"]),
@@ -125,8 +129,10 @@ def observe(ticker: str, day: pd.Timestamp) -> tuple:
                             tercile=e["tercile"] if isinstance(e["tercile"], str) else None, loss=bool(e["loss"]),
                             days_since=int(trading_days().get_loc(day) - trading_days().get_loc(e["event_day"])),
                             financial=bool(e["financial"]))
-        st = load_all()[ticker]
-        st = st[st.index == e["period_end"]]                   # Fintables tablosu dönem sonuna göre indeksli
+        allst = load_all()[ticker]
+        prev = allst["net_income"].get(pd.Timestamp(e["period_end"]) - pd.offsets.QuarterEnd(4))  # 1 yıl önceki çeyrek
+        fundamentals.update(net_income=_f(e["net_income"]), net_income_prev=_f(prev))
+        st = allst[allst.index == e["period_end"]]             # Fintables tablosu dönem sonuna göre indeksli
         if len(st):
             s = st.iloc[-1]
             for k in ("roe_q", "leverage", "net_margin"):
@@ -247,6 +253,23 @@ def _pct(x, d=1):
     return "yok" if x is None else f"%{x * 100:.{d}f}"
 
 
+def _tl(x):
+    return f"{x / 1e9:.2f} milyar TL" if abs(x) >= 1e9 else f"{x / 1e6:.0f} milyon TL"
+
+
+def profit_direction(cur, prev):
+    """Yıllık değişimin yönü sözle. Yüzde tek başına yanıltır: zarar küçülünce de (+) çıkar (PETKM, Adım 14)."""
+    if cur is None or prev is None:
+        return None
+    if prev >= 0 and cur < 0:
+        return "kârdan zarara geçti"
+    if prev < 0 and cur >= 0:
+        return "zarardan kâra geçti"
+    if cur >= 0:
+        return "kâr arttı" if cur > prev else "kâr azaldı"
+    return "zarar küçüldü (hâlâ zarar)" if cur > prev else "zarar büyüdü"
+
+
 def committed_evidence(action: str, secondary: list, cond: dict, b: dict) -> list:
     """Yalnızca sonucu destekleyen (ya da reddettiren) kanıtlar. Metinler sayılardan üretilir, model yazmaz."""
     o, h, bt = b["observed"], b["history"], b["backtest"]
@@ -271,8 +294,11 @@ def committed_evidence(action: str, secondary: list, cond: dict, b: dict) -> lis
                 f"(n={c['n']}, ortalama fark {_pct(c['mean_gap'], 2)})", c["hit"], "rank_sector_relative_strength")
     if "FUNDAMENTAL_IMPROVEMENT_CANDIDATE" in focus or action in ("INVESTIGATE", "REJECT_SIGNAL"):
         if fu.get("period_end") is not None:
+            cur, prev = fu.get("net_income"), fu.get("net_income_prev")
+            ch = (f"çeyrek net kârı {_tl(cur)} (bir yıl önce {_tl(prev)}) -> {profit_direction(cur, prev)}; "
+                  if cur is not None and prev is not None else "")
             add(f"Son açıklanan bilanço {pd.Timestamp(fu['period_end']).date()} ({pd.Timestamp(fu['event_day']).date()} "
-                f"görünür): yıllık net kâr değişimi {_pct(fu['ni_yoy'])}; aynı çeyrekte 30 hisse içinde (sektör içi değil) "
+                f"görünür): {ch}yıllık net kâr değişimi {_pct(fu['ni_yoy'])}; aynı çeyrekte 30 hisse içinde (sektör içi değil) "
                 f"{TERCILE_TR.get(fu['tercile'], 'sırasız')} üçte birde"
                 f"{', zarar' if fu['loss'] else ''}", fu["ni_yoy"], "calculate_fundamental_change")
         f_h = h.get("fundamental") or {}
@@ -287,7 +313,10 @@ def committed_evidence(action: str, secondary: list, cond: dict, b: dict) -> lis
             add(f"{pd.Timestamp(e['date']).date()} teknik olay: {e['event']} "
                 f"({'boğa' if e['direction'] == 1 else 'ayı'}){hist}", e["event"], "detect_reversal_events")
     if cond["shock"]:
-        add("Son 10 işlem gününde ±%9,5 üzeri günlük hareket var (şok bayrağı)", True, "check_data_quality")
+        p = o["price"]
+        add(f"Şok bayrağı: {pd.Timestamp(p['shock_day']).date()} günlük {_pct(p['shock_ret'])} "
+            f"{'düşüş' if p['shock_ret'] < 0 else 'yükseliş'} (sınır ±%9,5, son 10 işlem günü); 20 işlem gününde hisse "
+            f"{_pct(p['ret_20d'])}, XU100 {_pct(p['xu100_ret_20d'])}", p["shock_ret"], "check_data_quality")
     for n in nw["negative"]:
         add(f"{pd.Timestamp(n['event_day']).date()} olumsuz KAP duyurusu ({n['kind']}): {n['summary']}", n["url"],
             "get_news_events")

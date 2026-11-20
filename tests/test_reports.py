@@ -83,3 +83,10 @@ def test_report_5_builds_and_only_verified_claims_enter_evidence():
     for k in ("Table 2. Year by year", "Table 5. Sector FX sensitivity", "Table 13. Claims that entered",
               "fig/05_macro_timeline.png"):
         assert k in text
+
+
+def test_data_dictionary_describes_every_column():
+    """Bir veri setine yeni sütun eklenir ya da biri silinirse sözlük güncellenmeden bu test geçmez."""
+    from src.reports.data_dictionary import DATASETS, check
+    problems = {ds["key"]: check(ds) for ds in DATASETS}
+    assert all(not m and not x for m, x in problems.values()), {k: v for k, v in problems.items() if v[0] or v[1]}

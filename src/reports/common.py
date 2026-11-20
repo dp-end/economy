@@ -29,14 +29,15 @@ C = dict(s1="#2a78d6", s2="#eb6834", pos="#2a78d6", neg="#e34948", mid="#f0efec"
 
 # ---------- dosya damgası ----------
 def stamp(paths) -> str:
-    """Kaynak dosyaların tarih ve kısa SHA-256 değeri: rapor hangi çıktıdan üretildi?"""
+    """Kaynak dosyaların boyutu ve kısa SHA-256 değeri: rapor hangi çıktıdan üretildi?
+    Değişiklik saati yazılmaz: klonlamada değişir, içerik aynı olsa da rapor farklı görünürdü."""
     rows = []
     for p in map(Path, paths):
         if p.exists():
-            ts = pd.Timestamp(p.stat().st_mtime, unit="s").floor("s")
-            rows.append(dict(file=f"`{p}`", modified=str(ts), sha256=hashlib.sha256(p.read_bytes()).hexdigest()[:12]))
+            rows.append(dict(file=f"`{p}`", size=f"{p.stat().st_size / 1e3:,.0f} kB",
+                             sha256=hashlib.sha256(p.read_bytes()).hexdigest()[:12]))
         else:
-            rows.append(dict(file=f"`{p}`", modified="missing", sha256="-"))
+            rows.append(dict(file=f"`{p}`", size="missing", sha256="-"))
     return md_table(pd.DataFrame(rows), index=False)
 
 

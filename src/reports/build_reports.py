@@ -5,9 +5,9 @@
 """
 import argparse
 
-from src.reports import data_dictionary, r1_technical, r2_sector, r3_weekday, r4_earnings, r5_macro_context
+from src.reports import data_dictionary, r1_technical, r2_sector, r3_weekday, r4_earnings, r5_macro_context, r6_system
 
-REPORTS = {0: data_dictionary.build, 1: r1_technical.build, 2: r2_sector.build, 3: r3_weekday.build, 4: r4_earnings.build, 5: r5_macro_context.build}
+REPORTS = {0: data_dictionary.build, 1: r1_technical.build, 2: r2_sector.build, 3: r3_weekday.build, 4: r4_earnings.build, 5: r5_macro_context.build, 6: r6_system.build}
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Araştırma raporları")

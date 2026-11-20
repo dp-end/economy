@@ -160,3 +160,14 @@ def test_memory_never_shows_future_decisions(tmp_path):
     run_harness("ASELS", "2023-02-15", llm, REVIEW, db=db)
     sent = " ".join(m.get("content") or "" for call in llm.log for m in call["messages"])
     assert "2026-11-06" not in sent                                                 # modele gelecek tarih gitmedi
+
+
+def test_validator_skips_window_lengths_but_not_values():
+    """'20, 50 ve 200 günlük' pencere uzunluğudur, uydurma sayı değil (Adım 15'te B sürümünde bulunan yanlış alarm)."""
+    from src.agents.validate import check_numbers, numbers_in
+    raw = lambda t: [r for _, _, r in numbers_in(t)]  # noqa: E731
+    assert raw("fiyat 20, 50 ve 200 günlük ortalamaların altında, RSI 37,99") == ["37,99"]
+    assert raw("the 50-day average is 12.5; 10 işlem gününde %-15.9") == ["12.5", "-15.9"]
+    assert raw("%20 düştü, 20 hisse") == ["20", "20"]                     # gerçek değerler korunur
+    r = check_numbers("20 günlük ortalama 342,5 TL", {"sma_20": 342.525})
+    assert r["n_numbers"] == 1 and r["unsupported"] == []

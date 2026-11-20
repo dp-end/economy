@@ -575,8 +575,8 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `matches_reference` | action == reference | bool | 100% | 63% True |
 | `unsupported_conclusion` | action not supported by deterministic evidence | bool | 100% | 13% True |
 | `numbers` | numbers in the explanation | int | 100% | 0 – 12 |
-| `fabricated` | numbers not found in tool outputs | int | 100% | 0 – 1 |
-| `rounding` | numbers that are rounding mistakes | int | 100% | 0 – 3 |
+| `fabricated` | numbers not found in tool outputs | int | 100% | 0 – 0 |
+| `rounding` | numbers that are rounding mistakes | int | 100% | 0 – 1 |
 | `evidence_completeness` | share of committed evidence covered | float | 83% | 0 – 1 |
 | `tool_calls` | MCP tool calls | int | 100% | 0 – 27 |
 | `invalid_calls` | calls rejected (unknown tool / bad arguments) | int | 100% | 0 – 0 |

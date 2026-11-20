@@ -90,3 +90,13 @@ def test_data_dictionary_describes_every_column():
     from src.reports.data_dictionary import DATASETS, check
     problems = {ds["key"]: check(ds) for ds in DATASETS}
     assert all(not m and not x for m, x in problems.values()), {k: v for k, v in problems.items() if v[0] or v[1]}
+
+
+def test_report_6_builds_and_replays_real_log():
+    from src.reports.r6_system import build, lookahead_check
+    la = lookahead_check()
+    assert la.iloc[0]["total %"] > 1e6 > la.iloc[1]["total %"]          # kaydırma yoksa absürt, kaydırınca makul
+    text = open(build(), encoding="utf-8").read()
+    assert "not written yet" not in text
+    for k in ("Table 1. Strategy results", "Table 8. Action per case", "Table 13. Replay", "fig/06_experiments.png"):
+        assert k in text

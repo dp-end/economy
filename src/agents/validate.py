@@ -1,8 +1,8 @@
 """Sayısal halüsinasyon kontrolü: LLM metnindeki her sayı, modele verilen araç çıktısında/kanıtta var mı?
 
 Kural: metindeki sayı, bağlamdaki bir sayının aynı ondalığa yuvarlanmış hâline (ya da %/oran çevrimine)
-eşitse desteklidir. Tarihler (2026-10-27, 27.10.2026, '27 Ekim 2026'), yıllar, kanıt kimlikleri (E1, E2) ve 10'dan küçük
-tam sayılar (sayım, gün) sayılmaz.
+eşitse desteklidir. Tarihler (2026-10-27, 27.10.2026, '27 Ekim 2026'), yıllar, kanıt kimlikleri (E1, E2), pencere/ufuk
+uzunlukları ('20 günlük', '5-day') ve 10'dan küçük tam sayılar (sayım, gün) sayılmaz.
 """
 import json
 import re
@@ -15,6 +15,10 @@ MONTHS = ("Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kas
 # "27 Ekim", "7, 8, 23, 26 Ekim", "26 ve 28 Ekim", "Ekim 2026", "28 Ekim 2026'da"
 WRITTEN_DATE = re.compile(rf"\b\d{{1,2}}(?:\s*,\s*\d{{1,2}})*(?:\s+(?:ve|and)\s+\d{{1,2}})?\s+(?={MONTHS})", re.I)
 YEAR = re.compile(r"(?<![\d.,])(?:19[89]\d|20[0-3]\d)(?![\d.,]\d)")
+# Pencere / ufuk uzunluğu: "20 günlük", "20, 50 ve 200 günlük", "10 işlem günü", "5-day", "3 aylık" (Adım 15: B
+# sürümünün "uydurma" sayılan 6 sayısının 6'sı da hareketli ortalama penceresiydi). Tarih gibi sayılmaz.
+WINDOW = re.compile(r"(?<![\d.,])\d{1,3}(?:\s*,\s*\d{1,3})*(?:\s+(?:ve|veya|and|or)\s+\d{1,3})?\s*[-–]?\s*"
+                    r"(?=(?:işlem\s+)?gün|(?:trading\s+)?days?\b|hafta|weeks?\b|ay\b|aylık|months?\b)", re.I)
 
 
 def parse_number(tok: str):
@@ -34,7 +38,7 @@ def parse_number(tok: str):
 
 def numbers_in(text: str) -> list:
     """(sayı, ondalık basamak, orijinal yazım) listesi. Tarih ve kanıt kimlikleri atılır."""
-    clean = YEAR.sub(" ", WRITTEN_DATE.sub(" ", EVID.sub(" ", DATE.sub(" ", text or ""))))
+    clean = WINDOW.sub(" ", YEAR.sub(" ", WRITTEN_DATE.sub(" ", EVID.sub(" ", DATE.sub(" ", text or "")))))
     out = []
     for m in NUM.finditer(clean):
         v, d = parse_number(m.group())

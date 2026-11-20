@@ -11,13 +11,18 @@ table { border-collapse: collapse; margin: 6pt 0 10pt; font-size: 7.6pt; width: 
         table-layout: auto; break-inside: auto; }
 th { background: #f0efec; text-align: left; }
 th, td { border: 1px solid #d8d7d2; padding: 2.5pt 4pt; overflow-wrap: anywhere; }
-td code, th code { white-space: normal; overflow-wrap: anywhere; }
+td code, th code { white-space: normal; overflow-wrap: anywhere; font-size: 0.95em; }
 td { font-variant-numeric: tabular-nums; }
 tr { break-inside: avoid; }
 img { max-width: 100%; display: block; margin: 8pt auto; break-inside: avoid; }
 blockquote { color: #52514e; border-left: 3px solid #d8d7d2; margin: 6pt 0; padding-left: 8pt; }
 code { font-size: 8.5pt; background: #f4f3f0; padding: 0 2pt; border-radius: 2pt; }
+pre { background: #f4f3f0; padding: 6pt 8pt; border-radius: 3pt; white-space: pre-wrap; break-inside: avoid; }
+pre code { padding: 0; }
 em:first-child { color: #52514e; }
+.cover { height: 250mm; display: flex; flex-direction: column; justify-content: center; break-after: page; }
+.cover h1 { font-size: 24pt; border: none; }
+.cover p { font-size: 11pt; margin: 3pt 0; }
 .report { break-before: page; }
 .report:first-of-type { break-before: auto; }
 </style></head><body><section class="report"><h1>Data Dictionary</h1>
@@ -5332,10 +5337,12 @@ combinations will produce patterns by chance.</p>
 <p><strong>Short answer.</strong> A few calendar effects are statistically real in this sample but none of them is a usable
 trading rule.</p>
 <ul>
-<li><strong>Wednesdays were weak and Thursdays strong</strong> for the 30-stock portfolio.</li>
+<li><strong>Wednesdays were weak and Thursdays strong</strong> for the 30-stock portfolio.<ul>
 <li>Wednesday's weakness survives even when all 180 tests in this report are corrected together.</li>
 <li>Thursday's strength is the only weekday effect that keeps its size in the second half.</li>
 <li>Part of the Thursday effect comes from central-bank decision days, which fall on Thursdays in our data.</li>
+</ul>
+</li>
 <li><strong>Trading it does not pay.</strong> Buying on Wednesday and selling on Thursday would have earned +201% before costs,
   only +42% with a 0.15% one-way cost, and lost money at 0.30%. XU100 rose 647% over the same five years.</li>
 <li><strong>The multi-day patterns go the "wrong" way.</strong> Classic reversal ideas ("three down days, then a rebound",
@@ -5501,11 +5508,13 @@ Rate-change Thursdays vs other Thursdays: t = 2.21, p = 0.027.</p>
 <p>TCMB's Monetary Policy Committee announces rate decisions on Thursdays. In our macro data, every policy-rate change
 falls on a Thursday.</p>
 <ul>
-<li><strong>Rate-change Thursdays</strong> averaged +1.29% (n = 25), against +0.38% for other Thursdays.</li>
+<li><strong>Rate-change Thursdays</strong> averaged +1.29% (n = 25), against +0.38% for other Thursdays.<ul>
 <li>Hikes: +1.71%, n = 10.</li>
 <li>Cuts: +0.95%, n = 16.</li>
 <li>Both are positive. That suggests a relief effect: uncertainty is resolved on decision day, whatever the
-    direction.</li>
+  direction.</li>
+</ul>
+</li>
 <li><strong>Without decision days</strong> the Thursday premium shrinks from +0.34 to about +0.25 pt and is no longer
   significant (p = 0.054).</li>
 <li><strong>Fed decisions</strong> are also announced on Wednesday evening (Türkiye time), after BIST closes, so BIST
@@ -6201,11 +6210,13 @@ stocks equally at Wednesday's close and sell at Thursday's close, every week (si
 </table>
 <ul>
 <li><strong>Tests run.</strong> In total 180 tests were run for this report (Table 9), and 52 had raw p &lt; 0.05.</li>
-<li><strong>Correction.</strong> After correcting all of them together, <strong>9 survive</strong>:</li>
+<li><strong>Correction.</strong> After correcting all of them together, <strong>9 survive</strong>:<ul>
 <li>the portfolio Wednesday effect,</li>
 <li>six single-stock weekday effects (mostly the same Wednesday/Thursday effect),</li>
 <li>the large-down-day continuation at 5 days,</li>
 <li>the Friday → Monday continuation.</li>
+</ul>
+</li>
 <li><strong>Thursday.</strong> The portfolio Thursday effect (p = 0.007) does <em>not</em> survive when everything is corrected
   together, even though it is the most stable over time.</li>
 </ul>
@@ -6513,10 +6524,12 @@ The question is not "good earnings = price rises".</p>
   stable.</li>
 <li><strong>Largest positive quarters.</strong> 2022Q1 and Q2 (+6–7 pt), when nominal profit growth was extreme and dispersion
   between companies was large.</li>
-<li><strong>Negative quarters.</strong></li>
+<li><strong>Negative quarters.</strong><ul>
 <li>2022Q3 (−5.9 pt): results were published in Oct–Nov 2022, during a strong broad rally.</li>
 <li>2026Q3 (−2.6 pt): results were published during the Oct–Nov 2026 fund-liquidation sell-off (Report 1). In such
-    weeks, market-wide flows dominate company news.</li>
+  weeks, market-wide flows dominate company news.</li>
+</ul>
+</li>
 <li><strong>Inflation-accounting quarters</strong> (orange, statements under TMS 29) show a steadier positive spread (+1.5 to
   +4.4 pt in most quarters). Real (inflation-adjusted) profit figures may be more informative than the nominal
   figures of 2022–2023. We have too few quarters to test this.</li>
@@ -7111,14 +7124,16 @@ more believable than a single isolated p-value would be.</p>
 <li><strong>Nominal profits in 2022–2023.</strong> With annual CPI above 50–80%, the median company's net income grew 75–200%
   year over year in nominal TRY. Ranking within each quarter is essential; raw growth rates would mostly measure
   inflation.</li>
-<li><strong>Inflation accounting (TMS 29) from 2023 year-end.</strong></li>
+<li><strong>Inflation accounting (TMS 29) from 2023 year-end.</strong><ul>
 <li>KGK announced in November 2023 that companies applying TFRS must restate their 31 Dec 2023 statements for
-    inflation.</li>
+  inflation.</li>
 <li>SPK confirmed this for listed companies on 28 Dec 2023 and gave <strong>10 extra weeks</strong> for the first annual reports.</li>
 <li>This is why 60–80% of 2023Q4–2024Q1 filings in our KAP data came after the usual deadline, and why we use real
-    KAP timestamps.</li>
+  KAP timestamps.</li>
 <li>Restated figures include a "monetary loss" line, so net income fell sharply for many companies. The 2024Q4
-    median net-income change in our data is −73%.</li>
+  median net-income change in our data is −73%.</li>
+</ul>
+</li>
 <li><strong>Banks were treated differently.</strong> BDDK decided that banks would not restate their 2023 statements. A December
   2025 BDDK decision says banks and other financial institutions will not apply inflation accounting to their
   2025 statements either. AKBNK's figures are therefore not on the same accounting basis as the industrial companies,
@@ -7390,11 +7405,13 @@ decisions in practice, and (c) how unstructured text (news, speeches) can be use
    the only year with a strongly positive real and USD return (+61% after CPI, +106% in USD).</li>
 <li><strong>Jun 2023 – 2024: orthodox tightening.</strong> The policy rate rose from 8.5% to 50% by March 2024. In 2023 the index
    still rose +36% in TRY but fell −14% in USD and −16% after inflation.</li>
-<li><strong>Dec 2024 – Nov 2026: slow easing with shocks.</strong>
-   - Rates were cut from 50% to 36%.
-   - The March 2025 political shock brought a temporary hike to 46% (April 2025, visible in our data).
-   - The real policy rate stayed positive (+6–7 pt).
-   - The index lagged both the lira and inflation in 2025 and 2026.</li>
+<li><strong>Dec 2024 – Nov 2026: slow easing with shocks.</strong><ul>
+<li>Rates were cut from 50% to 36%.</li>
+<li>The March 2025 political shock brought a temporary hike to 46% (April 2025, visible in our data).</li>
+<li>The real policy rate stayed positive (+6–7 pt).</li>
+<li>The index lagged both the lira and inflation in 2025 and 2026.</li>
+</ul>
+</li>
 </ol>
 <p><strong>Fed.</strong> The Fed's path (0.25% → 5.5% → cuts to 3.75% → a hike to 4.00% in Sep 2026, from our hand-entered table)
 mattered mainly through the dollar. It is far smaller in size than Türkiye's own rate swings.</p>
@@ -8307,11 +8324,13 @@ the <strong>decision-log and replay demonstration</strong>.</p>
   look-ahead self-test.</li>
 <li><strong>Harness.</strong> 15 deterministic MCP tools sit under a fixed 17-state machine with per-state tool permissions,
   a rule-based action, a quality gate, human review and a SQLite decision log.</li>
-<li><strong>Experiments.</strong> The version comparison shows what each layer adds:</li>
+<li><strong>Experiments.</strong> The version comparison shows what each layer adds:<ul>
 <li><strong>Tools alone</strong> (B) improve the action from 17% to 50% agreement with the evidence-based reference but leave
-    unsupported labels.</li>
+  unsupported labels.</li>
 <li><strong>The state machine</strong> (C) removes the unsupported labels and forces backtests.</li>
 <li><strong>The evidence bundle and gate</strong> (D, E) give the reference action with complete, number-safe explanations.</li>
+</ul>
+</li>
 <li><strong>Numbers.</strong> After fixing a validator false alarm, no version invented numbers. The differences are in <strong>which
   action</strong> is chosen and <strong>how completely</strong> the evidence is explained.</li>
 <li><strong>Replay.</strong> Replaying the real decision log with today's code reproduces the same actions and correctly reports
@@ -8850,29 +8869,35 @@ is run once without the one-day shift and once with it.</p>
 </table>
 <p><strong>Reading Tables 1–4 and Figure 1.</strong></p>
 <ul>
-<li><strong>Strong first half, weak second half.</strong></li>
+<li><strong>Strong first half, weak second half.</strong><ul>
 <li>First half (2022-10 – 2024-11, the inflation rally): every variant except the rate filter beat XU100 by 41–91 pt (the rate filter: −17 pt), and C even beat
-    equal-weight buy-and-hold.</li>
+  equal-weight buy-and-hold.</li>
 <li>Second half: every variant earned only +2% to +11% while XU100 rose 33% and equal-weight 48%.</li>
 <li>A trend-following, long-only rule set that worked in a strong nominal bull market did not survive the
-    tight-money period. This is the most important out-of-sample result of the project.</li>
+  tight-money period. This is the most important out-of-sample result of the project.</li>
+</ul>
+</li>
 <li><strong>Layers do not add return.</strong> Fundamentals (C vs B) helped: +53 pt, with a higher Sharpe and a smaller drawdown.
   Macro (D) and news (E) cut returns by 65–70 pt. The rate filter cut 130 pt and gave a drawdown improvement of only
   3 pt. The only material benefit of D/E is a slightly lower volatility (19–20% vs 21%).</li>
 <li><strong>Costs matter.</strong> With 500–700 position entries, cumulative costs are 13–21% of capital. Doubling the cost to
   0.30% one-way removes about 50 pt from every variant.</li>
-<li><strong>The engine is honest.</strong></li>
+<li><strong>The engine is honest.</strong><ul>
 <li>A deliberately impossible "buy today's winners" signal returns an absurd 5 × 10¹¹ % when the one-day shift is
-    removed. With the shift it returns +11%.</li>
+  removed. With the shift it returns +11%.</li>
 <li>The shift is what prevents look-ahead, and a test (<code>tests/test_strategies.py</code>) enforces it.</li>
 <li>Without costs, the shifted signal earns +1,075%. Yesterday's winners kept winning the next day, the same
-    short-term continuation found in Report 3, but the daily turnover makes it worthless after costs.</li>
-<li><strong>Spec checklist (§18).</strong></li>
+  short-term continuation found in Report 3, but the daily turnover makes it worthless after costs.</li>
+</ul>
+</li>
+<li><strong>Spec checklist (§18).</strong><ul>
 <li>Done: signal shifting, publication dates, buy-and-hold and XU100 benchmarks, return / Sharpe / drawdown /
-    win rate / benchmark difference, costs, signal counts (no variant had fewer than 30 entries), and
-    in-sample/out-of-sample halves.</li>
+  win rate / benchmark difference, costs, signal counts (no variant had fewer than 30 entries), and
+  in-sample/out-of-sample halves.</li>
 <li>Not done: a rolling walk-forward or a separate validation period (only halves), and a sector benchmark at
-    portfolio level. The optional ML layer (§19) was not built.</li>
+  portfolio level. The optional ML layer (§19) was not built.</li>
+</ul>
+</li>
 </ul>
 <h2>2. MCP tools and the stateful harness</h2>
 <h3>2.1 MCP server (spec §22)</h3>
@@ -9313,10 +9338,12 @@ interpret tool outputs:</p>
    even on the safe-failure path (unknown ticker, earthquake closure).</li>
 <li><strong>Rules choose, the LLM explains.</strong> The action comes from <code>evidence.decide</code> over the 8 allowed labels and the gate
    status. The Orchestrator may only explain the <strong>committed evidence</strong> (E1, E2, …): sentences generated by code
-   from numbers.
-   - Every number in every agent's text is checked against the tool outputs.
-   - An unsupported number triggers one correction request.
-   - What remains is logged.</li>
+   from numbers.<ul>
+<li>Every number in every agent's text is checked against the tool outputs.</li>
+<li>An unsupported number triggers one correction request.</li>
+<li>What remains is logged.</li>
+</ul>
+</li>
 <li><strong>Humans decide.</strong> Nothing is ever turned into an order. The reviewer's decision and mandatory reason are stored
    next to the AI result, never merged into it.</li>
 <li><strong>Memory is dated.</strong> Episodic memory shows an agent at most three earlier cases of the same stock, and only cases
@@ -9661,40 +9688,50 @@ output). Before the fix, six B runs were flagged; every flagged number was a mov
 </table>
 <p><strong>What each layer added</strong> (Tables 7–8, Figure 2).</p>
 <ul>
-<li><strong>A — raw LLM.</strong></li>
+<li><strong>A — raw LLM.</strong><ul>
 <li><strong>Action:</strong> correct in only 2 of 12 runs, only for the unknown ticker. Half of its labels are
-    <em>unsupported</em>: a candidate label despite a shock, negative news or a missing condition.</li>
+  <em>unsupported</em>: a candidate label despite a shock, negative news or a missing condition.</li>
 <li><strong>Context it missed:</strong> it labelled TURSG (−39.5% in 20 days, negative KAP news) as <code>WATCH</code>, and called the
-    earthquake case <code>WATCH</code> although the market was closed.</li>
-<li><strong>B — LLM + tools (free use).</strong></li>
+  earthquake case <code>WATCH</code> although the market was closed.</li>
+</ul>
+</li>
+<li><strong>B — LLM + tools (free use).</strong><ul>
 <li><strong>Tool use:</strong> only about 3 tool calls per run and never a backtest.</li>
 <li><strong>Action:</strong> right in 50% of runs, but it called TURSG a <code>TECHNICAL_REVERSAL_CANDIDATE</code> despite a shock and
-    negative news, the most dangerous error in the table.</li>
+  negative news, the most dangerous error in the table.</li>
 <li><strong>Numbers:</strong> after the validator fix (Section 5) it fabricated none and had small rounding errors (4.5% of
-    numbers). Tools solved the <em>numbers</em> problem but not the <em>judgement</em> problem.</li>
-<li><strong>C — state machine.</strong></li>
+  numbers). Tools solved the <em>numbers</em> problem but not the <em>judgement</em> problem.</li>
+</ul>
+</li>
+<li><strong>C — state machine.</strong><ul>
 <li><strong>Tool use:</strong> forced to visit every state, it made about 25 tool calls and ran a backtest every time.</li>
 <li><strong>Action:</strong> no unsupported conclusions, but it still chose conservative labels in place of the evidence-based
-    ones (<code>WATCH</code> for the ASELS earnings candidate, <code>INVESTIGATE</code> instead of <code>REJECT_SIGNAL</code> for the KRDMD shock).</li>
+  ones (<code>WATCH</code> for the ASELS earnings candidate, <code>INVESTIGATE</code> instead of <code>REJECT_SIGNAL</code> for the KRDMD shock).</li>
 <li><strong>Errors:</strong> 6% of its tool calls failed, mostly on the unknown ticker, where the tool errors were the
-    <em>intended</em> behaviour.</li>
-<li><strong>D and E — evidence, gate, memory, human review.</strong></li>
+  <em>intended</em> behaviour.</li>
+</ul>
+</li>
+<li><strong>D and E — evidence, gate, memory, human review.</strong><ul>
 <li><strong>Action:</strong> 100% agreement with the reference. This is <strong>by construction</strong>: the reference is the rule result
-    that D and E use. It shows the harness cannot drift from its rules, not that the rules are right (Reports 1–5
-    discuss that).</li>
+  that D and E use. It shows the harness cannot drift from its rules, not that the rules are right (Reports 1–5
+  discuss that).</li>
 <li><strong>Explanations:</strong> cover 97.5% of the committed evidence, against 38–50% for A–C, with no fabricated or rounded
-    numbers. Semantic mistakes remain, as Section 5 shows.</li>
+  numbers. Semantic mistakes remain, as Section 5 shows.</li>
+</ul>
+</li>
 <li><strong>Reproducibility</strong> is 100% for every version. With temperature 0 and a separate cache for the second run, the
   same model chose the same action twice. That is consistency, not correctness: A was consistently wrong.</li>
 <li><strong>Cost.</strong> D needs about 5 LLM calls and 23 tool calls per analysis. The time column is unreliable: it includes
   cached calls, retries after "503 high demand" errors and, for E run 1, the human's reading time.</li>
-<li><strong>Human review (Table 10).</strong> The reviewer accepted 5 cases and modified one.</li>
+<li><strong>Human review (Table 10).</strong> The reviewer accepted 5 cases and modified one.<ul>
 <li><strong>KRDMD override:</strong> <code>REJECT_SIGNAL</code> → <code>FUNDAMENTAL_IMPROVEMENT_CANDIDATE</code>, reason "it is in a position to
-    rise". That reason is a forecast, and it contradicts evidence E4 (a −10% shock day and −15.9% vs XU100 −6.0% in
-    20 days). The system allows the override, by design, and keeps the reason for later review.</li>
+  rise". That reason is a forecast, and it contradicts evidence E4 (a −10% shock day and −15.9% vs XU100 −6.0% in
+  20 days). The system allows the override, by design, and keeps the reason for later review.</li>
 <li><strong>TURSG reason</strong> ("moved in parallel with the market") also contradicts E2 (−39.5% vs −6.0%).</li>
 <li>These two cases show why the log must store the human's reasoning, not only the final label: human judgement
-    is also fallible and must be reviewable.</li>
+  is also fallible and must be reviewable.</li>
+</ul>
+</li>
 </ul>
 <h2>4. Decision log and replay (spec §27–28)</h2>
 <p><strong>Table 11. Where each required log item is stored</strong></p>

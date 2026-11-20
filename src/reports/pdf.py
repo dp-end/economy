@@ -24,13 +24,18 @@ table { border-collapse: collapse; margin: 6pt 0 10pt; font-size: 7.6pt; width: 
         table-layout: auto; break-inside: auto; }
 th { background: #f0efec; text-align: left; }
 th, td { border: 1px solid #d8d7d2; padding: 2.5pt 4pt; overflow-wrap: anywhere; }
-td code, th code { white-space: normal; overflow-wrap: anywhere; }
+td code, th code { white-space: normal; overflow-wrap: anywhere; font-size: 0.95em; }
 td { font-variant-numeric: tabular-nums; }
 tr { break-inside: avoid; }
 img { max-width: 100%; display: block; margin: 8pt auto; break-inside: avoid; }
 blockquote { color: #52514e; border-left: 3px solid #d8d7d2; margin: 6pt 0; padding-left: 8pt; }
 code { font-size: 8.5pt; background: #f4f3f0; padding: 0 2pt; border-radius: 2pt; }
+pre { background: #f4f3f0; padding: 6pt 8pt; border-radius: 3pt; white-space: pre-wrap; break-inside: avoid; }
+pre code { padding: 0; }
 em:first-child { color: #52514e; }
+.cover { height: 250mm; display: flex; flex-direction: column; justify-content: center; break-after: page; }
+.cover h1 { font-size: 24pt; border: none; }
+.cover p { font-size: 11pt; margin: 3pt 0; }
 .report { break-before: page; }
 .report:first-of-type { break-before: auto; }
 """
@@ -39,13 +44,15 @@ em:first-child { color: #52514e; }
 def to_html(md_files: list) -> str:
     parts = []
     for f in md_files:
-        body = markdown.markdown(Path(f).read_text(encoding="utf-8"), extensions=["tables", "sane_lists"])
+        # tab_length=2: notlardaki iç içe listeler 2 boşlukla girintili (GitHub gibi); fenced_code: ``` blokları
+        body = markdown.markdown(Path(f).read_text(encoding="utf-8"), extensions=["tables", "sane_lists", "fenced_code"],
+                                 tab_length=2)
         parts.append(f'<section class="report">{body}</section>')
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>CSE-481 Research Reports</title>'
             f"<style>{CSS}</style></head><body>{''.join(parts)}</body></html>")
 
 
-def build_pdf(md_files: list = None, out: Path = OUT / "research_reports.pdf") -> Path:
+def build_pdf(md_files: list = None, out: Path = OUT / "research_reports.pdf", title: str = None) -> Path:
     md_files = md_files or sorted(OUT.glob("0*.md"))
     html = OUT / (out.stem + ".html")                     # resimler fig/ altında: HTML aynı klasörde olmalı
     html.write_text(to_html(md_files), encoding="utf-8")
@@ -58,5 +65,9 @@ def build_pdf(md_files: list = None, out: Path = OUT / "research_reports.pdf") -
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Raporları PDF'e çevir")
     ap.add_argument("files", nargs="*", help="varsayılan: reports/research/0*.md")
+    ap.add_argument("--final", action="store_true", help="final raporu ayrı PDF yap (reports/research/final_report.pdf)")
     a = ap.parse_args()
-    print("yazıldı:", build_pdf(a.files or None))
+    if a.final:
+        print("yazıldı:", build_pdf([OUT / "final_report.md"], OUT / "final_report.pdf"))
+    else:
+        print("yazıldı:", build_pdf(a.files or None))

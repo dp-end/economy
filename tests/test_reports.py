@@ -100,3 +100,16 @@ def test_report_6_builds_and_replays_real_log():
     assert "not written yet" not in text
     for k in ("Table 1. Strategy results", "Table 8. Action per case", "Table 13. Replay", "fig/06_experiments.png"):
         assert k in text
+
+
+def test_final_report_builds_and_pdf_keeps_nested_lists():
+    from src.reports.final_report import build
+    from src.reports.pdf import to_html
+    path = build()
+    text = open(path, encoding="utf-8").read()
+    assert "not written yet" not in text and "fig/final_architecture.png" in text
+    for k in ("## 9. Seven distinctions", "Table 4. Six cases", "Appendix A. Deliverables"):
+        assert k in text
+    html = to_html([path])
+    assert "<ul>\n<li>" in html and html.count("<ul>") > html.count("<h2")      # iç içe listeler korunur
+    assert "<pre><code" in html                                                # ``` blokları kod olarak

@@ -85,7 +85,9 @@ def backtest_tables() -> tuple:
         "Sharpe": b["sharpe"], "max DD %": b["max_dusus"] * 100, "win days %": b["kazanan_gun"] * 100,
         "in market %": b["piyasada_gun"] * 100, "entries": b["islem_sayisi"], "costs %": b["toplam_maliyet"] * 100,
         "vs equal-weight pt": b["fark"] * 100, "vs XU100 pt": b["xu100_fark"] * 100, "info ratio": b["bilgi_orani"],
-        "flag": b["uyari"].fillna("")})
+        "flag": b["uyari"].astype(object).where(b["uyari"].notna(), "")})
+    if not t["flag"].astype(bool).any():                     # hiçbir varyantta "az sinyal" uyarısı yok
+        t = t.drop(columns="flag")
     bench = (b[b["strateji"] == "A_teknik"][["donem", "kiyas_getiri", "xu100_total"]]
              .assign(period=lambda x: x["donem"].map({"tum": "full", "ilk_yari": "first half",
                                                       "ikinci_yari": "second half"}))

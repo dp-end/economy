@@ -1,14 +1,17 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><title>CSE-481 Research Reports</title><style>
 @page { size: A4; margin: 16mm 14mm; }
+html, body { max-width: 100%; }
 body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; font-size: 10pt; line-height: 1.45;
        color: #0b0b0b; background: #fff; }
 h1 { font-size: 17pt; margin: 0 0 6pt; border-bottom: 2px solid #2a78d6; padding-bottom: 4pt; }
 h2 { font-size: 12.5pt; margin: 16pt 0 5pt; color: #184f95; break-after: avoid; }
 h3 { font-size: 11pt; break-after: avoid; }
 p, li { orphans: 3; widows: 3; }
-table { border-collapse: collapse; margin: 6pt 0 10pt; font-size: 7.6pt; width: 100%; break-inside: auto; }
+table { border-collapse: collapse; margin: 6pt 0 10pt; font-size: 7.6pt; width: 100%; max-width: 100%;
+        table-layout: auto; break-inside: auto; }
 th { background: #f0efec; text-align: left; }
-th, td { border: 1px solid #d8d7d2; padding: 2.5pt 4pt; }
+th, td { border: 1px solid #d8d7d2; padding: 2.5pt 4pt; overflow-wrap: anywhere; }
+td code, th code { white-space: normal; overflow-wrap: anywhere; }
 td { font-variant-numeric: tabular-nums; }
 tr { break-inside: avoid; }
 img { max-width: 100%; display: block; margin: 8pt auto; break-inside: avoid; }
@@ -8385,7 +8388,6 @@ are indicator warm-up and are not evaluated.</p>
 <th style="text-align: right;">vs equal-weight pt</th>
 <th style="text-align: right;">vs XU100 pt</th>
 <th style="text-align: right;">info ratio</th>
-<th style="text-align: left;">flag</th>
 </tr>
 </thead>
 <tbody>
@@ -8404,7 +8406,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-161</td>
 <td style="text-align: right;">-8</td>
 <td style="text-align: right;">-0.72</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">A_teknik</td>
@@ -8421,7 +8422,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-23</td>
 <td style="text-align: right;">+58</td>
 <td style="text-align: right;">-0.28</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">A_teknik</td>
@@ -8438,7 +8438,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-46</td>
 <td style="text-align: right;">-31</td>
 <td style="text-align: right;">-1.24</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">B_sektor</td>
@@ -8455,7 +8454,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-154</td>
 <td style="text-align: right;">-1</td>
 <td style="text-align: right;">-0.70</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">B_sektor</td>
@@ -8472,7 +8470,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-34</td>
 <td style="text-align: right;">+47</td>
 <td style="text-align: right;">-0.42</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">B_sektor</td>
@@ -8489,7 +8486,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-39</td>
 <td style="text-align: right;">-24</td>
 <td style="text-align: right;">-1.04</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">C_temel</td>
@@ -8506,7 +8502,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-100</td>
 <td style="text-align: right;">+53</td>
 <td style="text-align: right;">-0.45</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">C_temel</td>
@@ -8523,7 +8518,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">+10</td>
 <td style="text-align: right;">+91</td>
 <td style="text-align: right;">-0.03</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">C_temel</td>
@@ -8540,7 +8534,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-37</td>
 <td style="text-align: right;">-22</td>
 <td style="text-align: right;">-0.97</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro</td>
@@ -8557,7 +8550,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-166</td>
 <td style="text-align: right;">-13</td>
 <td style="text-align: right;">-0.73</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro</td>
@@ -8574,7 +8566,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-36</td>
 <td style="text-align: right;">+45</td>
 <td style="text-align: right;">-0.44</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro</td>
@@ -8591,7 +8582,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-43</td>
 <td style="text-align: right;">-27</td>
 <td style="text-align: right;">-1.09</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_oynaklik</td>
@@ -8608,7 +8598,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-173</td>
 <td style="text-align: right;">-20</td>
 <td style="text-align: right;">-0.77</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_oynaklik</td>
@@ -8625,7 +8614,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-35</td>
 <td style="text-align: right;">+46</td>
 <td style="text-align: right;">-0.44</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_oynaklik</td>
@@ -8642,7 +8630,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-46</td>
 <td style="text-align: right;">-31</td>
 <td style="text-align: right;">-1.19</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_faiz</td>
@@ -8659,7 +8646,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-231</td>
 <td style="text-align: right;">-78</td>
 <td style="text-align: right;">-1.07</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_faiz</td>
@@ -8676,7 +8662,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-98</td>
 <td style="text-align: right;">-17</td>
 <td style="text-align: right;">-1.06</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_faiz</td>
@@ -8693,7 +8678,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-43</td>
 <td style="text-align: right;">-27</td>
 <td style="text-align: right;">-1.09</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">E_haber</td>
@@ -8710,7 +8694,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-170</td>
 <td style="text-align: right;">-18</td>
 <td style="text-align: right;">-0.75</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">E_haber</td>
@@ -8727,7 +8710,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-39</td>
 <td style="text-align: right;">+41</td>
 <td style="text-align: right;">-0.47</td>
-<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;">E_haber</td>
@@ -8744,7 +8726,6 @@ are indicator warm-up and are not evaluated.</p>
 <td style="text-align: right;">-43</td>
 <td style="text-align: right;">-28</td>
 <td style="text-align: right;">-1.10</td>
-<td style="text-align: left;"></td>
 </tr>
 </tbody>
 </table>

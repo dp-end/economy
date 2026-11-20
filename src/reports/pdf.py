@@ -13,15 +13,18 @@ from src.reports.common import OUT
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 CSS = """
 @page { size: A4; margin: 16mm 14mm; }
+html, body { max-width: 100%; }
 body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; font-size: 10pt; line-height: 1.45;
        color: #0b0b0b; background: #fff; }
 h1 { font-size: 17pt; margin: 0 0 6pt; border-bottom: 2px solid #2a78d6; padding-bottom: 4pt; }
 h2 { font-size: 12.5pt; margin: 16pt 0 5pt; color: #184f95; break-after: avoid; }
 h3 { font-size: 11pt; break-after: avoid; }
 p, li { orphans: 3; widows: 3; }
-table { border-collapse: collapse; margin: 6pt 0 10pt; font-size: 7.6pt; width: 100%; break-inside: auto; }
+table { border-collapse: collapse; margin: 6pt 0 10pt; font-size: 7.6pt; width: 100%; max-width: 100%;
+        table-layout: auto; break-inside: auto; }
 th { background: #f0efec; text-align: left; }
-th, td { border: 1px solid #d8d7d2; padding: 2.5pt 4pt; }
+th, td { border: 1px solid #d8d7d2; padding: 2.5pt 4pt; overflow-wrap: anywhere; }
+td code, th code { white-space: normal; overflow-wrap: anywhere; }
 td { font-variant-numeric: tabular-nums; }
 tr { break-inside: avoid; }
 img { max-width: 100%; display: block; margin: 8pt auto; break-inside: avoid; }

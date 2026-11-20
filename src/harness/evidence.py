@@ -159,8 +159,11 @@ def observe(ticker: str, day: pd.Timestamp) -> tuple:
     src["haber"] = win["event_day"].max() if len(win) else None
 
     sp = t["speech"]
-    sp = sp[(sp["publish_time"].dt.normalize() <= day) &
-            (sp["publish_time"] >= day - pd.Timedelta(days=SPEECH_DAYS))]
+    # Piyasa kapanışından sonra yayınlanan konuşma ancak event_day'den itibaren bilinir (Adım 15'te bulunan hata:
+    # takvim günü karşılaştırması 21:30'daki Fed konuşmasını aynı günün analizine sokuyordu).
+    known = sp["event_day"].where(sp["event_day"].notna(),
+                                  sp["publish_time"].where(sp["publish_time"].dt.hour < 18).dt.normalize())
+    sp = sp[(known <= day) & (sp["publish_time"] >= day - pd.Timedelta(days=SPEECH_DAYS))]
     speech = dict(sources=[], warnings=[])
     if len(sp):
         from src.data.speech_features import get_speech_features

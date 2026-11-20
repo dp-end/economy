@@ -162,3 +162,12 @@ def test_conflicting_technical_signals_mean_investigate():
     assert p["conditions"]["tech_conflict"] and p["action"] == "INVESTIGATE"
     txt = next(e["text"] for e in p["committed"] if e["text"].startswith("Çelişen teknik"))
     assert "boğa kama_turn_up" in txt and "support_break" in txt
+
+
+def test_speech_after_close_is_not_known_the_same_day():
+    """Fed basın toplantısı 2026-10-28 21:30'da (BIST kapandıktan sonra): 28 Ekim analizi görmemeli, 30 Ekim görmeli."""
+    from src.harness.evidence import observe
+    same = observe("ASELS", pd.Timestamp("2026-10-28"))[0]["speech"]["sources"]
+    later = observe("ASELS", pd.Timestamp("2026-10-30"))[0]["speech"]["sources"]
+    assert "fed_20261028" not in [s["source_id"] for s in same]
+    assert "fed_20261028" in [s["source_id"] for s in later]

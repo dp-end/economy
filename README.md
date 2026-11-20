@@ -1,0 +1,185 @@
+# BIST 100 Agentic Analytics Harness — CSE-481 Engineering Economics Project
+
+An educational research system for 30 BIST 100 stocks (Nov 2021 – Nov 2026). It builds point-in-time datasets
+(prices, quarterly fundamentals, macro, KAP news, central-bank speeches), runs event studies and backtests, and
+wraps the deterministic tools in an **MCP server** and a **stateful agent harness**. In the harness, rules choose one
+of 8 analytical labels, an LLM (Gemini) only explains the committed evidence, and a human accepts, modifies or
+rejects the result. Every run is logged for replay.
+
+> **Not investment advice.** The system returns an evidence-backed *analytical state*, never a buy/sell order.
+> There is no broker connection. Returns are nominal TRY unless stated otherwise.
+
+Project brief: *Engineering Economics Project 2026, CSE-481* (Dr. Alper Özcan).
+
+---
+
+## 1. Quick start (about 10 minutes, no API key needed)
+
+```bash
+# 1) Python 3.12 and ffmpeg (ffmpeg only for re-transcribing speech audio)
+python3.12 --version
+brew install ffmpeg            # macOS; Linux: apt install ffmpeg
+
+# 2) Code and environment
+git clone https://github.com/dp-end/economy.git
+cd economy
+python3.12 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 3) Data cache (delivered separately as economy_data_2026-11-06.zip, ~9 MB)
+unzip /path/to/economy_data_2026-11-06.zip      # creates ./data/
+
+# 4) Check
+pytest -q                                       # expected: all tests pass (≈ 1 minute)
+cp .env.example .env                            # keys are optional, see section 4
+```
+
+Then try the demos in section 3.
+
+## 2. What is where
+
+```
+config/universe.csv        30 study stocks + 4 extra peers, sector and peer-group map (Step 1)
+src/data/                  data loaders with on-disk caches: prices, fundamentals, KAP dates, macro, news, speech
+src/indicators/            technical indicators, support/resistance, sector-relative features
+src/events/                event studies: technical reversals, sector catch-up, calendar, earnings, news
+src/backtest/              backtest engine (signal shift, costs, benchmarks) and strategy variants A–E
+src/mcp_server/            MCP server with 15 deterministic tools + stdio client demo
+src/harness/               evidence bundle, quality gate, decision log + replay, state machine, experiments
+src/agents/                Gemini client (OpenAI-compatible endpoint), prompts, numerical validator, mock LLM
+src/reports/               research reports, data dictionary, PDF builder
+reports/                   committed outputs (event tables, summaries, backtests, decision logs, experiments)
+reports/research/          final research reports (Markdown + PDF) and their interpretation notes
+tests/                     pytest suite (offline; uses the data cache)
+data/                      cache, NOT in git (see section 5)
+```
+
+Main documents:
+
+- `reports/research/research_reports.pdf`: data dictionary plus the five research reports.
+- `reports/research/00_data_dictionary.md`: every structured and unstructured field.
+- `reports/research/01_…05_*.md`: technical reversals, sector catch-up, weekday patterns, earnings reaction,
+  macro/news/speech context.
+
+## 3. Demos (no API key)
+
+```bash
+# Full harness on one case with the mock LLM. Writes only to reports/decision_log_demo.sqlite.
+python -m src.harness.state_machine ASELS 2026-11-06 --mock --review ACCEPT --reason "demo"
+
+# Safe-failure cases
+python -m src.harness.state_machine ASELS 2023-02-15 --mock --review ACCEPT --reason "earthquake"   # ANALYSIS_UNSAFE
+python -m src.harness.state_machine YOKBOYLE 2026-11-06 --mock --review ACCEPT --reason "unknown"   # HARD_BLOCK
+
+# Decision log, replay and episodic memory (demo database)
+python -m src.harness.decision_log
+
+# MCP: start the server as a subprocess (stdio), list the 15 tools, call each once
+python -m src.mcp_server.client_demo
+
+# Rebuild the research reports and the PDF (needs Google Chrome for the PDF step)
+python -m src.reports.build_reports
+python -m src.reports.pdf
+```
+
+The 8 actions: `HOLD`, `WATCH`, `INVESTIGATE`, `POTENTIAL_CATCH_UP_CANDIDATE`, `TECHNICAL_REVERSAL_CANDIDATE`,
+`FUNDAMENTAL_IMPROVEMENT_CANDIDATE`, `REJECT_SIGNAL`, `ANALYSIS_UNSAFE`.
+
+## 4. Runs that need API keys
+
+Put the keys in `.env` (copy `.env.example`). `.env` is git-ignored; never commit it.
+
+| Key | Used for | Needed when |
+|---|---|---|
+| `GEMINI_API_KEY`, `GEMINI_MODEL` | LLM agents (Step 13) and harness experiments (Step 14) | real LLM runs only; all tests use the mock |
+| `EVDS_API_KEY` | TCMB EVDS macro series (Step 8) | only to re-download macro data |
+
+```bash
+# Real harness run with Gemini; asks for a human review in the terminal; writes to reports/decision_log.sqlite
+python -m src.harness.state_machine ASELS 2026-11-06
+
+# Harness experiments A–E (6 cases × 2 runs, ~200 Gemini calls, resumable).
+# Results are already committed in reports/experiments/ and reports/harness_experiments.csv.
+python -m src.harness.experiments
+```
+
+> **Warning:** `python -m src.harness.experiments --fresh` deletes the committed experiment results. `--mock`
+> appends to the same `raw.jsonl`. Use both only in a copy of the repository.
+
+The experiments in the report were run with `GEMINI_MODEL=gemini-3.1-flash-lite`.
+
+## 5. Data: archive or rebuild from sources
+
+`data/` is not in git. It contains third-party data (KAP, İş Yatırım, Fintables, TCMB) that is shared only for
+course evaluation. There are two options:
+
+**A. Archive (recommended).** Unzip `economy_data_2026-11-06.zip` in the repository root. The maintainer creates it
+with `python -m src.data.pack_data` (raw speech audio is excluded; transcripts and official texts are included).
+
+**B. Rebuild from the original sources** (≈ 1 hour; run from the repository root, in this order):
+
+| Step | Command | Source / note |
+|---|---|---|
+| 2 | `python -m src.data.prices` | İş Yatırım daily prices (public endpoint), quality report → `reports/price_quality.csv` |
+| 2 | `python -m src.data.yahoo_prices` | Yahoo Finance, validation only |
+| 2 | *manual* | Fintables quarterly statements: download `<TICKER> (TRY).xlsx` for the 30 stocks into `data/fintables/` (needs Fintables access); check with `python -m src.data.fundamentals` |
+| 7 | `python -m src.data.disclosure_dates` then `python -m src.data.kap_dates` | legal filing windows, then real KAP publication times (public KAP API, polite 4 s pauses) |
+| 8 | `python -m src.data.macro` | TCMB EVDS (needs `EVDS_API_KEY`); Fed table is in the code |
+| 10 | `python -m src.data.kap_news` | KAP material-event disclosures 2021–2026 (~630 requests, ~45 min) |
+| 10 | `python -m src.data.rss_news` | AA / BloombergHT / TRT RSS; archive grows from the day you start |
+| 10 | `python -m src.data.news_tags` | keyword tagging → `reports/news_events.parquet` |
+| 10B | `python -m src.data.speech` then `python -m src.data.speech_features` | Fed audio + Whisper (needs ffmpeg), TCMB official text; claim verification |
+
+Then rebuild the research outputs:
+
+```bash
+python -m src.events.technical_events      # Step 4
+python -m src.events.sector_catchup        # Step 5
+python -m src.events.calendar_patterns     # Step 6
+python -m src.events.earnings_reaction     # Step 7C
+python -m src.events.news_reaction         # Step 10C
+python -m src.backtest.engine              # Step 9: engine checks (look-ahead test, costs)
+python -m src.backtest.strategies          # Step 9–10: strategy variants A–E vs benchmarks
+python -m src.reports.build_reports && python -m src.reports.pdf
+```
+
+Prices end on **2026-11-06**. Later data would change the numbers in the reports. Re-running the downloads on
+another day gives a longer sample.
+
+## 6. Point-in-time rules (no look-ahead)
+
+- **Fundamentals:** usable only from the KAP **event day**, the first trading day after the real publication time
+  (88% of filings are published after 18:00). Legal deadlines are not used.
+- **Macro:** CPI from the 3rd of the following month; Fed decisions from the first BIST day after the
+  announcement; FX and policy rate at that day's close.
+- **News and speeches:** usable from their event day. A speech published after the close is not part of that day's
+  analysis.
+- **Technical events:** use only past closes. Historical hit rates use only events whose forward window had closed
+  before the analysis date.
+- **Backtests:** shift signals by one day and charge 0.15% one-way costs.
+- **Quality gate:** checks every source date against the analysis date and blocks the analysis if any is later.
+
+The tests enforce these rules: `tests/test_harness.py`, `tests/test_strategies.py`, `tests/test_kap_dates.py`
+and others.
+
+## 7. Tests
+
+```bash
+pytest -q            # whole suite, offline, uses data/ and reports/
+pytest -q tests/test_harness.py tests/test_state_machine.py tests/test_mcp.py   # harness only
+```
+
+No test calls a paid API or uses a key. LLM behaviour is tested with `MockLLM`.
+
+## 8. Known limitations
+
+- **Sample:** 30 stocks, five years, nominal TRY. Survivorship: the 2026 index list is used for the whole period.
+- **Fundamentals data:** Fintables lacks 2022Q4 for 24 of 30 stocks. No share counts (no valuation ratios) and no
+  liquidity ratios. Inflation accounting (TMS 29) changes comparability from 2023 year-end.
+- **News:** RSS has no history, so news statistics rely on KAP. Categories come from keyword rules.
+- **Speeches:** only two official speeches (no instructor-approved list arrived). The TCMB YouTube video required a
+  bot sign-in that we did not bypass, so the official text was used instead.
+- **Validator:** the numerical-hallucination check catches invented numbers but not wrong interpretations.
+
+See section "Limitations" in each research report.

@@ -24,7 +24,7 @@ from src.agents.llm import MockLLM, assistant_message, tool_schemas
 from src.agents.prompts import FIX_PROMPT, system_prompt
 from src.agents.validate import check_numbers
 from src.data.universe import load_universe
-from src.harness.decision_log import (REVIEW_DECISIONS, log_decision, log_trace, past_cases, record_review)
+from src.harness.decision_log import (DEMO_DB, REVIEW_DECISIONS, log_decision, log_trace, past_cases, record_review)
 from src.harness.evidence import ACTIONS, VARIANT_FOR, DEFAULT_VARIANT, run_analysis
 from src.mcp_server.server import build_server
 
@@ -450,7 +450,10 @@ if __name__ == "__main__":
         from src.agents.llm import GeminiLLM
         llm = GeminiLLM()
     review = dict(decision=a.review, reason=a.reason, final_action=a.final) if a.review else None
-    ctx, trace = run_harness(a.ticker, a.asof, llm, review)
+    db = DEMO_DB if a.mock else None              # sahte model sonuçları gerçek karar günlüğüne yazılmaz
+    ctx, trace = run_harness(a.ticker, a.asof, llm, review, db=db)
+    if a.mock:
+        print(f"(sahte model: kayıt {DEMO_DB} dosyasına yazıldı, gerçek günlük değişmedi)")
     print("\nDurumlar:", " -> ".join(trace["states"]))
     print("Özet:", json.dumps(ctx["summary"], ensure_ascii=False))
     for agent, note in trace["notes"].items():

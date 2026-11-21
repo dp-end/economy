@@ -151,6 +151,14 @@ another day gives a longer sample.
 
 - **Fundamentals:** usable only from the KAP **event day**, the first trading day after the real publication time
   (88% of filings are published after 18:00). Legal deadlines are not used.
+- **Fundamental versions and units** (`src/data/pit_fundamentals.py`): Fintables keeps the latest version of each
+  figure. For the 24 companies that apply inflation accounting (TMS 29) it shows the 2022Q4 – 2023Q3 restatements,
+  which were published a year later, and re-expresses later figures in the money of the latest balance sheet
+  (checked against 20 published figures; `python -m src.data.pit_fundamentals` prints the evidence). A figure is
+  used only from the day its version was published, comparisons stay within one unit, and amounts are shown in the
+  money of their report.
+- **Earnings thirds:** a company's third is decided against the previous quarter's cut-offs, using only figures
+  already published on its event day.
 - **Macro:** CPI from the 3rd of the following month; Fed decisions from the first BIST day after the
   announcement; FX and policy rate at that day's close.
 - **News and speeches:** usable from their event day. A speech published after the close is not part of that day's
@@ -160,8 +168,8 @@ another day gives a longer sample.
 - **Backtests:** shift signals by one day and charge 0.15% one-way costs.
 - **Quality gate:** checks every source date against the analysis date and blocks the analysis if any is later.
 
-The tests enforce these rules: `tests/test_harness.py`, `tests/test_strategies.py`, `tests/test_kap_dates.py`
-and others.
+The tests enforce these rules: `tests/test_harness.py`, `tests/test_strategies.py`, `tests/test_kap_dates.py`,
+`tests/test_pit_fundamentals.py`, `tests/test_earnings.py` and others.
 
 ## 7. Tests
 
@@ -175,8 +183,11 @@ No test calls a paid API or uses a key. LLM behaviour is tested with `MockLLM`.
 ## 8. Known limitations
 
 - **Sample:** 30 stocks, five years, nominal TRY. Survivorship: the 2026 index list is used for the whole period.
-- **Fundamentals data:** Fintables lacks 2022Q4 for 24 of 30 stocks. No share counts (no valuation ratios) and no
-  liquidity ratios. Inflation accounting (TMS 29) changes comparability from 2023 year-end.
+- **Fundamentals data:** around the inflation-accounting switch (2022Q4 – 2024Q1) earnings cannot be ranked,
+  because the restated figures were published a year later. Valuation, liquidity and EBITDA are not computed yet,
+  although the Fintables files contain the needed lines (paid-in capital, current assets and liabilities, financial
+  debt, depreciation). Fintables keeps only the latest version of each figure, so later corrections are carried
+  back into earlier periods (one small case found).
 - **News:** RSS has no history, so news statistics rely on KAP. Categories come from keyword rules.
 - **Speeches:** only two official speeches (no instructor-approved list arrived). The TCMB YouTube video required a
   bot sign-in that we did not bypass, so the official text was used instead.

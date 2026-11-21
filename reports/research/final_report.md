@@ -33,7 +33,8 @@ November 2026.
   - No strategy variant beats an equal-weight buy-and-hold after costs.
   - In a controlled experiment, adding structure (tools → state machine → evidence and gate) moved the same LLM from
     17% to 100% agreement with the evidence-based label, without fabricated numbers.
-  - The system's own checks found and fixed eight design errors during the project.
+  - The system's own checks found and fixed ten design errors, two of them look-ahead problems in the earnings data
+    found in a final review; correcting them made the earnings reaction clearer and the best strategy weaker.
 
 ## 1. Problem and purpose
 
@@ -70,6 +71,11 @@ Two questions run through the project:
   - 88% of filings appear after 18:00.
   - 15% came after the legal deadline, mostly the first inflation-accounting (TMS 29) statements.
   - Assuming legal deadlines would therefore have leaked information.
+  - Fintables keeps the latest version of each figure. For the 24 companies that apply inflation accounting it shows
+    restatements of 2022Q4 – 2023Q3 that were published a year later, and it re-expresses later figures in the money
+    of the latest balance sheet (verified against 20 published figures). Each figure is therefore used only from
+    the day its version became public, comparisons stay within one unit, and amounts are shown in the money of their
+    report.
 - **Macro.** TCMB EVDS (USD/TRY, EUR/TRY, policy rate), TÜİK CPI (usable from the 3rd of the next month) and the Fed
   target range (usable from the first BIST day after the announcement).
 - **Unstructured text.**
@@ -78,11 +84,11 @@ Two questions run through the project:
   - The official text of the TCMB briefing of 12 Nov 2026.
   - Numerical claims in speeches are checked against the data tools. Only verified claims can become evidence.
 
-The **data dictionary** (Report 0) documents 388 fields in 19 datasets with units and point-in-time rules. A test
+The **data dictionary** (Report 0) documents 415 fields in 19 datasets with units and point-in-time rules. A test
 fails if any field is undocumented. Two layers enforce the point-in-time rules:
 
 - **construction:** every feature uses only past closes; forward returns are used only when their window closed
-  before the analysis date;
+  before the analysis date; every fundamental figure carries the date its version was published;
 - **the quality gate:** it blocks any analysis whose evidence has a source date after the analysis date.
 
 ## 3. System architecture
@@ -119,17 +125,17 @@ tools; it does not invent or predict financial facts.**
 | research scenario (report) | key result | robustness | harness use |
 |:---|:---|:---|:---|
 | 1 Technical reversals | excess vs XU100 of 12 event types: -0.13 to +0.32% in 5 days; raw gains ≈ any-day drift (+1.08%) | no type with q < 0.05; 4/12 keep sign out of sample | context only |
-| 2 Sector catch-up | harness rule (no shock, strong sector, recovering, not weak earnings): +0.80 pt vs peers in 10 days (baseline +0.15) | only q < 0.05 result; +0.80 / +0.81 in the two halves; ~half still lag after 20 days | `POTENTIAL_CATCH_UP_CANDIDATE` |
+| 2 Sector catch-up | harness rule (no shock, strong sector, recovering, not weak earnings): +0.82 pt vs peers in 10 days (baseline +0.15) | only q < 0.05 result; +0.88 / +0.72 in the two halves; ~half still lag after 20 days | `POTENTIAL_CATCH_UP_CANDIDATE` |
 | 3 Weekday & multi-day | Wednesday -0.41, Thursday +0.34 pt vs other days; big down days continue (−1.35 pt in 5 days) | Wed-buy/Thu-sell: +201% before costs, +42% at 0.15% (XU100 +647%) | not used for actions |
-| 4 Earnings reaction | top − bottom net-income third: +1.67 pt before, +1.39 pt on the event day; operating income +1.64, revenue +0.14 | no reliable drift after day 4 except ROE change (+2.65 pt, days 1–20) | `FUNDAMENTAL_IMPROVEMENT_CANDIDATE` |
-| 5 Macro, news, speech | XU100 ×7.5 in TRY but ×1.4 in USD; macro risk flag lowered returns (C 241% → D 176%); only 'new contract' KAP news moves prices (+0.5 pt) | 3 of 33 speech claims verified and admitted as evidence | context, gate warnings, blockers |
+| 4 Earnings reaction | top − bottom net-income third: +1.26 pt before (q = 0.11), +2.01 pt on the event day (q = 0.021); operating income +1.95, revenue +0.45 | event day +2.01 pt with previous-quarter cut-offs, +2.01 pt ranking only companies already reported; no drift after day 4 except the net-margin change (+5.07 pt, days 1–20, q = 0.046) | `FUNDAMENTAL_IMPROVEMENT_CANDIDATE` |
+| 5 Macro, news, speech | XU100 ×7.5 in TRY but ×1.4 in USD; macro risk flag lowered returns (C 213% → D 163%); only 'new contract' KAP news moves prices (+0.5 pt) | 3 of 33 speech claims verified and admitted as evidence | context, gate warnings, blockers |
 
 - **Benchmarks.** The common thread is the benchmark. In five years XU100 rose 7.5× in nominal TRY (1.4× in USD),
   so almost any bullish signal "worked" in raw terms. Measured against XU100 or sector peers, most effects shrink to
   a few tenths of a percent.
 - **Robust findings.** Few effects survive correction *and* keep their sign in the second half:
   - the harness's catch-up rule (+0.8 pt vs peers in 10 days, both halves);
-  - the earnings reaction around disclosure (+1.4 pt on the event day, profitability rather than sales);
+  - the earnings reaction on the disclosure day (+2.0 pt top vs bottom third, profitability rather than sales);
   - the Wednesday weakness;
   - short-term continuation after big down days and over weekends.
 - **Robust but not tradable.** The Thursday strength, partly linked to central-bank decision days, is the most
@@ -138,7 +144,8 @@ tools; it does not invent or predict financial facts.**
   - no technical reversal type beats the index;
   - negative KAP news categories have no average effect;
   - the macro risk flag lowered strategy returns;
-  - revenue growth carries no price information under high inflation.
+  - revenue growth carries no price information under high inflation;
+  - there is no reliable price move before earnings filings once only published figures are used.
 - **Türkiye context.** Each report places its results in dated events, verified by search where it matters:
   - the 2021 currency crisis;
   - negative real rates in 2022;
@@ -157,18 +164,19 @@ second half 2024-11 – 2026-11)
 |:---|---:|---:|---:|---:|---:|---:|
 | A_teknik | 181 | 176 | 2 | 1.20 | -29 | 594 |
 | B_sektor | 188 | 164 | 9 | 1.29 | -24 | 688 |
-| C_temel | 241 | 209 | 11 | 1.57 | -25 | 536 |
-| D_makro | 176 | 163 | 5 | 1.39 | -22 | 536 |
-| E_haber | 171 | 159 | 5 | 1.39 | -23 | 525 |
+| C_temel | 213 | 175 | 14 | 1.44 | -21 | 627 |
+| D_makro | 163 | 145 | 7 | 1.30 | -21 | 627 |
+| E_haber | 176 | 145 | 12 | 1.37 | -20 | 611 |
 | XU100 | 189 | 118 | 33 | – | – | – |
 | equal-weight buy & hold | 342 | 199 | 48 | – | – | – |
 
-- **Strong first half.** All variants were profitable in the first half (the inflation rally), and C, which adds
-  the fundamental filter, beat equal-weight buy-and-hold there.
-- **Weak second half.** All variants earned only 2–11% while XU100 rose 33% and equal-weight 48%.
+- **Strong first half.** All variants were profitable in the first half (the inflation rally); none beat
+  equal-weight buy-and-hold. C, which adds the fundamental filter, beat XU100 by 57 pt there. Before the
+  point-in-time fix it also appeared to beat equal-weight buy-and-hold, using earnings information not yet public.
+- **Weak second half.** All variants earned only 2–14% while XU100 rose 33% and equal-weight 48%.
 - **Full period.** No variant beat equal-weight buy-and-hold (342%). The macro and news layers (D, E) reduced
   returns with almost no drawdown benefit.
-- **Costs.** Raising the one-way cost from 0.15% to 0.30% removes about 50 pt from every variant.
+- **Costs.** Raising the one-way cost from 0.15% to 0.30% removes 28–54 pt.
 - **The engine passes a deliberate look-ahead test:** a signal that "knows" today's return earns an absurd
   5 × 10¹¹ % without the one-day shift and +11% with it.
 
@@ -188,7 +196,9 @@ statistically real effects, yet a long-only rule built on them does not beat sim
 | E | 100.0 | 0.0 | 0.0 | 97.5 | 100.0 | 22.7 | 5.3 |
 
 The same model (Gemini 3.1 Flash-Lite, temperature 0) was run in five configurations on six cases chosen to expose
-failure modes, twice each.
+failure modes, twice each. The runs took place on 19–20 November, before the point-in-time fix (Section 10). With the
+corrected data the six cases keep their actions and gate results, but some evidence numbers changed (Report 6 §3);
+the experiment will be re-run once after the remaining corrections.
 
 - **A — raw LLM.** Text in, label out. It gave the evidence-based label in 2 of 12 runs, and half of its labels were
   unsupported (a candidate label despite a shock or negative news).
@@ -220,20 +230,21 @@ but that means consistency, not correctness: version A was consistently wrong.
 
 | id | tool | committed evidence (system output, Turkish) |
 |:---|:---|:---|
-| E1 | `calculate_fundamental_change` | Son açıklanan bilanço 2026-09-30 (2026-10-28 görünür): çeyrek net kârı 11.23 milyar TL (bir yıl önce 6.18 milyar TL) -> kâr arttı; yıllık net kâr değişimi %81.6; aynı çeyrekte 30 hisse içinde (sektör içi değil) üst üçte birde |
-| E2 | `get_fundamental_metrics` | Geçmişte üst üçte bir bilançolar açıklama sonrası 5 günde alt üçte birden %1.97 daha iyi (n=162) |
+| E1 | `calculate_fundamental_change` | Son açıklanan bilanço 2026-09-30 (2026-10-28 görünür): çeyrek net kârı 11.23 milyar TL (bir yıl önce 6.18 milyar TL; ikisi de Eylül 2026 TL'si) -> kâr arttı; yıllık net kâr değişimi %81.6; bir önceki çeyrekte 30 hissenin yıllık kâr değişimine göre üst üçte birde (eşikler: alt üçte bir %-19.0 ve altı, üst üçte bir %50.5 üstü; sektör içi değil) |
+| E2 | `get_fundamental_metrics` | Geçmişte üst üçte bir bilançolar açıklama sonrası 5 günde alt üçte birden %2.59 daha iyi (n=131) |
 | E3 | `get_news_events` | 2026-10-23 olumlu KAP duyurusu (yeni_is_sozlesme): Sözleşme İmzalanması |
 | E4 | `get_news_events` | 2026-10-26 olumlu KAP duyurusu (yeni_is_sozlesme): Sözleşme İmzalanması |
 | E5 | `get_news_events` | 2026-11-03 olumlu KAP duyurusu (yeni_is_sozlesme): Sözleşme İmzalanması |
 | E6 | `get_news_events` | Son 10 işlem gününde olumsuz KAP duyurusu ve şok yok |
 | E7 | `get_macro_context` | Makro: politika faizi %36.0, yıllık TÜFE %29.8 (2026-10), makro risk var (yarı ağırlık) |
-| E8 | `run_backtest` | Backtest C_temel (2022-10-27-2026-11-06, maliyet dahil): %241; eşit ağırlıklı al-tut %342, XU100 %189, en büyük düşüş %-25 |
+| E8 | `run_backtest` | Backtest C_temel (2022-10-27-2026-11-06, maliyet dahil): %213; eşit ağırlıklı al-tut %342, XU100 %189, en büyük düşüş %-21 |
 
 Table 4 shows how the rules turn evidence into a state, and how the system fails safely:
 
 - **ASELS (`FUNDAMENTAL_IMPROVEMENT_CANDIDATE`, gate PASS).** Quarterly profit rose from 6.18 to 11.23 billion TRY
-  (top third), there were three new contract disclosures, and no shock or negative news. The evidence also states the
-  weakness: the related backtest (C) returned 241%, below equal-weight buy-and-hold (342%), and the macro flag was on.
+  (money of Sep 2026; top third against the previous quarter's cut-offs), there were three new contract disclosures,
+  and no shock or negative news. The evidence also states the weakness: the related backtest (C) returned 213%,
+  below equal-weight buy-and-hold (342%), and the macro flag was on.
   In the real decision log the human changed this to `WATCH` for exactly that reason.
 - **TURSG (`INVESTIGATE`).** A −10% day, −39.5% in 20 days against −6.0% for XU100, a request for extra time to file
   statements, a departing head of internal audit, and a swing from profit to loss. The rules do not call this a
@@ -261,9 +272,10 @@ the explanation agent may not add a number that is not in these sentences.
 - the explanation, the model name, the full agent trace, and the human decision with its reason.
 
 **Replay.** The two real Gemini analyses in the log (ASELS, 18 Nov 2026; both changed by the human from candidate to
-`WATCH`) were replayed with the final code. The action and the gate were identical and no data file had changed,
-but the procedure hash differed. That is correct: rules and evidence wording were improved after those decisions.
-Replay thus separates "the data changed" from "the method changed".
+`WATCH`) were replayed with the final code. The action and the gate were identical. The replay reported a different
+procedure hash and one changed data file, the earnings table rebuilt by the point-in-time fix. That is correct:
+rules and evidence wording were improved after those decisions, and the earnings data were corrected. Replay thus
+separates "the data changed" from "the method changed".
 
 **Memory.** Episodic memory shows agents up to three earlier cases of the same stock, but only cases with an earlier
 analysis date. The missing date filter was one of the bugs found during the experiments.
@@ -283,23 +295,24 @@ The brief (§38) lists seven distinctions. Each one appeared in our own results:
 2. **Correlation ≠ causation.** Thursday's strength coincides with TCMB and Fed decision days (all 26 rate changes
    fell on a Thursday). That is a plausible mechanism, not a proven cause: meetings that held the rate are not in the
    data (Report 3).
-3. **Backtest ≠ future guarantee.** Every strategy variant beat XU100 in the first half and lagged it in the second
-   (Report 6).
+3. **Backtest ≠ future guarantee.** Every strategy variant except the rate filter beat XU100 in the first half, and
+   all of them lagged it in the second (Report 6).
 4. **Historical evidence ≠ investment advice.** Even the best-supported label (`POTENTIAL_CATCH_UP_CANDIDATE`)
    historically beat peers only about 52% of the time. About half of such stocks were still behind after 20 days
    (Report 2). The system therefore labels "worth investigating", never "buy".
 5. **LLM confidence ≠ statistical probability.** The raw LLM (version A) produced fluent, confident labels and was
    wrong in 10 of 12 runs. Its labels were 100% reproducible, which is consistency, not probability (Report 6).
 6. **Fundamental strength ≠ guaranteed price increase.** Strong earnings in a stock already above its 200-day
-   average gained only +0.44% in five days, and most of the earnings reaction happens before or on the disclosure
-   day (Report 4).
+   average lost −0.46% over days 0–4, and most of the earnings reaction happens on the disclosure day and the day
+   after (Report 4).
 7. **Expert commentary ≠ verified fact.** Of 33 numerical claims in the Fed and TCMB speeches, 3 could be verified
    and only those entered the evidence. The TCMB briefing sounded hawkish while TCMB had just cut rates (Report 5).
 
 ## 10. Problems found and fixed
 
-The system's own safeguards found eight design errors during Steps 14–15. Each was fixed together with a test
-that fails without the fix (full table in Report 6 §5):
+The system's own safeguards found eight design errors during Steps 14–15, and a final review on 22 November found
+two more in the earnings data. Each was fixed together with a test that fails without the fix (full table in
+Report 6 §5):
 
 1. **Memory leak.** Episodic memory could show a 2026 decision to a 2023 analysis (look-ahead in memory).
 2. **API change.** Gemini 3 tool calls required their "thought signature" to be returned.
@@ -311,9 +324,15 @@ that fails without the fix (full table in Report 6 §5):
 6. **Speech timing.** A speech published after the close entered the same day's analysis.
 7. **Validator false alarm.** The numerical validator flagged moving-average window lengths as fabricated numbers.
 8. **Demo log.** A demo command wrote to the real decision log.
+9. **Restated figures used too early.** Fintables shows inflation-accounting restatements of 2022Q4 – 2023Q3 that
+   were published a year later; they had been used on the original dates and compared with unrestated figures.
+10. **Ranking with later reporters.** A company's earnings third depended on companies that reported weeks later.
 
-Affected experiment rows were re-run with the real model, except wording-only changes, which are stated. The
-validator fix was applied by re-scoring the stored explanations offline.
+For findings 1–8, affected experiment rows were re-run with the real model, except wording-only changes, which are
+stated; the validator fix was applied by re-scoring the stored explanations offline. Findings 9–10 changed some
+evidence numbers of the experiment but none of its actions; it will be re-run once after the remaining corrections.
+They also changed research results: the pre-event earnings move and the ROE drift of Report 4 are no longer
+significant, and strategy C's lead over XU100 fell from 53 to 24 pt.
 
 One class of error is **not** caught automatically: an explanation that cites the wrong evidence id or skips an
 item. The numbers were right but the attribution was wrong. That needs an evidence-consistency check or the human
@@ -326,9 +345,11 @@ reviewer.
   - Survivorship from the 2026 index list.
   - Results in nominal TRY: they are always judged against XU100 or peers.
 - **Data gaps.**
-  - No 2022Q4 statements for 24 of 30 stocks.
-  - No share counts (valuation) and no liquidity ratios.
-  - Comparability across the TMS 29 switch is uncertain.
+  - Around the inflation-accounting switch (2022Q4 – 2024Q1) earnings cannot be ranked: the restated figures were
+    published a year later.
+  - Valuation, liquidity and EBITDA are not computed yet, although the Fintables files contain the needed lines.
+  - Fintables keeps only the latest version of each figure, so later corrections are carried back into earlier
+    periods (one small case found).
   - RSS has no history.
   - Only two speeches and no instructor-approved video list.
   - The TCMB video required a bot sign-in that we did not bypass.
@@ -342,6 +363,7 @@ reviewer.
   - The reference label is the rule result, so D/E agreement is not independent evidence that the rules are good.
     A human-labelled reference set would be needed.
   - Evidence completeness is a heuristic. Latency includes human time.
+  - The stored explanations predate the point-in-time fix (Report 6 §3).
 
 ## 12. Conclusion and future work
 
@@ -355,7 +377,7 @@ reviewer.
 
 **Future work.**
 
-- Test the ROE-improvement drift (Report 4) on new quarters as a pre-registered hypothesis.
+- Test the net-margin drift (Report 4) on new quarters as a pre-registered hypothesis.
 - Replace halves with rolling walk-forward tests and add a sector benchmark at portfolio level.
 - Add an evidence-id consistency check to the validator.
 - Collect a human-labelled reference set for the harness experiment.
@@ -385,7 +407,7 @@ reviewer.
 git clone https://github.com/dp-end/economy.git && cd economy
 python3.12 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
 unzip economy_data_2026-11-06.zip          # data cache, delivered separately
-pytest -q                                  # 160 tests, offline
+pytest -q                                  # 194 tests, offline
 python -m src.reports.build_reports        # Reports 0-6 and this report (no API key)
 python -m src.reports.pdf                  # research_reports.pdf
 python -m src.reports.pdf --final          # final_report.pdf

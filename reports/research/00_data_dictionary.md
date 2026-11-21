@@ -10,7 +10,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage points; `[TRY]` Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.
 
-**19 datasets, 388 fields.**
+**19 datasets, 416 fields.**
 
 | # | dataset | kind | step | columns |
 |---:|:---|:---|:---|---:|
@@ -22,13 +22,13 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | 6 | KAP publication dates of financial statements | structured | 7B | 9 |
 | 7 | Technical reversal events | structured (event table) | 4 | 15 |
 | 8 | Sector laggard / leader events | structured (event table) | 5 | 17 |
-| 9 | Earnings disclosure events | structured (event table) | 7C | 22 |
+| 9 | Earnings disclosure events | structured (event table) | 7C | 45 |
 | 10 | News archive (KAP + RSS) | unstructured text + structured tags | 10 | 12 |
 | 11 | KAP news signal events | structured (event table) | 10C | 15 |
 | 12 | Speech segments | unstructured text | 10B | 16 |
 | 13 | Speech features and claim checks | structured features from unstructured text | 10B | 26 |
 | 14 | Numerical claims in speeches | structured | 10B | 9 |
-| 15 | Evidence bundle (one per stock and analysis day) | structured + text evidence | 11 | 104 |
+| 15 | Evidence bundle (one per stock and analysis day) | structured + text evidence | 11 | 109 |
 | 16 | Decision log: analyses | structured (JSON fields) | 11, 13 | 21 |
 | 17 | Decision log: human reviews | structured + text | 11 | 7 |
 | 18 | Decision log: harness traces | structured (JSON) | 13 | 5 |
@@ -67,7 +67,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 
 - **File:** `data/fintables/*.xlsx → load_all() (example: TUPRS)`
 - **Type:** structured · **Built in step:** 2, 7 · **Grain:** one row per stock and quarter, 2022Q1 – 2026Q3 (2022Q4 missing for 24 of 30 stocks)
-- **Point-in-time rule:** a quarter is usable only from its KAP `event_day` (see `kap_disclosure_dates`); never from period end
+- **Point-in-time rule:** RAW, NOT point-in-time. Fintables keeps the latest version of every figure. For the 24 companies that apply inflation accounting (TMS 29) it re-states 2022Q4 – 2023Q3 and re-expresses everything from 2022Q4 on in the purchasing power of the company's latest balance-sheet month (verified against 20 published figures). Analyses use the point-in-time view in `earnings_events` (src/data/pit_fundamentals.py), never these raw values
 
 | column | description | type | filled | range / example |
 |:---|:---|:---|:---|:---|
@@ -75,7 +75,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `net_income` | net income attributable to parent, quarterly [TRY] | float | 98% | -2.265e+09 – 8.54e+10 |
 | `revenue` | net sales, quarterly [TRY]; missing for financials | float | 98% | 6.191e+09 – 5.06e+11 |
 | `gross_profit` | gross profit, quarterly [TRY]; missing for financials | float | 98% | -9.091e+08 – 9.386e+10 |
-| `op_income` | operating profit (closest line to EBITDA available), quarterly [TRY]; missing for financials | float | 98% | -2.993e+09 – 8.182e+10 |
+| `op_income` | operating profit, quarterly [TRY]; missing for financials | float | 98% | -2.993e+09 – 8.182e+10 |
 | `equity` | shareholders' equity at quarter end [TRY] | float | 98% | 7.233e+09 – 5.229e+11 |
 | `total_assets` | total assets at quarter end [TRY] | float | 98% | 2.728e+10 – 9.721e+11 |
 | `ni_yoy` | (net income − same quarter last year) / |same quarter last year| [fraction] | float | 86% | -5.037 – 28.2 |
@@ -233,7 +233,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 
 - **File:** `reports/earnings_events.parquet`
 - **Type:** structured (event table) · **Built in step:** 7C · **Grain:** one row per stock and quarter
-- **Point-in-time rule:** fundamentals attached at `event_day`; windows are outcomes
+- **Point-in-time rule:** fundamentals as they could be known on `event_day` (src/data/pit_fundamentals.py): a value is used only after the version we hold was published, and only with inputs in the same unit. Inflation-accounting restatements of 2022Q4 – 2023Q3 were first published a year later, so those quarters have no values on their own event day (reason in `pit_dropped`); they serve only as next year's comparatives. TRY amounts are in the money of that report (`unit_flow`, `unit_stock`); windows are outcomes
 
 | column | description | type | filled | range / example |
 |:---|:---|:---|:---|:---|
@@ -246,11 +246,34 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `event_day` | first trading day on which the market could react (after publication; post-18:00 filings → next day) | datetime | 98% | 2022-04-25 – 2026-11-06 |
 | `lag_days` | calendar days from quarter end to publication | int | 100% | 15 – 134 |
 | `after_deadline` | True if published after the legal deadline (15% of filings) | bool | 100% | 15% True |
-| `net_income` | quarterly net income [TRY] | float | 100% | -2.19e+10 – 9.35e+10 |
-| `ni_yoy` | net income YoY change [fraction] | float | 96% | -92.94 – 249.6 |
-| `ni_qoq` | net income QoQ change [fraction] | float | 96% | -51.93 – 225.7 |
-| `loss` | True if net income < 0 | bool | 100% | 16% True |
-| `tercile` | `alt`/`orta`/`ust` = bottom/middle/top third of ni_yoy among stocks of the same quarter | text | 93% | ust |
+| `net_income` | quarterly net income attributable to parent, as published [TRY, unit in `unit_flow`] | float | 80% | -1.346e+10 – 9.35e+10 |
+| `net_income_prev` | same quarter one year earlier as shown in this report (restated to its unit under TMS 29) [TRY] | float | 80% | -1.762e+10 – 9.35e+10 |
+| `ni_yoy` | net income YoY change, both quarters in the same unit [fraction] | float | 80% | -92.94 – 249.6 |
+| `ni_qoq` | net income QoQ change, both quarters in the same unit [fraction] | float | 76% | -51.93 – 225.7 |
+| `loss` | True if net income < 0; empty if net income is not known on the event day | bool | 80% | 15% True |
+| `net_income_ttm` | net income of the last 12 months, from cumulative figures [TRY] | float | 85% | -2.498e+10 – 1.824e+11 |
+| `revenue` | net sales, quarterly [TRY]; missing for financials | float | 71% | 3.267e+08 – 6.517e+11 |
+| `gross_profit` | gross profit, quarterly [TRY]; missing for financials | float | 71% | -3.129e+09 – 1.669e+11 |
+| `op_income` | operating profit, quarterly [TRY]; missing for financials | float | 71% | -1.145e+10 – 6.34e+10 |
+| `equity` | equity attributable to parent at quarter end [TRY, unit in `unit_stock`] | float | 98% | 6.363e+08 – 1.135e+12 |
+| `total_assets` | total assets at quarter end [TRY, unit in `unit_stock`] | float | 98% | 4.746e+09 – 6.233e+12 |
+| `roe_q` | quarterly net income / equity [fraction] | float | 80% | -0.2004 – 0.4148 |
+| `leverage` | total assets / equity [ratio] | float | 98% | 1.095 – 32.39 |
+| `net_margin` | net income / revenue, quarterly [fraction]; non-financials only | float | 71% | -0.8971 – 1.005 |
+| `revenue_yoy` | revenue YoY change [fraction] | float | 71% | -0.7617 – 6.527 |
+| `op_income_yoy` | operating profit YoY change [fraction] | float | 71% | -13.8 – 301.9 |
+| `margin_chg` | net margin minus net margin one year earlier [fraction points] | float | 71% | -1.417 – 1.077 |
+| `roe_chg` | roe_q minus roe_q one year earlier [fraction points] | float | 67% | -5.902 – 0.3713 |
+| `era_flow` | income-statement version: `A` as published (nominal), `B` inflation-accounting restatement first published a year later, `C` inflation-accounting report | text | 98% | A |
+| `era_stock` | balance-sheet version, same codes as `era_flow` | text | 98% | A |
+| `unit_flow` | unit of income amounts: `TL nominal`, `TL@YYYY-MM` (money of that month) or `-` if none shown | text | 98% | TL nominal |
+| `unit_stock` | unit of balance-sheet amounts, same codes as `unit_flow` | text | 98% | TL nominal |
+| `pit_dropped` | values left empty and why: `gec(date)` known only from that date, `birim` inputs in different units, `eksik` input missing, `karsilastirilamaz` comparison not in the same unit | text | 98% |  |
+| `tercile` | `alt`/`orta`/`ust` = ni_yoy at or below the previous quarter's 1/3 point, up to its 2/3 point, above it (no look-ahead: only previous-quarter values published by `event_day`) | text | 70% | ust |
+| `tercile_ref` | previous quarter whose values set the cut-offs | datetime | 70% | 2021-12-31 – 2026-06-30 |
+| `tercile_n` | number of previous-quarter values used (at least 15, else no tercile) | float | 70% | 30 – 30 |
+| `tercile_lo` | 1/3 point of the previous quarter's ni_yoy [fraction] | float | 70% | -0.975 – 1.001 |
+| `tercile_hi` | 2/3 point of the previous quarter's ni_yoy [fraction] | float | 70% | -0.4705 – 2.844 |
 | `quake_window` | True if the window touches the Feb 2023 earthquake closure; such rows are excluded from statistics | bool | 100% | 1% True |
 | `pre5` | abnormal return vs XU100, days −5…−1 before the event day [fraction] | float | 98% | -0.1531 – 0.2893 |
 | `d0` | abnormal return vs XU100 on the event day [fraction] | float | 98% | -0.1217 – 0.1111 |
@@ -413,14 +436,14 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `backtest.variant` | strategy variant matching the action | text | – | C_temel |
 | `backtest.start` | backtest start | datetime | – | 2022-10-27 |
 | `backtest.end` | backtest end (≤ asof) | datetime | – | 2026-11-06 |
-| `backtest.toplam_getiri` | total return after costs [fraction] | float | – | 2.414 |
+| `backtest.toplam_getiri` | total return after costs [fraction] | float | – | 2.127 |
 | `backtest.esit_agirlik` | equal-weight buy-and-hold [fraction] | float | – | 3.416 |
-| `backtest.fark` | difference to equal weight | float | – | -1.002 |
+| `backtest.fark` | difference to equal weight | float | – | -1.289 |
 | `backtest.xu100` | XU100 return [fraction] | float | – | 1.888 |
-| `backtest.xu100_fark` | difference to XU100 | float | – | 0.5261 |
-| `backtest.sharpe` | annualised Sharpe | float | – | 1.573 |
-| `backtest.max_dusus` | maximum drawdown [fraction] | float | – | -0.2464 |
-| `backtest.islem_sayisi` | number of position entries | int | – | 536 |
+| `backtest.xu100_fark` | difference to XU100 | float | – | 0.2395 |
+| `backtest.sharpe` | annualised Sharpe | float | – | 1.439 |
+| `backtest.max_dusus` | maximum drawdown [fraction] | float | – | -0.207 |
+| `backtest.islem_sayisi` | number of position entries | int | – | 627 |
 | `backtest.uyari` | `az sinyal` if < 30 trades | text | – |  |
 | `observed.price.date` | last price date used | datetime | – | 2026-11-06 |
 | `observed.price.close` | close [TRY] | float | – | 331.8 |
@@ -460,13 +483,18 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `observed.sector.own_ret_10` | stock's 10-day return | float | – | -0.01922 |
 | `observed.fundamentals.period_end` | latest PUBLIC quarter | datetime | – | 2026-09-30 |
 | `observed.fundamentals.event_day` | its KAP event day | datetime | – | 2026-10-28 |
-| `observed.fundamentals.ni_yoy` | net income YoY | float | – | 0.8161 |
-| `observed.fundamentals.tercile` | net income YoY third | text | – | ust |
-| `observed.fundamentals.loss` | loss quarter | bool | – | False |
+| `observed.fundamentals.ni_yoy` | net income YoY (both quarters in the same unit) | float | – | 0.8161 |
+| `observed.fundamentals.tercile` | net income YoY third (cut-offs from the previous quarter, no look-ahead) | text | – | ust |
+| `observed.fundamentals.tercile_ref` | previous quarter that set the cut-offs | datetime | – | 2026-06-30 |
+| `observed.fundamentals.tercile_n` | number of previous-quarter values behind the cut-offs | int | – | 30 |
+| `observed.fundamentals.tercile_lo` | 1/3 cut-off [fraction] | float | – | -0.1895 |
+| `observed.fundamentals.tercile_hi` | 2/3 cut-off [fraction] | float | – | 0.5046 |
+| `observed.fundamentals.loss` | loss quarter (empty if not known on the event day) | bool | – | False |
 | `observed.fundamentals.days_since` | trading days since event day | int | – | 6 |
 | `observed.fundamentals.financial` | financial company | bool | – | False |
-| `observed.fundamentals.net_income` | quarter net income [TRY] | float | – | 1.123e+10 |
-| `observed.fundamentals.net_income_prev` | same quarter a year earlier [TRY] | float | – | 6.182e+09 |
+| `observed.fundamentals.net_income` | quarter net income as published [TRY, money of that report] | float | – | 1.123e+10 |
+| `observed.fundamentals.net_income_prev` | same quarter a year earlier as shown in that report [TRY] | float | – | 6.182e+09 |
+| `observed.fundamentals.unit` | unit of the two amounts, e.g. `TL@2026-09` (money of Sep 2026) | text | – | TL@2026-09 |
 | `observed.fundamentals.roe_q` | quarterly ROE | float | – | 0.03352 |
 | `observed.fundamentals.leverage` | assets / equity | float | – | 1.848 |
 | `observed.fundamentals.net_margin` | net margin | float | – | 0.1934 |
@@ -485,7 +513,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `observed.speech.sources` | official speeches of the last 30 days: speaker, time, stance, verified claims | text | – | [{"source_id": "fed_20261028", "speaker"… |
 | `observed.speech.warnings` | transcript quality warnings | text | – | [] |
 | `history.catch_up` | past no-shock laggard outcomes closed before asof: n, hit, mean gap, last date | text | – | – |
-| `history.fundamental` | past top-minus-bottom earnings reaction closed before asof | text | – | {"n": 162, "mean_top": 0.007420404592176… |
+| `history.fundamental` | past top-minus-bottom earnings reaction closed before asof | text | – | {"n": 131, "mean_top": 0.004474519260934… |
 | `source_dates.<source>` | latest date of each source used (checked by the gate) | datetime | – | 2026-11-06 |
 | `action` | rule-chosen label from the 8 allowed actions | text | – | FUNDAMENTAL_IMPROVEMENT_CANDIDATE |
 | `secondary` | other candidate labels that also held | text | – | [] |

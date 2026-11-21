@@ -99,7 +99,12 @@ def research_summary() -> pd.DataFrame:
     bt3, _ = R3.wed_thu_backtest()
     sp4 = pd.read_csv("reports/earnings_spread_tests.csv").set_index("pencere")
     e4 = R4.load_events()
-    met = R4.metric_table(e4).set_index(["metric", "window"])
+    fam4, met, _ = R4.test_family(e4, sp4)          # Rapor 4 ile aynı 22 testlik BH ailesi
+    met = met.set_index(["metric", "window"])
+    q4 = fam4[fam4["family"] == "net income spread vs XU100"].set_index("test")["q (all tests)"]
+    mt4 = R4.method_table(e4)
+    a_d0, b_d0 = mt4.iloc[0]["event day pt"], mt4.iloc[1]["event day pt"]
+    bt = pd.read_csv("reports/backtest_strategies.csv").set_index(["strateji", "donem"])["toplam_getiri"] * 100
     rows = [
         ("1 Technical reversals", f"excess vs XU100 of 12 event types: {m1['excess 5d %'].min():+.2f} to "
          f"{m1['excess 5d %'].max():+.2f}% in 5 days; raw gains ≈ any-day drift (+{R1.baseline().iloc[0]['mean_5']:.2f}%)",
@@ -113,13 +118,18 @@ def research_summary() -> pd.DataFrame:
          f"other days; big down days continue (−1.35 pt in 5 days)",
          f"Wed-buy/Thu-sell: {bt3.iloc[0]['total return %']:+.0f}% before costs, {bt3.iloc[1]['total return %']:+.0f}% at 0.15% "
          f"(XU100 +{bt3.iloc[0]['XU100 %']:.0f}%)", "not used for actions"),
-        ("4 Earnings reaction", f"top − bottom net-income third: {sp4.loc['pre5', 'ort_fark']:+.2f} pt before, "
-         f"{sp4.loc['d0', 'ort_fark']:+.2f} pt on the event day; operating income "
+        ("4 Earnings reaction", f"top − bottom net-income third: {sp4.loc['pre5', 'ort_fark']:+.2f} pt before "
+         f"(q = {q4['5 days before']:.2f}), {sp4.loc['d0', 'ort_fark']:+.2f} pt on the event day "
+         f"(q = {q4['event day']:.3f}); operating income "
          f"{met.loc[('operating income YoY (non-financial)', 'event day'), 'top − bottom (pt)']:+.2f}, revenue "
          f"{met.loc[('revenue YoY (non-financial)', 'event day'), 'top − bottom (pt)']:+.2f}",
-         f"no reliable drift after day 4 except ROE change (+{met.loc[('ROE change, pt', 'days 1–20'), 'top − bottom (pt)']:.2f} "
-         f"pt, days 1–20)", "`FUNDAMENTAL_IMPROVEMENT_CANDIDATE`"),
-        ("5 Macro, news, speech", "XU100 ×7.5 in TRY but ×1.4 in USD; macro risk flag lowered returns (C 241% → D 176%); "
+         f"event day {a_d0:+.2f} pt with previous-quarter cut-offs, {b_d0:+.2f} pt ranking only companies already "
+         f"reported; no drift after day 4 except the net-margin change "
+         f"({met.loc[('net margin change, pt (non-financial)', 'days 1–20'), 'top − bottom (pt)']:+.2f} pt, days 1–20, "
+         f"q = {met.loc[('net margin change, pt (non-financial)', 'days 1–20'), 'q (all tests)']:.3f})",
+         "`FUNDAMENTAL_IMPROVEMENT_CANDIDATE`"),
+        ("5 Macro, news, speech", f"XU100 ×7.5 in TRY but ×1.4 in USD; macro risk flag lowered returns "
+         f"(C {bt[('C_temel', 'tum')]:.0f}% → D {bt[('D_makro', 'tum')]:.0f}%); "
          "only 'new contract' KAP news moves prices (+0.5 pt)", "3 of 33 speech claims verified and admitted as evidence",
          "context, gate warnings, blockers"),
     ]

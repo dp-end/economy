@@ -15,7 +15,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 from src.backtest.engine import COST_ONE_WAY, benchmarks, calculate_performance, load_returns
 from src.backtest.engine import run_backtest as _engine_backtest
 from src.backtest.strategies import WARMUP
-from src.data.fundamentals import load_all
+from src.data.pit_fundamentals import pit_asof
 from src.data.macro import CPI_RELEASE_DAY, get_macro_context as _macro
 from src.data.news_tags import CATEGORY_RULES, get_news_events as _news_query, load_news_events
 from src.data.prices import get_index_history as _index, get_stock_history as _stock
@@ -242,11 +242,24 @@ def test_weekday_pattern(ticker: str, pattern: str = "weekday", start: str = Non
 
 
 # ---------- 8-9: bilanço ----------
+FUND_NOTE = ("Değerler analiz gününde bilinebilenlerdir: enflasyon muhasebesi (TMS 29) uygulayan şirketlerin sonradan "
+             "düzeltilmiş 2022/4-2023/3 rakamları ancak yayınlandıkları günden sonra kullanılır; yıllık ve çeyreklik "
+             "değişimler aynı birimdeki iki rakamla hesaplanır. TL tutarları analiz gününde görünen son raporun "
+             "parasıyla (2022/9 ve öncesi nominal); birimler unit_flow (gelir) ve unit_stock (bilanço) alanlarında, "
+             "ör. 'TL@2026-09' Eylül 2026 TL'si. Boş değerlerin nedeni pit_dropped alanında. tercile: açıklama "
+             "günündeki sınıf; eşikler bir önceki çeyrekte o güne kadar açıklanmış en az 15 hissenin yıllık net kâr "
+             "değişiminin 1/3 ve 2/3 noktaları (sektör içi değil).")
+
+
 def _visible_quarters(t: str, d: pd.Timestamp) -> pd.DataFrame:
+    """Analiz gününe kadar açıklanmış çeyrekler: o gün bilinebilen değerler (src/data/pit_fundamentals.pit_asof;
+    TL tutarları o gün görünen son raporun parasıyla) + açıklama gününde hesaplanan 30 hisse içi sıralama."""
+    q = pit_asof(t, d)
+    if q.empty:
+        return q
     ev = pd.read_parquet("reports/earnings_events.parquet")
-    ev = ev[(ev["ticker"] == t) & (ev["event_day"] <= d)].sort_values("period_end")
-    st = load_all()[t]
-    return ev.merge(st, left_on="period_end", right_index=True, how="left", suffixes=("", "_st"))
+    ev = ev.loc[ev["ticker"] == t, ["period_end", "publish_time", "tercile", "financial"]]
+    return q.merge(ev, on="period_end", how="left").sort_values("period_end").reset_index(drop=True)
 
 
 def get_fundamental_metrics(ticker: str, period: str = None, asof: str = None) -> dict:
@@ -263,10 +276,12 @@ def get_fundamental_metrics(ticker: str, period: str = None, asof: str = None) -
             raise ToolError(f"{t} {p.date()} dönemi {d.date()} itibarıyla açıklanmamış ya da veride yok")
     r = q.iloc[-1]
     cols = ["period_end", "publish_time", "event_day", "net_income", "revenue", "gross_profit", "op_income", "equity",
-            "total_assets", "ni_yoy", "ni_qoq", "roe_q", "leverage", "net_margin", "loss", "tercile", "financial"]
+            "total_assets", "ni_yoy", "ni_qoq", "roe_q", "leverage", "net_margin", "loss", "tercile", "financial",
+            "unit_flow", "unit_stock", "pit_dropped"]
     out = {c: r[c] for c in cols if c in r.index}
     out.update(ticker=t, asof=str(d.date()), source="Fintables (elle indirilen Excel), yayın zamanı KAP",
-               note="Banka/sigorta/aracı kurumda ciro ve brüt kâr yoktur; ortak ölçüler net kâr, özkaynak, toplam varlık.")
+               note="Banka/sigorta/aracı kurumda ciro ve brüt kâr yoktur; ortak ölçüler net kâr, özkaynak, toplam varlık. "
+                    + FUND_NOTE)
     return to_json(out)
 
 
@@ -281,10 +296,9 @@ def calculate_fundamental_change(ticker: str, periods: int = 4, asof: str = None
         raise ToolError(f"{t} için {d.date()} itibarıyla açıklanmış bilanço yok")
     q = q.assign(roe_change=q["roe_q"].diff(), margin_change=q["net_margin"].diff() if "net_margin" in q else np.nan)
     cols = ["period_end", "event_day", "net_income", "ni_yoy", "ni_qoq", "roe_q", "roe_change", "net_margin",
-            "margin_change", "leverage", "loss", "tercile"]
+            "margin_change", "leverage", "loss", "tercile", "unit_flow", "unit_stock", "pit_dropped"]
     return to_json(dict(ticker=t, asof=str(d.date()), quarters=q[[c for c in cols if c in q]].to_dict("records"),
-                        note="Enflasyon muhasebesi (TMS 29) nedeniyle nominal büyüme yanıltıcı olabilir; "
-                             "tercile aynı çeyrekteki 30 hisse içinde sıralamadır."))
+                        note=FUND_NOTE))
 
 
 # ---------- 10-12: makro, haber, konuşma ----------

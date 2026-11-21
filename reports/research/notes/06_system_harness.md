@@ -4,7 +4,7 @@
 **Short answer.**
 
 - **Backtests.** No rule-based strategy variant beat a simple equal-weight buy-and-hold of the 30 stocks after
-  costs. The best variant (C, fundamental filter) beat XU100 over the full period (+53 pt), but every variant lagged
+  costs. The best variant (C, fundamental filter) beat XU100 over the full period (+24 pt), but every variant lagged
   XU100 in the second half. The macro and news layers (D, E) lowered returns. The backtest engine passes its own
   look-ahead self-test.
 - **Harness.** 15 deterministic MCP tools sit under a fixed 17-state machine with per-state tool permissions,
@@ -16,23 +16,26 @@
   - **The evidence bundle and gate** (D, E) give the reference action with complete, number-safe explanations.
 - **Numbers.** After fixing a validator false alarm, no version invented numbers. The differences are in **which
   action** is chosen and **how completely** the evidence is explained.
-- **Replay.** Replaying the real decision log with today's code reproduces the same actions and correctly reports
-  that the data are unchanged but the procedure has changed since the decisions were made.
+- **Replay.** Replaying the real decision log with today's code reproduces the same actions and gates and correctly
+  reports what changed since the decisions were made: the procedure, and one data file (the earnings table rebuilt
+  by the point-in-time fix of 22 November).
 
 <!-- backtest -->
 **Reading Tables 1–4 and Figure 1.**
 
 - **Strong first half, weak second half.**
-  - First half (2022-10 – 2024-11, the inflation rally): every variant except the rate filter beat XU100 by 41–91 pt (the rate filter: −17 pt), and C even beat
-    equal-weight buy-and-hold.
-  - Second half: every variant earned only +2% to +11% while XU100 rose 33% and equal-weight 48%.
+  - First half (2022-10 – 2024-11, the inflation rally): every variant except the rate filter beat XU100 by
+    27–58 pt (the rate filter: −22 pt), but none beat equal-weight buy-and-hold.
+  - Second half: every variant earned only +2% to +14% while XU100 rose 33% and equal-weight 48%.
   - A trend-following, long-only rule set that worked in a strong nominal bull market did not survive the
     tight-money period. This is the most important out-of-sample result of the project.
-- **Layers do not add return.** Fundamentals (C vs B) helped: +53 pt, with a higher Sharpe and a smaller drawdown.
-  Macro (D) and news (E) cut returns by 65–70 pt. The rate filter cut 130 pt and gave a drawdown improvement of only
-  3 pt. The only material benefit of D/E is a slightly lower volatility (19–20% vs 21%).
-- **Costs matter.** With 500–700 position entries, cumulative costs are 13–21% of capital. Doubling the cost to
-  0.30% one-way removes about 50 pt from every variant.
+- **Layers do not add return.** Fundamentals (C vs B) helped: +25 pt, with a higher Sharpe (1.44 vs 1.29) and a
+  smaller drawdown (−21% vs −24%). Before the point-in-time fix of 22 November (findings 9 and 10) this gain looked
+  twice as large (+53 pt): part of it came from earnings information that was not yet public. Macro (D) and news
+  (E) cut returns by 37–50 pt. The rate filter cut 103 pt and did not improve the drawdown. The only material
+  benefit of D/E is a slightly lower volatility (about 20% vs 21%; the rate filter 17%).
+- **Costs matter.** With about 600–700 position entries, cumulative costs are 15–21% of capital. Doubling the cost
+  to 0.30% one-way removes 28–54 pt.
 - **The engine is honest.**
   - A deliberately impossible "buy today's winners" signal returns an absurd 5 × 10¹¹ % when the one-day shift is
     removed. With the shift it returns +11%.
@@ -66,6 +69,23 @@
    whose analysis date is earlier than the current one.
 
 <!-- experiments -->
+**Status of this experiment.** It ran on 19–20 November 2026, before the point-in-time fix of 22 November (findings
+9 and 10). We recomputed the rule result for all six cases with the corrected data. The action, the secondary
+candidates and the gate are unchanged in every case, so the reference labels and the agreement figures below stand.
+Some numbers in the evidence the models saw have changed:
+
+| case | evidence item | in the experiment | now |
+|---|---|---|---|
+| ASELS, KRDMD (2026-11-06) | C backtest return (max drawdown) | 241% (−25%) | 213% (−21%) |
+| ASELS, KRDMD | earnings-reaction history, top − bottom over days 0–4 | +1.97 pt (n = 162) | +2.59 pt (n = 131) |
+| TURSG, PETKM (2026-11-06) | D backtest return (max drawdown) | 176% (−22%) | 163% (−21%) |
+| PETKM | earnings third | top | middle (+48.1% vs cut-off +50.5%) |
+| the four 2026 cases | earnings sentence | third within the quarter | third against the previous quarter's cut-offs; amounts with their unit |
+| ASELS, 2023-02-15 | D backtest return | 38% | 41% |
+
+The stored explanations therefore quote the pre-fix numbers. The experiment will be re-run once, after the remaining
+corrections from the 22 November review, so that explanations and evidence match again.
+
 **What each layer added** (Tables 7–8, Figure 2).
 
 - **A — raw LLM.**
@@ -112,17 +132,19 @@ translation: "strong earnings, but the strategy does not beat buy-and-hold; watc
 **What the replay shows (Table 13).** Replaying both records today gives:
 
 - the **same action and the same gate**;
-- **no changed data file** (all hashes match);
+- **one changed data file**: `reports/earnings_events.parquet`;
 - **procedure changed = yes**, and a different fingerprint.
 
-That is the correct diagnosis: since 18 November the rules were extended (the conflicting-signal rule) and the
-evidence sentences were improved (shock direction, profit direction), while the data stayed identical. A replay
-separates "the world changed" from "our method changed". That is the purpose of storing data hashes and a
-procedure hash with every decision.
+That is the correct diagnosis. Since 18 November the rules were extended (the conflicting-signal rule), the evidence
+sentences were improved (shock direction, profit direction, units, earnings cut-offs), and on 22 November the
+earnings table was rebuilt so that it contains only figures that were public on each event day (findings 9–10).
+Neither change alters these two decisions. A replay separates "the data changed" from "our method changed". That is
+the purpose of storing data hashes and a procedure hash with every decision.
 
 <!-- findings -->
 The checks built into the system (point-in-time gate, replay, numerical validator, tests) and the experiments
-found the following problems during Steps 14–15. Each was fixed with a test that fails without the fix:
+found problems 1–8 during Steps 14–15. Problems 9–10 were found on 22 November, while checking the project brief's
+fundamental-analysis requirements against the data. Each was fixed with a test that fails without the fix:
 
 | # | Problem | How it showed up | Fix | Effect on results |
 |---|---|---|---|---|
@@ -134,6 +156,8 @@ found the following problems during Steps 14–15. Each was fixed with a test th
 | 6 | A speech published after the close entered that day's analysis | found while writing the data dictionary | speeches selected by event day | none (no case affected) |
 | 7 | Validator flagged window lengths ("20, 50 and 200-day") as fabricated | B's "9.4% hallucination" was 6 such numbers | window/horizon lengths excluded like dates | stored explanations re-scored offline: hallucination 0% for all versions |
 | 8 | `--mock` demo wrote to the real decision log | found while writing the README | mock runs use the demo database | none |
+| 9 | Fintables stores inflation-accounting restatements and re-expressed figures, not the figures published at the time | 2023Q1–Q2 median profit growth was +178% and +209% for the 24 restating companies against +58% and +105% for the other six: restated figures, published a year later, were compared with original ones | point-in-time fundamentals layer: a figure is used only after the version we hold was published, comparisons only within one unit, amounts in the report's money; checked against 20 published figures | 2023Q1–Q3 no longer ranked; with row 10: Report 4's pre-event result and ROE drift no longer significant, C backtest 241% → 213% |
+| 10 | Earnings thirds used companies that reported later | an early reporter's third depended on results published weeks later, and on 11 companies that reported after the data end | thirds from the previous quarter's cut-offs, using only figures already published; same-quarter ranking kept as a robustness check (Report 4) | C/D/E backtests, Reports 2 and 4, experiment evidence (Section 3) |
 
 **Not caught automatically.** Some explanations cite the wrong evidence id. The KRDMD orchestrator attributed
 technical hit rates to E1 (an earnings sentence) and skipped two evidence items in one run. The validator checks
@@ -146,7 +170,7 @@ numbers, not meaning. Catching such errors needs a second check (evidence-id con
   human-labelled reference set would measure whether the *rules* are good.
 - **Mixed evidence bases.** Evidence completeness is a heuristic (evidence id cited, a number from the evidence, or
   a topic keyword). For PETKM and KRDMD, A–C were scored against the evidence list before the Step 15 rule changes,
-  D/E against the new one.
+  D/E against the new one. All stored explanations predate the point-in-time fix of 22 November (Section 3).
 - **Backtest simplifications.** Halves instead of walk-forward, a fixed 0.15% cost instead of a slippage model, 0%
   interest on cash, weekly rebalancing only, no ML layer.
 - **Short decision log.** It holds two real records. A longer history would make episodic memory meaningful.

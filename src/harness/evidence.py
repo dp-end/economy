@@ -15,7 +15,6 @@ import pandas as pd
 
 from src.backtest.engine import benchmarks, calculate_performance, load_returns, run_backtest
 from src.backtest.strategies import WARMUP, generate_strategy_variants, macro_scale
-from src.data.fundamentals import load_all
 from src.data.macro import get_macro_context
 from src.data.news_tags import load_news_events
 from src.data.prices import get_index_history, get_stock_history
@@ -126,18 +125,20 @@ def observe(ticker: str, day: pd.Timestamp) -> tuple:
     if len(vis):
         e = vis.iloc[-1]
         fundamentals = dict(period_end=e["period_end"], event_day=e["event_day"], ni_yoy=_f(e["ni_yoy"]),
-                            tercile=e["tercile"] if isinstance(e["tercile"], str) else None, loss=bool(e["loss"]),
+                            tercile=e["tercile"] if isinstance(e["tercile"], str) else None,
+                            # üçte bir eşikleri: bir önceki çeyrekte o güne kadar bilinen değerlerin 1/3 ve 2/3 noktaları
+                            tercile_ref=e["tercile_ref"] if pd.notna(e["tercile_ref"]) else None,
+                            tercile_n=int(e["tercile_n"]) if pd.notna(e["tercile_n"]) else None,
+                            tercile_lo=_f(e["tercile_lo"]), tercile_hi=_f(e["tercile_hi"]),
+                            loss=None if pd.isna(e["loss"]) else bool(e["loss"]),
                             days_since=int(trading_days().get_loc(day) - trading_days().get_loc(e["event_day"])),
                             financial=bool(e["financial"]))
-        allst = load_all()[ticker]
-        prev = allst["net_income"].get(pd.Timestamp(e["period_end"]) - pd.offsets.QuarterEnd(4))  # 1 yıl önceki çeyrek
-        fundamentals.update(net_income=_f(e["net_income"]), net_income_prev=_f(prev))
-        st = allst[allst.index == e["period_end"]]             # Fintables tablosu dönem sonuna göre indeksli
-        if len(st):
-            s = st.iloc[-1]
-            for k in ("roe_q", "leverage", "net_margin"):
-                if k in s.index:
-                    fundamentals[k] = _f(s[k])
+        # Açıklama gününde bilinebilen değerler (src/data/pit_fundamentals.py, Adım 1b). TL tutarları o raporun
+        # parasıyla; "bir yıl önce" o raporun karşılaştırma sütunu (TMS 29 şirketlerinde aynı birime çevrilmiş).
+        fundamentals.update(net_income=_f(e["net_income"]), net_income_prev=_f(e["net_income_prev"]),
+                            unit=e["unit_flow"] if isinstance(e["unit_flow"], str) else None)
+        for k in ("roe_q", "leverage") + (() if e["financial"] else ("net_margin",)):
+            fundamentals[k] = _f(e[k])
         src["bilanco_event_day"] = e["event_day"]
         src["bilanco_donemi"] = e["period_end"]
 
@@ -267,6 +268,19 @@ def _tl(x):
     return f"{x / 1e9:.2f} milyar TL" if abs(x) >= 1e9 else f"{x / 1e6:.0f} milyon TL"
 
 
+AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
+
+
+def unit_tr(unit) -> str:
+    """'TL@2026-09' -> 'Eylül 2026 TL'si'; 'TL nominal' -> 'nominal TL'. Bilinmiyorsa boş."""
+    if not isinstance(unit, str) or not unit.startswith("TL"):
+        return ""
+    if unit == "TL nominal":
+        return "nominal TL"
+    y, m = unit.split("@")[1].split("-")
+    return f"{AYLAR[int(m) - 1]} {y} TL'si"
+
+
 def profit_direction(cur, prev):
     """Yıllık değişimin yönü sözle. Yüzde tek başına yanıltır: zarar küçülünce de (+) çıkar (PETKM, Adım 14)."""
     if cur is None or prev is None:
@@ -305,11 +319,16 @@ def committed_evidence(action: str, secondary: list, cond: dict, b: dict) -> lis
     if "FUNDAMENTAL_IMPROVEMENT_CANDIDATE" in focus or action in ("INVESTIGATE", "REJECT_SIGNAL"):
         if fu.get("period_end") is not None:
             cur, prev = fu.get("net_income"), fu.get("net_income_prev")
-            ch = (f"çeyrek net kârı {_tl(cur)} (bir yıl önce {_tl(prev)}) -> {profit_direction(cur, prev)}; "
-                  if cur is not None and prev is not None else "")
+            u = unit_tr(fu.get("unit"))
+            ch = (f"çeyrek net kârı {_tl(cur)} (bir yıl önce {_tl(prev)}{'; ikisi de ' + u if u else ''}) -> "
+                  f"{profit_direction(cur, prev)}; " if cur is not None and prev is not None else "")
+            terc = TERCILE_TR.get(fu["tercile"])
+            rank = (f"bir önceki çeyrekte {fu['tercile_n']} hissenin yıllık kâr değişimine göre {terc} üçte birde "
+                    f"(eşikler: alt üçte bir {_pct(fu['tercile_lo'])} ve altı, üst üçte bir {_pct(fu['tercile_hi'])} "
+                    f"üstü; sektör içi değil)" if terc else
+                    "sırasız (bir önceki çeyrekte o güne kadar yeterli karşılaştırma yok)")
             add(f"Son açıklanan bilanço {pd.Timestamp(fu['period_end']).date()} ({pd.Timestamp(fu['event_day']).date()} "
-                f"görünür): {ch}yıllık net kâr değişimi {_pct(fu['ni_yoy'])}; aynı çeyrekte 30 hisse içinde (sektör içi değil) "
-                f"{TERCILE_TR.get(fu['tercile'], 'sırasız')} üçte birde"
+                f"görünür): {ch}yıllık net kâr değişimi {_pct(fu['ni_yoy'])}; {rank}"
                 f"{', zarar' if fu['loss'] else ''}", fu["ni_yoy"], "calculate_fundamental_change")
         f_h = h.get("fundamental") or {}
         if "FUNDAMENTAL_IMPROVEMENT_CANDIDATE" in focus and f_h.get("n"):

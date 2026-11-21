@@ -8,13 +8,14 @@
   inflation in every full year except 2022. Most of the "returns" in Reports 1–4 are nominal, which is why every
   report measures against XU100 or peers.
 - **Macro as a position-sizing rule hurt.** Halving positions when the macro risk flag is on cut the strategy's
-  return from 241% to 176% and barely reduced its worst drawdown (−25% → −22%). In this sample, XU100 actually did
+  return from 213% to 163% and did not reduce its worst drawdown (about −21% in both). In this sample, XU100 actually did
   *better* in the 20 days after the flag turned on (+5.4% vs +3.2%).
 - **The lira matters for sectors.** When USD/TRY rises, metal and mining stocks (exporters, a gold miner) beat the
   index and banks lag it. Only the metals result survives correction.
 - **News: one useful category.** Of the pre-registered KAP news categories, only "new contract / order"
   disclosures moved prices: +0.5 pt on the day (q = 0.002), mostly ASELS and EKGYO, with no follow-through.
-  Negative categories showed no average effect. Adding news to the strategy (E) changed nothing.
+  Negative categories showed no average effect. Adding news to the strategy (E) changed little (176% vs 163% for
+  D, not tested for significance).
 - **Speeches: verified claims only.** Of 33 numerical claims in two central-bank speeches, 3 could be verified
   against our data and only those entered the evidence. Forecasts and targets stay as context: expert commentary
   ≠ verified fact.
@@ -48,9 +49,10 @@ hold half positions. The data do not support it as a timing rule:
   (+3.19%, p = 0.001). In Türkiye a lira shock or a sell-off has often been followed by a rebound: equities are
   bought as an inflation and currency hedge (Dec 2021, mid-2023), and sharp political sell-offs partly reversed
   (spring 2025).
-- **Strategies.** Every D variant earns less than C. The interest-rate variant earns the least (111%), and the
-  drawdown improves by only 3 pt. Adding the news filter (E) gives 171% vs 176% for D.
-- **No help in the second half.** In the tighter second half, all of them lag XU100 (+2–11% vs +33%).
+- **Strategies.** Every D variant earns less than C (213%). The interest-rate variant earns the least (110%), and
+  the drawdown barely changes (−21% for C, −20% to −21% for the D variants). Adding the news filter (E) gives 176%
+  vs 163% for D.
+- **No help in the second half.** In the tighter second half, all of them lag XU100 (+7–14% vs +33%).
 
 The macro layer stays in the harness as **context and as a gate warning**, not as an automatic sizing rule. This
 was the main negative result of Step 9, and Table 3 shows it was not just bad luck in the backtest.

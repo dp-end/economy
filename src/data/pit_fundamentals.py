@@ -284,44 +284,81 @@ LEVELS = {  # çıktı adı -> panel niceliği (TL; yayınlandığı raporun par
 }
 
 
-def pit_quarters(ticker: str) -> pd.DataFrame:
-    """Her açıklanmış çeyrek için, açıklama gününde (event_day) bilinebilen değerler.
-    Bilinemeyen ya da birim karıştıran değerler boş bırakılır; nedeni 'pit_dropped' sütununda yazılır.
-    TL tutarları o raporun parasıyla; 'unit' sütunu birimi söyler."""
-    df = panel(ticker)
-    rows = []
-    for p in df.index:
-        ev = event_day(ticker, p)
-        if pd.isna(ev):
+FLOW_LEVELS = ("net_income", "net_income_prev", "revenue", "gross_profit", "op_income", "net_income_ttm")
+STOCK_LEVELS = ("equity", "total_assets")
+
+
+def _values(ticker: str, pan: pd.DataFrame, p, cutoff, factor: float, unit_u: str) -> dict:
+    """p döneminin değerleri, 'cutoff' gününde bilinebilenlerle sınırlı. 'U' ailesindeki TL tutarları 'factor' ile
+    çevrilir ve birimleri unit_u olur; 'nominal' tutarlar olduğu gibi kalır."""
+    r = pan.loc[p]
+    out = dict(ticker=ticker, period_end=p, event_day=event_day(ticker, p), era_flow=r["era_flow"],
+               era_stock=r["era_stock"])
+    dropped, fams = [], {}
+    for name, q in [(n, n) for n in RATIOS] + list(LEVELS.items()):
+        if q not in pan.columns:
             continue
-        r = df.loc[p]
-        u = unit_month(ticker)
-        out = dict(ticker=ticker, period_end=p, event_day=ev, era_flow=r["era_flow"], era_stock=r["era_stock"])
-        dropped = []
-        for name, q in [(n, n) for n in RATIOS] + list(LEVELS.items()):
-            if q not in df.columns:
-                continue
-            v, fam, kn, why = r[q], r[f"{q}__fam"], r[f"{q}__known"], r[f"{q}__why"]
-            if pd.isna(v):
-                if why:
-                    dropped.append(f"{name}:{why}")
-                out[name] = np.nan
-                continue
-            if pd.isna(kn) or kn > ev:
-                dropped.append(f"{name}:gec({'?' if pd.isna(kn) else pd.Timestamp(kn).date()})")
-                out[name] = np.nan
-                continue
-            if name in LEVELS and fam == "U":
-                v = v * report_factor(ticker, p)
-            out[name] = float(v)
-        out["loss"] = bool(out["net_income"] < 0) if pd.notna(out.get("net_income")) else None
-        # birim: gelir ve bilanço ayrı (2023/3-9'da TMS 29 şirketlerinde bilanço açıklandığı gibi, gelir düzeltilmiş)
-        here = f"TL@{actual_end(ticker, p):%Y-%m}"
-        out["unit_flow"] = {"A": "TL nominal", "C": here}.get(r["era_flow"], "-") if u is not None else "TL nominal"
-        out["unit_stock"] = {"A": "TL nominal", "C": here}.get(r["era_stock"], "-") if u is not None else "TL nominal"
-        out["pit_dropped"] = ";".join(dropped)
-        rows.append(out)
+        v, fam, kn, why = r[q], r[f"{q}__fam"], r[f"{q}__known"], r[f"{q}__why"]
+        if pd.isna(v):
+            if why:
+                dropped.append(f"{name}:{why}")
+            out[name] = np.nan
+            continue
+        if pd.isna(kn) or kn > cutoff:
+            dropped.append(f"{name}:gec({'?' if pd.isna(kn) else pd.Timestamp(kn).date()})")
+            out[name] = np.nan
+            continue
+        if name in LEVELS:
+            fams[name] = fam
+            if fam == "U":
+                v = v * factor
+        out[name] = float(v)
+    # "bir yıl önce" rakamı yalnızca bu çeyreğin rakamıyla aynı birimdeyse anlamlı (yan yana farklı birim yanıltır)
+    if pd.notna(out.get("net_income_prev")) and (pd.isna(out.get("net_income"))
+                                                 or fams.get("net_income_prev") != fams.get("net_income")):
+        out["net_income_prev"] = np.nan
+        fams.pop("net_income_prev", None)
+        dropped.append("net_income_prev:karsilastirilamaz")
+    out["loss"] = bool(out["net_income"] < 0) if pd.notna(out.get("net_income")) else None
+    # birim: gelir ve bilanço ayrı yazılır (2023/3-9'da TMS 29 şirketlerinde bilanço açıklandığı gibi, gelir
+    # düzeltilmiş). Gösterilen tutar yoksa '-'.
+    for col, names in (("unit_flow", FLOW_LEVELS), ("unit_stock", STOCK_LEVELS)):
+        shown = {fams[n] for n in names if n in fams}
+        out[col] = "-" if not shown else ("TL nominal" if shown == {"nominal"} else
+                                          unit_u if shown == {"U"} else "karışık")
+    out["pit_dropped"] = ";".join(dropped)
+    return out
+
+
+def pit_quarters(ticker: str) -> pd.DataFrame:
+    """Olay günü görünümü: her açıklanmış çeyrek için, açıklama gününde (event_day) bilinebilen değerler.
+    Bilinemeyen ya da birim karıştıran değerler boş bırakılır; nedeni 'pit_dropped' sütununda yazılır.
+    TL tutarları o raporun parasıyla (unit_flow, unit_stock). Olay çalışmaları (Rapor 4) ve backtest bunu kullanır."""
+    pan = panel(ticker)
+    rows = []
+    for p in pan.index:
+        ev = event_day(ticker, p)
+        if pd.notna(ev):
+            rows.append(_values(ticker, pan, p, ev, report_factor(ticker, p), f"TL@{actual_end(ticker, p):%Y-%m}"))
     return pd.DataFrame(rows)
+
+
+def pit_asof(ticker: str, asof) -> pd.DataFrame:
+    """Analiz günü görünümü: 'asof' gününe kadar açıklanmış çeyrekler ve o gün bilinebilen değerler.
+    Olay günü görünümünden iki farkı var:
+      - Elimizdeki sürümü sonradan yayınlanan bir değer, analiz günü o tarihten sonraysa kullanılır
+        (ör. TMS 29 şirketinin tek başına 2023/4. çeyreği Ekim 2024'ten itibaren bilinir).
+      - TL tutarları, analiz gününde görünen SON raporun parasıyla tek birimde verilir; böylece satırlar
+        karşılaştırılabilir. TMS 29 öncesi (nominal) satırlar olduğu gibi kalır.
+    MCP araçları (get_fundamental_metrics, calculate_fundamental_change) bunu kullanır."""
+    d = pd.Timestamp(asof)
+    pan = panel(ticker)
+    vis = [p for p in pan.index if pd.notna(event_day(ticker, p)) and event_day(ticker, p) <= d]
+    if not vis:
+        return pd.DataFrame()
+    latest = max(vis)
+    f, unit_u = report_factor(ticker, latest), f"TL@{actual_end(ticker, latest):%Y-%m}"
+    return pd.DataFrame([_values(ticker, pan, p, d, f, unit_u) for p in vis])
 
 
 @lru_cache(maxsize=1)

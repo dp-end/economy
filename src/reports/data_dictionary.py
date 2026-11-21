@@ -141,11 +141,15 @@ DATASETS = [
     dict(key="fundamentals", title="Quarterly fundamentals (Fintables)", file="data/fintables/*.xlsx → load_all() "
          "(example: TUPRS)", load=_fund, kind="structured", step="2, 7",
          grain="one row per stock and quarter, 2022Q1 – 2026Q3 (2022Q4 missing for 24 of 30 stocks)",
-         pit="a quarter is usable only from its KAP `event_day` (see `kap_disclosure_dates`); never from period end",
+         pit="RAW, NOT point-in-time. Fintables keeps the latest version of every figure. For the 24 companies that "
+             "apply inflation accounting (TMS 29) it re-states 2022Q4 – 2023Q3 and re-expresses everything from "
+             "2022Q4 on in the purchasing power of the company's latest balance-sheet month (verified against 20 "
+             "published figures). Analyses use the point-in-time view in `earnings_events` "
+             "(src/data/pit_fundamentals.py), never these raw values",
          cols={"period_end": "quarter end date", "net_income": "net income attributable to parent, quarterly [TRY]",
                "revenue": "net sales, quarterly [TRY]; missing for financials",
                "gross_profit": "gross profit, quarterly [TRY]; missing for financials",
-               "op_income": "operating profit (closest line to EBITDA available), quarterly [TRY]; missing for financials",
+               "op_income": "operating profit, quarterly [TRY]; missing for financials",
                "equity": "shareholders' equity at quarter end [TRY]", "total_assets": "total assets at quarter end [TRY]",
                "ni_yoy": "(net income − same quarter last year) / |same quarter last year| [fraction]",
                "ni_qoq": "(net income − previous quarter) / |previous quarter| [fraction]",
@@ -218,10 +222,43 @@ DATASETS = [
                **{k: v for k, v in EVENT_RET.items() if k.split("_")[1] in ("5", "10", "20")}}),
     dict(key="earnings_events", title="Earnings disclosure events", file="reports/earnings_events.parquet",
          load=_pq("reports/earnings_events.parquet"), kind="structured (event table)", step="7C",
-         grain="one row per stock and quarter", pit="fundamentals attached at `event_day`; windows are outcomes",
-         cols={**KAP_DATES, "net_income": "quarterly net income [TRY]", "ni_yoy": "net income YoY change [fraction]",
-               "ni_qoq": "net income QoQ change [fraction]", "loss": "True if net income < 0",
-               "tercile": "`alt`/`orta`/`ust` = bottom/middle/top third of ni_yoy among stocks of the same quarter",
+         grain="one row per stock and quarter",
+         pit="fundamentals as they could be known on `event_day` (src/data/pit_fundamentals.py): a value is used only "
+             "after the version we hold was published, and only with inputs in the same unit. Inflation-accounting "
+             "restatements of 2022Q4 – 2023Q3 were first published a year later, so those quarters have no values "
+             "on their own event day (reason in `pit_dropped`); they serve only as next year's comparatives. TRY "
+             "amounts are in the money of that report (`unit_flow`, `unit_stock`); windows are outcomes",
+         cols={**KAP_DATES,
+               "net_income": "quarterly net income attributable to parent, as published [TRY, unit in `unit_flow`]",
+               "net_income_prev": "same quarter one year earlier as shown in this report (restated to its unit under "
+                                  "TMS 29) [TRY]",
+               "ni_yoy": "net income YoY change, both quarters in the same unit [fraction]",
+               "ni_qoq": "net income QoQ change, both quarters in the same unit [fraction]",
+               "loss": "True if net income < 0; empty if net income is not known on the event day",
+               "net_income_ttm": "net income of the last 12 months, from cumulative figures [TRY]",
+               "revenue": "net sales, quarterly [TRY]; missing for financials",
+               "gross_profit": "gross profit, quarterly [TRY]; missing for financials",
+               "op_income": "operating profit, quarterly [TRY]; missing for financials",
+               "equity": "equity attributable to parent at quarter end [TRY, unit in `unit_stock`]",
+               "total_assets": "total assets at quarter end [TRY, unit in `unit_stock`]",
+               "roe_q": "quarterly net income / equity [fraction]", "leverage": "total assets / equity [ratio]",
+               "net_margin": "net income / revenue, quarterly [fraction]; non-financials only",
+               "revenue_yoy": "revenue YoY change [fraction]", "op_income_yoy": "operating profit YoY change [fraction]",
+               "margin_chg": "net margin minus net margin one year earlier [fraction points]",
+               "roe_chg": "roe_q minus roe_q one year earlier [fraction points]",
+               "era_flow": "income-statement version: `A` as published (nominal), `B` inflation-accounting "
+                           "restatement first published a year later, `C` inflation-accounting report",
+               "era_stock": "balance-sheet version, same codes as `era_flow`",
+               "unit_flow": "unit of income amounts: `TL nominal`, `TL@YYYY-MM` (money of that month) or `-` if none shown",
+               "unit_stock": "unit of balance-sheet amounts, same codes as `unit_flow`",
+               "pit_dropped": "values left empty and why: `gec(date)` known only from that date, `birim` inputs in "
+                              "different units, `eksik` input missing, `karsilastirilamaz` comparison not in the same unit",
+               "tercile": "`alt`/`orta`/`ust` = ni_yoy at or below the previous quarter's 1/3 point, up to its 2/3 "
+                          "point, above it (no look-ahead: only previous-quarter values published by `event_day`)",
+               "tercile_ref": "previous quarter whose values set the cut-offs",
+               "tercile_n": "number of previous-quarter values used (at least 15, else no tercile)",
+               "tercile_lo": "1/3 point of the previous quarter's ni_yoy [fraction]",
+               "tercile_hi": "2/3 point of the previous quarter's ni_yoy [fraction]",
                "quake_window": QUAKE, **WIN, "financial": "True for AKBNK, ISMEN, TURSG (industrial ratios not used)"}),
     dict(key="news", title="News archive (KAP + RSS)", file="reports/news_events.parquet",
          load=_pq("reports/news_events.parquet"), kind="unstructured text + structured tags", step="10",
@@ -287,10 +324,18 @@ DATASETS = [
                "observed.sector.rank_in_group": "rank of the stock's 10-day return in its group (1 = best)",
                "observed.sector.own_ret_10": "stock's 10-day return",
                "observed.fundamentals.period_end": "latest PUBLIC quarter", "observed.fundamentals.event_day": "its KAP event day",
-               "observed.fundamentals.ni_yoy": "net income YoY", "observed.fundamentals.tercile": "net income YoY third",
-               "observed.fundamentals.loss": "loss quarter", "observed.fundamentals.days_since": "trading days since event day",
-               "observed.fundamentals.financial": "financial company", "observed.fundamentals.net_income": "quarter net income [TRY]",
-               "observed.fundamentals.net_income_prev": "same quarter a year earlier [TRY]",
+               "observed.fundamentals.ni_yoy": "net income YoY (both quarters in the same unit)",
+               "observed.fundamentals.tercile": "net income YoY third (cut-offs from the previous quarter, no look-ahead)",
+               "observed.fundamentals.tercile_ref": "previous quarter that set the cut-offs",
+               "observed.fundamentals.tercile_n": "number of previous-quarter values behind the cut-offs",
+               "observed.fundamentals.tercile_lo": "1/3 cut-off [fraction]",
+               "observed.fundamentals.tercile_hi": "2/3 cut-off [fraction]",
+               "observed.fundamentals.loss": "loss quarter (empty if not known on the event day)",
+               "observed.fundamentals.days_since": "trading days since event day",
+               "observed.fundamentals.financial": "financial company",
+               "observed.fundamentals.net_income": "quarter net income as published [TRY, money of that report]",
+               "observed.fundamentals.net_income_prev": "same quarter a year earlier as shown in that report [TRY]",
+               "observed.fundamentals.unit": "unit of the two amounts, e.g. `TL@2026-09` (money of Sep 2026)",
                "observed.fundamentals.roe_q": "quarterly ROE", "observed.fundamentals.leverage": "assets / equity",
                "observed.fundamentals.net_margin": "net margin",
                **{f"observed.macro.{k}": f"macro panel `{k}` on the analysis day" for k in

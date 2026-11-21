@@ -43,7 +43,8 @@ def load_events() -> pd.DataFrame:
     ev = ev.dropna(subset=["event_day"]).assign(event_day=lambda x: pd.to_datetime(x["event_day"]))
     s = pd.merge_asof(s.sort_values("date"), ev.sort_values("event_day"), left_on="date", right_on="event_day",
                       by="ticker", direction="backward")              # yalnızca olay gününe kadar açıklanmış bilanço
-    s["tercile"] = s["tercile"].fillna("none")
+    # bilanço yok / bilanço var ama sıralanmadı (TMS 29 geçişi çeyrekleri) ayrı tutulur
+    s["tercile"] = np.where(s["event_day"].isna(), "none", s["tercile"].fillna("unranked"))
     s["macro_risk"] = macro_scale(pd.DatetimeIndex(s["date"])).to_numpy() < 1
     s["harness_catch_up"] = (~s["shock"]) & s["sector_strong"] & s["recovering"] & (s["tercile"] != "alt")
     for h in FWD_H:
@@ -85,13 +86,15 @@ def filter_ladder(s: pd.DataFrame, base: pd.Series) -> pd.DataFrame:
 
 
 def split_table(s: pd.DataFrame, col: str, labels: dict) -> pd.DataFrame:
+    """Satırlar labels sözlüğünün sırasıyla (sözlükte olmayan değerler sona)."""
     g = s[(s["config"] == MAIN) & (s["side"] == "laggard") & ~s["shock"]]
     rows = []
     for v, x in g.groupby(col):
         r = stat_row(x)
         rows.append({col: labels.get(v, v), **{k: r[k] for k in ("n", "gap 10d", "gap 20d", "hit 10d %",
                                                                   "t (by day)")}})
-    return pd.DataFrame(rows).set_index(col)
+    order = {lab: i for i, lab in enumerate(labels.values())}
+    return pd.DataFrame(rows).set_index(col).sort_index(key=lambda ix: ix.map(lambda x: order.get(x, len(order))))
 
 
 def false_positives(s: pd.DataFrame) -> tuple:
@@ -192,7 +195,8 @@ def build() -> str:
     m = main_table(s)
     lad = filter_ladder(s, base)
     terc = split_table(s, "tercile", {"alt": "bottom third", "orta": "middle third", "ust": "top third",
-                                      "none": "no earnings visible yet"})
+                                      "unranked": "statement public, quarter not ranked",
+                                      "none": "no statement public yet"})
     strong = split_table(s, "sector_strong", {True: "sector median > 0", False: "sector median ≤ 0"})
     recov = split_table(s, "recovering", {True: "above KAMA or Supertrend up", False: "below KAMA and Supertrend down"})
     macro = split_table(s, "macro_risk", {True: "macro risk on (half weight)", False: "macro risk off"})

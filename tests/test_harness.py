@@ -171,3 +171,17 @@ def test_speech_after_close_is_not_known_the_same_day():
     later = observe("ASELS", pd.Timestamp("2026-10-30"))[0]["speech"]["sources"]
     assert "fed_20261028" not in [s["source_id"] for s in same]
     assert "fed_20261028" in [s["source_id"] for s in later]
+
+
+def test_fundamental_evidence_in_report_money_and_unit():
+    """Geçmiş tarihli analizde kâr, o raporun parasıyla ve birimi yazılarak verilir (Adım 1b)."""
+    from src.harness.evidence import unit_tr
+    assert unit_tr("TL@2026-09") == "Eylül 2026 TL'si" and unit_tr("TL nominal") == "nominal TL"
+    assert unit_tr(None) == "" and unit_tr("-") == ""
+    fu = build_evidence_bundle("ASELS", "2024-06-03")["observed"]["fundamentals"]
+    assert fu["period_end"] == pd.Timestamp("2024-03-31") and fu["unit"] == "TL@2024-03"
+    assert abs(fu["net_income"] - 1.403767e9) / 1.403767e9 < 1e-4          # Mart 2024 TL'si, açıklandığı gibi
+    assert fu["tercile"] is None                     # 2024/1: önceki çeyrekte (2023/4) yeterli karşılaştırma yok
+    r = run_analysis("ASELS", "2026-11-06")
+    e1 = next(e["text"] for e in r["committed"] if e["text"].startswith("Son açıklanan bilanço"))
+    assert "ikisi de Eylül 2026 TL'si" in e1 and "bir önceki çeyrekte 30 hissenin" in e1

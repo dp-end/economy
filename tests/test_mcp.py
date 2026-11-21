@@ -77,6 +77,8 @@ def test_tools_do_not_leak_future():
     late = ev[pd.to_datetime(ev["date"]) > pd.Timestamp("2026-10-23")]          # 5 günlük pencere 30 Ekim'i geçer
     assert late["exc_5"].isna().all()
     err, text = call("get_fundamental_metrics", dict(ticker="ASELS", asof="2026-10-27"))
-    assert json.loads(text)["period_end"].startswith("2026-06-30")               # 2026/9 henüz açıklanmadı
+    out = json.loads(text)
+    assert out["period_end"].startswith("2026-06-30")                            # 2026/9 henüz açıklanmadı
+    assert out["unit_flow"] == "TL@2026-06" and out["unit_stock"] == "TL@2026-06"  # o gün görünen son raporun parası
     err, text = call("get_news_events", dict(ticker="TURSG", start="2026-10-01", asof="2026-10-20"))
     assert all(e["event_day"][:10] <= "2026-10-20" for e in json.loads(text)["events"])

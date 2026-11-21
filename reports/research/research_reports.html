@@ -33,7 +33,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 (news, speeches, LLM explanations, review reasons); all other fields are structured.</p>
 <p>Units: <code>[fraction]</code> 0.05 = 5%; <code>[%]</code> already in percent; <code>[pt]</code> percentage points; <code>[TRY]</code> Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.</p>
-<p><strong>19 datasets, 388 fields.</strong></p>
+<p><strong>19 datasets, 416 fields.</strong></p>
 <table>
 <thead>
 <tr>
@@ -106,7 +106,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">Earnings disclosure events</td>
 <td style="text-align: left;">structured (event table)</td>
 <td style="text-align: left;">7C</td>
-<td style="text-align: right;">22</td>
+<td style="text-align: right;">45</td>
 </tr>
 <tr>
 <td style="text-align: right;">10</td>
@@ -148,7 +148,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">Evidence bundle (one per stock and analysis day)</td>
 <td style="text-align: left;">structured + text evidence</td>
 <td style="text-align: left;">11</td>
-<td style="text-align: right;">104</td>
+<td style="text-align: right;">109</td>
 </tr>
 <tr>
 <td style="text-align: right;">16</td>
@@ -299,7 +299,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <ul>
 <li><strong>File:</strong> <code>data/fintables/*.xlsx → load_all() (example: TUPRS)</code></li>
 <li><strong>Type:</strong> structured · <strong>Built in step:</strong> 2, 7 · <strong>Grain:</strong> one row per stock and quarter, 2022Q1 – 2026Q3 (2022Q4 missing for 24 of 30 stocks)</li>
-<li><strong>Point-in-time rule:</strong> a quarter is usable only from its KAP <code>event_day</code> (see <code>kap_disclosure_dates</code>); never from period end</li>
+<li><strong>Point-in-time rule:</strong> RAW, NOT point-in-time. Fintables keeps the latest version of every figure. For the 24 companies that apply inflation accounting (TMS 29) it re-states 2022Q4 – 2023Q3 and re-expresses everything from 2022Q4 on in the purchasing power of the company's latest balance-sheet month (verified against 20 published figures). Analyses use the point-in-time view in <code>earnings_events</code> (src/data/pit_fundamentals.py), never these raw values</li>
 </ul>
 <table>
 <thead>
@@ -342,7 +342,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 <tr>
 <td style="text-align: left;"><code>op_income</code></td>
-<td style="text-align: left;">operating profit (closest line to EBITDA available), quarterly [TRY]; missing for financials</td>
+<td style="text-align: left;">operating profit, quarterly [TRY]; missing for financials</td>
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">98%</td>
 <td style="text-align: left;">-2.993e+09 – 8.182e+10</td>
@@ -1197,7 +1197,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <ul>
 <li><strong>File:</strong> <code>reports/earnings_events.parquet</code></li>
 <li><strong>Type:</strong> structured (event table) · <strong>Built in step:</strong> 7C · <strong>Grain:</strong> one row per stock and quarter</li>
-<li><strong>Point-in-time rule:</strong> fundamentals attached at <code>event_day</code>; windows are outcomes</li>
+<li><strong>Point-in-time rule:</strong> fundamentals as they could be known on <code>event_day</code> (src/data/pit_fundamentals.py): a value is used only after the version we hold was published, and only with inputs in the same unit. Inflation-accounting restatements of 2022Q4 – 2023Q3 were first published a year later, so those quarters have no values on their own event day (reason in <code>pit_dropped</code>); they serve only as next year's comparatives. TRY amounts are in the money of that report (<code>unit_flow</code>, <code>unit_stock</code>); windows are outcomes</li>
 </ul>
 <table>
 <thead>
@@ -1275,38 +1275,199 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 <tr>
 <td style="text-align: left;"><code>net_income</code></td>
-<td style="text-align: left;">quarterly net income [TRY]</td>
+<td style="text-align: left;">quarterly net income attributable to parent, as published [TRY, unit in <code>unit_flow</code>]</td>
 <td style="text-align: left;">float</td>
-<td style="text-align: left;">100%</td>
-<td style="text-align: left;">-2.19e+10 – 9.35e+10</td>
+<td style="text-align: left;">80%</td>
+<td style="text-align: left;">-1.346e+10 – 9.35e+10</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>net_income_prev</code></td>
+<td style="text-align: left;">same quarter one year earlier as shown in this report (restated to its unit under TMS 29) [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">80%</td>
+<td style="text-align: left;">-1.762e+10 – 9.35e+10</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>ni_yoy</code></td>
-<td style="text-align: left;">net income YoY change [fraction]</td>
+<td style="text-align: left;">net income YoY change, both quarters in the same unit [fraction]</td>
 <td style="text-align: left;">float</td>
-<td style="text-align: left;">96%</td>
+<td style="text-align: left;">80%</td>
 <td style="text-align: left;">-92.94 – 249.6</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>ni_qoq</code></td>
-<td style="text-align: left;">net income QoQ change [fraction]</td>
+<td style="text-align: left;">net income QoQ change, both quarters in the same unit [fraction]</td>
 <td style="text-align: left;">float</td>
-<td style="text-align: left;">96%</td>
+<td style="text-align: left;">76%</td>
 <td style="text-align: left;">-51.93 – 225.7</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>loss</code></td>
-<td style="text-align: left;">True if net income &lt; 0</td>
+<td style="text-align: left;">True if net income &lt; 0; empty if net income is not known on the event day</td>
 <td style="text-align: left;">bool</td>
-<td style="text-align: left;">100%</td>
-<td style="text-align: left;">16% True</td>
+<td style="text-align: left;">80%</td>
+<td style="text-align: left;">15% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>net_income_ttm</code></td>
+<td style="text-align: left;">net income of the last 12 months, from cumulative figures [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">85%</td>
+<td style="text-align: left;">-2.498e+10 – 1.824e+11</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>revenue</code></td>
+<td style="text-align: left;">net sales, quarterly [TRY]; missing for financials</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">71%</td>
+<td style="text-align: left;">3.267e+08 – 6.517e+11</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>gross_profit</code></td>
+<td style="text-align: left;">gross profit, quarterly [TRY]; missing for financials</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">71%</td>
+<td style="text-align: left;">-3.129e+09 – 1.669e+11</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>op_income</code></td>
+<td style="text-align: left;">operating profit, quarterly [TRY]; missing for financials</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">71%</td>
+<td style="text-align: left;">-1.145e+10 – 6.34e+10</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>equity</code></td>
+<td style="text-align: left;">equity attributable to parent at quarter end [TRY, unit in <code>unit_stock</code>]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">98%</td>
+<td style="text-align: left;">6.363e+08 – 1.135e+12</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>total_assets</code></td>
+<td style="text-align: left;">total assets at quarter end [TRY, unit in <code>unit_stock</code>]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">98%</td>
+<td style="text-align: left;">4.746e+09 – 6.233e+12</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>roe_q</code></td>
+<td style="text-align: left;">quarterly net income / equity [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">80%</td>
+<td style="text-align: left;">-0.2004 – 0.4148</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>leverage</code></td>
+<td style="text-align: left;">total assets / equity [ratio]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">98%</td>
+<td style="text-align: left;">1.095 – 32.39</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>net_margin</code></td>
+<td style="text-align: left;">net income / revenue, quarterly [fraction]; non-financials only</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">71%</td>
+<td style="text-align: left;">-0.8971 – 1.005</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>revenue_yoy</code></td>
+<td style="text-align: left;">revenue YoY change [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">71%</td>
+<td style="text-align: left;">-0.7617 – 6.527</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>op_income_yoy</code></td>
+<td style="text-align: left;">operating profit YoY change [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">71%</td>
+<td style="text-align: left;">-13.8 – 301.9</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>margin_chg</code></td>
+<td style="text-align: left;">net margin minus net margin one year earlier [fraction points]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">71%</td>
+<td style="text-align: left;">-1.417 – 1.077</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>roe_chg</code></td>
+<td style="text-align: left;">roe_q minus roe_q one year earlier [fraction points]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">67%</td>
+<td style="text-align: left;">-5.902 – 0.3713</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>era_flow</code></td>
+<td style="text-align: left;">income-statement version: <code>A</code> as published (nominal), <code>B</code> inflation-accounting restatement first published a year later, <code>C</code> inflation-accounting report</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">98%</td>
+<td style="text-align: left;">A</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>era_stock</code></td>
+<td style="text-align: left;">balance-sheet version, same codes as <code>era_flow</code></td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">98%</td>
+<td style="text-align: left;">A</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>unit_flow</code></td>
+<td style="text-align: left;">unit of income amounts: <code>TL nominal</code>, <code>TL@YYYY-MM</code> (money of that month) or <code>-</code> if none shown</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">98%</td>
+<td style="text-align: left;">TL nominal</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>unit_stock</code></td>
+<td style="text-align: left;">unit of balance-sheet amounts, same codes as <code>unit_flow</code></td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">98%</td>
+<td style="text-align: left;">TL nominal</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>pit_dropped</code></td>
+<td style="text-align: left;">values left empty and why: <code>gec(date)</code> known only from that date, <code>birim</code> inputs in different units, <code>eksik</code> input missing, <code>karsilastirilamaz</code> comparison not in the same unit</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">98%</td>
+<td style="text-align: left;"></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>tercile</code></td>
-<td style="text-align: left;"><code>alt</code>/<code>orta</code>/<code>ust</code> = bottom/middle/top third of ni_yoy among stocks of the same quarter</td>
+<td style="text-align: left;"><code>alt</code>/<code>orta</code>/<code>ust</code> = ni_yoy at or below the previous quarter's 1/3 point, up to its 2/3 point, above it (no look-ahead: only previous-quarter values published by <code>event_day</code>)</td>
 <td style="text-align: left;">text</td>
-<td style="text-align: left;">93%</td>
+<td style="text-align: left;">70%</td>
 <td style="text-align: left;">ust</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>tercile_ref</code></td>
+<td style="text-align: left;">previous quarter whose values set the cut-offs</td>
+<td style="text-align: left;">datetime</td>
+<td style="text-align: left;">70%</td>
+<td style="text-align: left;">2021-12-31 – 2026-06-30</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>tercile_n</code></td>
+<td style="text-align: left;">number of previous-quarter values used (at least 15, else no tercile)</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">70%</td>
+<td style="text-align: left;">30 – 30</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>tercile_lo</code></td>
+<td style="text-align: left;">1/3 point of the previous quarter's ni_yoy [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">70%</td>
+<td style="text-align: left;">-0.975 – 1.001</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>tercile_hi</code></td>
+<td style="text-align: left;">2/3 point of the previous quarter's ni_yoy [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">70%</td>
+<td style="text-align: left;">-0.4705 – 2.844</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>quake_window</code></td>
@@ -2183,7 +2344,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">total return after costs [fraction]</td>
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">–</td>
-<td style="text-align: left;">2.414</td>
+<td style="text-align: left;">2.127</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>backtest.esit_agirlik</code></td>
@@ -2197,7 +2358,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">difference to equal weight</td>
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">–</td>
-<td style="text-align: left;">-1.002</td>
+<td style="text-align: left;">-1.289</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>backtest.xu100</code></td>
@@ -2211,28 +2372,28 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">difference to XU100</td>
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">–</td>
-<td style="text-align: left;">0.5261</td>
+<td style="text-align: left;">0.2395</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>backtest.sharpe</code></td>
 <td style="text-align: left;">annualised Sharpe</td>
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">–</td>
-<td style="text-align: left;">1.573</td>
+<td style="text-align: left;">1.439</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>backtest.max_dusus</code></td>
 <td style="text-align: left;">maximum drawdown [fraction]</td>
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">–</td>
-<td style="text-align: left;">-0.2464</td>
+<td style="text-align: left;">-0.207</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>backtest.islem_sayisi</code></td>
 <td style="text-align: left;">number of position entries</td>
 <td style="text-align: left;">int</td>
 <td style="text-align: left;">–</td>
-<td style="text-align: left;">536</td>
+<td style="text-align: left;">627</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>backtest.uyari</code></td>
@@ -2509,21 +2670,49 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 <tr>
 <td style="text-align: left;"><code>observed.fundamentals.ni_yoy</code></td>
-<td style="text-align: left;">net income YoY</td>
+<td style="text-align: left;">net income YoY (both quarters in the same unit)</td>
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">–</td>
 <td style="text-align: left;">0.8161</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>observed.fundamentals.tercile</code></td>
-<td style="text-align: left;">net income YoY third</td>
+<td style="text-align: left;">net income YoY third (cut-offs from the previous quarter, no look-ahead)</td>
 <td style="text-align: left;">text</td>
 <td style="text-align: left;">–</td>
 <td style="text-align: left;">ust</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>observed.fundamentals.tercile_ref</code></td>
+<td style="text-align: left;">previous quarter that set the cut-offs</td>
+<td style="text-align: left;">datetime</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">2026-06-30</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>observed.fundamentals.tercile_n</code></td>
+<td style="text-align: left;">number of previous-quarter values behind the cut-offs</td>
+<td style="text-align: left;">int</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">30</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>observed.fundamentals.tercile_lo</code></td>
+<td style="text-align: left;">1/3 cut-off [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">-0.1895</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>observed.fundamentals.tercile_hi</code></td>
+<td style="text-align: left;">2/3 cut-off [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">0.5046</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>observed.fundamentals.loss</code></td>
-<td style="text-align: left;">loss quarter</td>
+<td style="text-align: left;">loss quarter (empty if not known on the event day)</td>
 <td style="text-align: left;">bool</td>
 <td style="text-align: left;">–</td>
 <td style="text-align: left;">False</td>
@@ -2544,17 +2733,24 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 <tr>
 <td style="text-align: left;"><code>observed.fundamentals.net_income</code></td>
-<td style="text-align: left;">quarter net income [TRY]</td>
+<td style="text-align: left;">quarter net income as published [TRY, money of that report]</td>
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">–</td>
 <td style="text-align: left;">1.123e+10</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>observed.fundamentals.net_income_prev</code></td>
-<td style="text-align: left;">same quarter a year earlier [TRY]</td>
+<td style="text-align: left;">same quarter a year earlier as shown in that report [TRY]</td>
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">–</td>
 <td style="text-align: left;">6.182e+09</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>observed.fundamentals.unit</code></td>
+<td style="text-align: left;">unit of the two amounts, e.g. <code>TL@2026-09</code> (money of Sep 2026)</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">TL@2026-09</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>observed.fundamentals.roe_q</code></td>
@@ -2687,7 +2883,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">past top-minus-bottom earnings reaction closed before asof</td>
 <td style="text-align: left;">text</td>
 <td style="text-align: left;">–</td>
-<td style="text-align: left;">{"n": 162, "mean_top": 0.007420404592176…</td>
+<td style="text-align: left;">{"n": 131, "mean_top": 0.004474519260934…</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>source_dates.&lt;source&gt;</code></td>
@@ -4347,18 +4543,18 @@ fundamental and risk-gate evidence, never alone.</p></section><section class="re
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_events.parquet</code></td>
-<td style="text-align: left;">71 kB</td>
-<td style="text-align: left;">ad007230085a</td>
+<td style="text-align: left;">142 kB</td>
+<td style="text-align: left;">a72fbdcb98ea</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/backtest_strategies.csv</code></td>
 <td style="text-align: left;">6 kB</td>
-<td style="text-align: left;">7abc36342ce3</td>
+<td style="text-align: left;">5266ca6a8032</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/backtest_cost_sensitivity.csv</code></td>
 <td style="text-align: left;">1 kB</td>
-<td style="text-align: left;">58e99b35c201</td>
+<td style="text-align: left;">5adf4069e31b</td>
 </tr>
 </tbody>
 </table>
@@ -4371,7 +4567,8 @@ the rule and to report false positives.</p>
 peers in 10 days, without a price shock, beats its peers by +0.59 pt on average over the next 10 days. A random
 stock-day gives +0.15. This is the only result in the report that survives multiple-testing correction
 (q = 0.041). The harness's extra conditions (strong sector, price recovering) raise the effect to about +0.8–0.9 pt,
-and only the full harness rule keeps the same size in the second half of the sample (+0.80 → +0.81).</p>
+and only the full harness rule keeps most of its size in the second half of the sample (+0.88 → +0.72, while the
+other laggards fall from +1.00 to +0.02).</p>
 <p>The effect is small and noisy:</p>
 <ul>
 <li>About half of the laggards (48–50%) are still behind their peers 20 days later.</li>
@@ -4678,13 +4875,13 @@ shock, <strong>and</strong> its sector median return is positive, <strong>and</s
 </tr>
 <tr>
 <td style="text-align: left;">+ not bottom earnings tercile = harness rule</td>
-<td style="text-align: right;">447</td>
-<td style="text-align: right;">0.09</td>
-<td style="text-align: right;">0.80</td>
-<td style="text-align: right;">1.13</td>
-<td style="text-align: right;">52.8</td>
-<td style="text-align: right;">2.47</td>
-<td style="text-align: right;">0.014</td>
+<td style="text-align: right;">513</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">0.82</td>
+<td style="text-align: right;">1.18</td>
+<td style="text-align: right;">53.6</td>
+<td style="text-align: right;">2.80</td>
+<td style="text-align: right;">0.005</td>
 </tr>
 </tbody>
 </table>
@@ -4693,9 +4890,11 @@ shock, <strong>and</strong> its sector median return is positive, <strong>and</s
 <li><strong>Shock filter:</strong> removing shock cases is the single most useful step (+0.41 → +0.59).</li>
 <li><strong>Sector strength and price recovery:</strong> requiring both pushes the 10-day gap to +0.88 pt (hit rate 54.4%).</li>
 <li><strong>Earnings filter:</strong> the last harness filter (drop laggards whose latest earnings are in the bottom third)
-  does <strong>not</strong> help here: 10 days +0.88 → +0.80, 5 days +0.43 → +0.09. It removes 160 events without improving
-  the rest. We keep it in the harness because it is a defensible risk rule: do not call a fundamentally weakening
-  company a "temporary" laggard. But this table shows it is a judgement, not something the data proved.</li>
+  does <strong>not</strong> help here: 10 days +0.88 → +0.82, 5 days +0.43 → +0.16. The 94 events it removes caught up
+  <em>better</em> than the rest (+1.20 pt at 10 days). We keep it in the harness because it is a defensible risk rule: do
+  not call a fundamentally weakening company a "temporary" laggard. But this table shows it is a judgement, not
+  something the data proved. (The thirds are decided without look-ahead, against the previous quarter's cut-offs;
+  see Report 4.)</li>
 </ul>
 <h2>5. Structural vs temporary laggards</h2>
 <p>The spec asks whether a lag is <strong>structural</strong> (the company is weaker) or <strong>temporary</strong>. We use evidence
@@ -4717,35 +4916,43 @@ strategies (XU100 below its 200-day average or a USD/TRY spike). All rows are no
 <tbody>
 <tr>
 <td style="text-align: left;">bottom third</td>
-<td style="text-align: right;">331</td>
-<td style="text-align: right;">0.63</td>
-<td style="text-align: right;">0.33</td>
-<td style="text-align: right;">54.6</td>
-<td style="text-align: right;">1.10</td>
-</tr>
-<tr>
-<td style="text-align: left;">no earnings visible yet</td>
-<td style="text-align: right;">158</td>
-<td style="text-align: right;">0.96</td>
-<td style="text-align: right;">0.56</td>
-<td style="text-align: right;">50.0</td>
-<td style="text-align: right;">1.50</td>
+<td style="text-align: right;">224</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">-0.05</td>
+<td style="text-align: right;">52.3</td>
+<td style="text-align: right;">-0.07</td>
 </tr>
 <tr>
 <td style="text-align: left;">middle third</td>
-<td style="text-align: right;">308</td>
-<td style="text-align: right;">0.27</td>
-<td style="text-align: right;">0.32</td>
-<td style="text-align: right;">50.0</td>
-<td style="text-align: right;">0.54</td>
+<td style="text-align: right;">212</td>
+<td style="text-align: right;">0.65</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: right;">53.3</td>
+<td style="text-align: right;">1.07</td>
 </tr>
 <tr>
 <td style="text-align: left;">top third</td>
-<td style="text-align: right;">301</td>
-<td style="text-align: right;">0.68</td>
-<td style="text-align: right;">1.75</td>
-<td style="text-align: right;">52.5</td>
-<td style="text-align: right;">1.51</td>
+<td style="text-align: right;">238</td>
+<td style="text-align: right;">0.48</td>
+<td style="text-align: right;">1.30</td>
+<td style="text-align: right;">52.7</td>
+<td style="text-align: right;">0.91</td>
+</tr>
+<tr>
+<td style="text-align: left;">statement public, quarter not ranked</td>
+<td style="text-align: right;">313</td>
+<td style="text-align: right;">0.69</td>
+<td style="text-align: right;">0.84</td>
+<td style="text-align: right;">49.8</td>
+<td style="text-align: right;">2.15</td>
+</tr>
+<tr>
+<td style="text-align: left;">no statement public yet</td>
+<td style="text-align: right;">111</td>
+<td style="text-align: right;">1.39</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: right;">54.1</td>
+<td style="text-align: right;">1.81</td>
 </tr>
 </tbody>
 </table>
@@ -4763,20 +4970,20 @@ strategies (XU100 below its 200-day average or a USD/TRY spike). All rows are no
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;">sector median ≤ 0</td>
-<td style="text-align: right;">267</td>
-<td style="text-align: right;">0.24</td>
-<td style="text-align: right;">-0.65</td>
-<td style="text-align: right;">49.6</td>
-<td style="text-align: right;">0.46</td>
-</tr>
-<tr>
 <td style="text-align: left;">sector median &gt; 0</td>
 <td style="text-align: right;">831</td>
 <td style="text-align: right;">0.70</td>
 <td style="text-align: right;">1.18</td>
 <td style="text-align: right;">52.8</td>
 <td style="text-align: right;">3.02</td>
+</tr>
+<tr>
+<td style="text-align: left;">sector median ≤ 0</td>
+<td style="text-align: right;">267</td>
+<td style="text-align: right;">0.24</td>
+<td style="text-align: right;">-0.65</td>
+<td style="text-align: right;">49.6</td>
+<td style="text-align: right;">0.46</td>
 </tr>
 </tbody>
 </table>
@@ -4794,20 +5001,20 @@ strategies (XU100 below its 200-day average or a USD/TRY spike). All rows are no
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;">below KAMA and Supertrend down</td>
-<td style="text-align: right;">434</td>
-<td style="text-align: right;">0.36</td>
-<td style="text-align: right;">0.26</td>
-<td style="text-align: right;">50.8</td>
-<td style="text-align: right;">1.10</td>
-</tr>
-<tr>
 <td style="text-align: left;">above KAMA or Supertrend up</td>
 <td style="text-align: right;">664</td>
 <td style="text-align: right;">0.73</td>
 <td style="text-align: right;">1.06</td>
 <td style="text-align: right;">52.9</td>
 <td style="text-align: right;">2.81</td>
+</tr>
+<tr>
+<td style="text-align: left;">below KAMA and Supertrend down</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">0.36</td>
+<td style="text-align: right;">0.26</td>
+<td style="text-align: right;">50.8</td>
+<td style="text-align: right;">1.10</td>
 </tr>
 </tbody>
 </table>
@@ -4825,20 +5032,20 @@ strategies (XU100 below its 200-day average or a USD/TRY spike). All rows are no
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;">macro risk off</td>
-<td style="text-align: right;">733</td>
-<td style="text-align: right;">0.77</td>
-<td style="text-align: right;">0.96</td>
-<td style="text-align: right;">52.7</td>
-<td style="text-align: right;">2.99</td>
-</tr>
-<tr>
 <td style="text-align: left;">macro risk on (half weight)</td>
 <td style="text-align: right;">365</td>
 <td style="text-align: right;">0.21</td>
 <td style="text-align: right;">0.31</td>
 <td style="text-align: right;">50.8</td>
 <td style="text-align: right;">0.61</td>
+</tr>
+<tr>
+<td style="text-align: left;">macro risk off</td>
+<td style="text-align: right;">733</td>
+<td style="text-align: right;">0.77</td>
+<td style="text-align: right;">0.96</td>
+<td style="text-align: right;">52.7</td>
+<td style="text-align: right;">2.99</td>
 </tr>
 </tbody>
 </table>
@@ -4850,9 +5057,12 @@ strategies (XU100 below its 200-day average or a USD/TRY spike). All rows are no
 <li><strong>Price recovery</strong> (Table 3c) helps: +0.73 vs +0.36 at 10 days.</li>
 <li><strong>Macro risk</strong> (Table 3d) matters. When XU100 is below its 200-day average or USD/TRY is spiking, catch-up
   mostly disappears (+0.21 vs +0.77). In stress periods investors sell the weaker names and do not rotate back.</li>
-<li><strong>Earnings tercile</strong> (Table 3a) does not separate them at 10 days (bottom +0.63, top +0.68). At 20 days, top-third
-  companies do better (+1.75 vs +0.33), so fundamentals may matter on a slower clock than the 10-day rule. This
-  is a hypothesis; the t-values are small.</li>
+<li><strong>Earnings tercile</strong> (Table 3a) points the expected way but weakly. Across all no-shock laggards, those whose
+  latest earnings are in the bottom third show no catch-up (+0.08 pt at 10 days, −0.05 at 20), while middle- and
+  top-third laggards do (+0.65 / +0.48 at 10 days, +0.80 / +1.30 at 20). The t-values are small, and inside the
+  harness's filtered set the bottom-third events caught up well (see the ladder), so this is a hypothesis, not a
+  rule. "Statement public, quarter not ranked" are dates whose latest statement falls in the inflation-accounting
+  switch (2022Q4 – 2024Q1), when no comparable previous-quarter cut-offs exist.</li>
 </ul>
 <h2>6. By sector</h2>
 <p><img alt="Figure 2" src="fig/02_sector_groups.png" /></p>
@@ -4884,10 +5094,10 @@ they describe the sample rather than prove differences.</p>
 </tr>
 <tr>
 <td style="text-align: left;">harness catch-up subset</td>
-<td style="text-align: right;">447</td>
-<td style="text-align: right;">48.5</td>
-<td style="text-align: right;">28.9</td>
-<td style="text-align: right;">0.32</td>
+<td style="text-align: right;">513</td>
+<td style="text-align: right;">48.7</td>
+<td style="text-align: right;">27.5</td>
+<td style="text-align: right;">0.47</td>
 </tr>
 </tbody>
 </table>
@@ -5006,6 +5216,13 @@ they describe the sample rather than prove differences.</p>
 <td style="text-align: right;">-28.44</td>
 </tr>
 <tr>
+<td style="text-align: left;">2022-11-23</td>
+<td style="text-align: left;">TCELL</td>
+<td style="text-align: left;">Tech Telecom &amp; Defense</td>
+<td style="text-align: right;">-12.28</td>
+<td style="text-align: right;">-28.32</td>
+</tr>
+<tr>
 <td style="text-align: left;">2023-07-04</td>
 <td style="text-align: left;">KCHOL</td>
 <td style="text-align: left;">Other Financials</td>
@@ -5019,24 +5236,17 @@ they describe the sample rather than prove differences.</p>
 <td style="text-align: right;">-7.49</td>
 <td style="text-align: right;">-23.34</td>
 </tr>
-<tr>
-<td style="text-align: left;">2026-04-10</td>
-<td style="text-align: left;">TUPRS</td>
-<td style="text-align: left;">Chemicals &amp; Energy</td>
-<td style="text-align: right;">-5.43</td>
-<td style="text-align: right;">-23.09</td>
-</tr>
 </tbody>
 </table>
 <p><strong>False positives are the normal case, not the exception.</strong></p>
 <ul>
 <li>About half of no-shock laggards, including those that pass every harness filter, are still behind their
   peers 20 days later.</li>
-<li>The harness filters move the <em>median</em> outcome from about 0 to +0.32 pt, but they do not reduce the share of bad
-  cases (28.9% fell more than 5 pt further in both rows).</li>
+<li>The harness filters move the <em>median</em> outcome from about 0 to +0.47 pt, but they barely reduce the share of bad
+  cases (28.9% vs 27.5% fell more than 5 pt further).</li>
 </ul>
-<p>Table 6 shows what the worst cases have in common. In almost all of them <strong>the peers rallied</strong> (+17% to +51% in
-20 days) while the stock stayed flat:</p>
+<p>Table 6 shows what the worst cases have in common. In all of them <strong>the peers rallied</strong> (+18% to +51% in
+20 days) while the stock stayed flat or fell:</p>
 <table>
 <thead>
 <tr>
@@ -5057,9 +5267,9 @@ they describe the sample rather than prove differences.</p>
 <td>+30%</td>
 </tr>
 <tr>
-<td>TUPRS, Apr 2026</td>
-<td>0%</td>
-<td>+23%</td>
+<td>TCELL, Feb 2025</td>
+<td>−11%</td>
+<td>+18%</td>
 </tr>
 </tbody>
 </table>
@@ -5082,18 +5292,18 @@ companies: a holding, a broker and an insurer.</p>
 <tbody>
 <tr>
 <td style="text-align: left;">other no-shock laggards</td>
-<td style="text-align: right;">259</td>
-<td style="text-align: right;">1.06</td>
-<td style="text-align: right;">392</td>
+<td style="text-align: right;">212</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">373</td>
 <td style="text-align: right;">0.02</td>
 <td style="text-align: left;">yes</td>
 </tr>
 <tr>
 <td style="text-align: left;">harness catch-up</td>
-<td style="text-align: right;">277</td>
-<td style="text-align: right;">0.80</td>
-<td style="text-align: right;">170</td>
-<td style="text-align: right;">0.81</td>
+<td style="text-align: right;">324</td>
+<td style="text-align: right;">0.88</td>
+<td style="text-align: right;">189</td>
+<td style="text-align: right;">0.72</td>
 <td style="text-align: left;">yes</td>
 </tr>
 <tr>
@@ -5106,9 +5316,10 @@ companies: a holding, a broker and an insurer.</p>
 </tr>
 </tbody>
 </table>
-<p>This is the most encouraging table in the report. The full harness rule gives +0.80 pt in the first half and
-+0.81 in the second half. Laggards that fail the harness filters drop from +1.06 to +0.02. The extra conditions are
-what made the effect stable. Leaders stay slightly positive in both halves (momentum, not reversal).</p>
+<p>This is the most encouraging table in the report. The full harness rule gives +0.88 pt in the first half and
++0.72 in the second half. Laggards that fail the harness filters drop from +1.00 to +0.02. The extra conditions are
+what kept most of the effect in the later sample. Leaders stay slightly positive in both halves (momentum, not
+reversal).</p>
 <h2>9. Backtest: sector-catch-up strategy (B_sektor)</h2>
 <p>Step 9 turned the idea into a long-only weekly strategy. Each week it picks up to 10 stocks that are in an
 uptrend (Supertrend up, above the 50-day SMA, no bearish KAMA/cloud state) with no shock, ranking the sector laggards
@@ -5251,9 +5462,9 @@ sample.</p>
 <ul>
 <li><strong>2022 – mid 2023: inflation rally and sector rotation.</strong> With negative real rates, BIST rose strongly in
   nominal TRY and money rotated quickly between sectors. That favours catch-up: a stock left behind by its sector
-  tends to be pulled along. The first-half results (other laggards +1.06 pt) reflect this.</li>
-<li><strong>Rallies where peers ran away.</strong> Several of the worst false positives (KCHOL, ISMEN, TURSG, SASA in June–Sep
-  2023; AKSEN and KCHOL in Nov 2022) fall in strong, fast rallies. In June–July 2023 the market rose after the May
+  tends to be pulled along. The first-half results (other laggards +1.00 pt) reflect this.</li>
+<li><strong>Rallies where peers ran away.</strong> Most of the worst false positives (KCHOL, ISMEN, TURSG, SASA in June–Sep
+  2023; AKSEN, KCHOL and TCELL in Nov 2022) fall in strong, fast rallies. In June–July 2023 the market rose after the May
   2023 elections and the new economic team's return to orthodox policy, and leaders moved much faster than the
   rest. In such phases a laggard can stay behind even while it rises.</li>
 <li><strong>Second half (May 2024 – Nov 2026): tight policy and shocks.</strong> Policy rates stayed high, and the March 2025
@@ -5281,7 +5492,8 @@ close to a coin flip, and the explanation agents are required to say that.</p>
   stocks. Healthcare (2 members) is excluded. Groups such as Other Financials and Chemicals &amp; Energy mix different
   businesses.</li>
 <li><strong>Coarse fundamentals.</strong> "Structural" is approximated by one earnings measure (year-over-year net-income
-  tercile). Margins, debt and bank-specific ratios are not used here.</li>
+  third, decided against the previous quarter's cut-offs). Margins, debt and bank-specific ratios are not used here.
+  Dates in the inflation-accounting switch (2022Q4 – 2024Q1) have no third.</li>
 <li><strong>Fixed thresholds.</strong> The 5-pt / 10-day and 10-pt / 20-day thresholds and the 10-day dedupe gap were fixed in
   Step 5. Other values could give different numbers.</li>
 <li><strong>Strategy ≠ rule.</strong> The backtest strategy differs from the harness rule: it is a weekly top-10 portfolio with a
@@ -5291,8 +5503,8 @@ close to a coin flip, and the explanation agents are required to say that.</p>
 </ul>
 <h2>14. Conclusion</h2>
 <p>Sector-relative lag carries <strong>some</strong> information. Laggards without a shock, in a rising sector, that already
-show signs of recovery, beat their peers by about 0.8 pt over the next 10 days, and this held in both halves of
-the sample. But half of them still fail, the effect is smaller than a single bad day, and a portfolio built on
+show signs of recovery, beat their peers by about 0.8 pt over the next 10 days (+0.88 in the first half, +0.72 in
+the second). But half of them still fail, the effect is smaller than a single bad day, and a portfolio built on
 the idea did not beat XU100 after costs. The right use is the one the harness makes: a laggard that passes the
 rules is a <strong>candidate for investigation</strong>, shown with its historical hit rate, backtest and risks, and the
 decision stays with a human.</p></section><section class="report"><h1>Report 3 — Weekday and Multi-Day Patterns</h1>
@@ -6285,23 +6497,23 @@ cached price data.</p>
 <tbody>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_events.parquet</code></td>
-<td style="text-align: left;">71 kB</td>
-<td style="text-align: left;">ad007230085a</td>
+<td style="text-align: left;">142 kB</td>
+<td style="text-align: left;">a72fbdcb98ea</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_by_tercile.csv</code></td>
 <td style="text-align: left;">1 kB</td>
-<td style="text-align: left;">af0615e9f844</td>
+<td style="text-align: left;">d4d8756745ae</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_spread_tests.csv</code></td>
 <td style="text-align: left;">1 kB</td>
-<td style="text-align: left;">64cca043c691</td>
+<td style="text-align: left;">6d7116e4fb14</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_spread_by_quarter.csv</code></td>
 <td style="text-align: left;">2 kB</td>
-<td style="text-align: left;">7b63b3ef1c0d</td>
+<td style="text-align: left;">61e25e9250de</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/kap_disclosure_dates.csv</code></td>
@@ -6320,19 +6532,22 @@ cached price data.</p>
 whether specific changes (profit, revenue, operating profit, margins, ROE) were historically associated with
 <strong>different price reactions</strong>: before, on and after the disclosure, against XU100 and against the sector's peers.
 The question is not "good earnings = price rises".</p>
-<p><strong>Short answer.</strong> The market does react to quarterly results, and it reacts to <em>profitability</em>, not to sales.</p>
+<p><strong>Short answer.</strong> The market reacts to quarterly results, and it reacts to <em>profitability</em>, not to sales.</p>
 <ul>
-<li><strong>Net-income ranking.</strong> Ranked by year-over-year net-income change, top-third companies beat bottom-third
-  companies by about <strong>1.4 pt on the event day</strong> and <strong>1.7 pt in the five days before</strong> disclosure (both q &lt; 0.05).
-  Part of the move happens before the KAP filing.</li>
+<li><strong>Net-income ranking.</strong> Companies in the top third by year-over-year net-income change beat those in the bottom
+  third by <strong>+2.0 pt on the event day</strong> and +2.4 pt over days 0–1 (q = 0.021 and 0.029 after correcting all 22
+  tests of this report). Each company's third is decided with information that was public on its own event day.</li>
 <li><strong>Which metrics matter.</strong> Operating-income growth and net-margin change separate winners from losers on the event
-  day at least as clearly as net income does, in both halves of the sample. Revenue growth, which in high-inflation
-  Türkiye is mostly price increases, does not.</li>
-<li><strong>Drift.</strong> After the first few days there is no reliable further drift for net income (days 1–20: +1.3 pt,
-  p = 0.33, and the two halves disagree). The one exception is <strong>ROE improvement</strong>: +2.65 pt over days 1–20 in both
-  halves (q = 0.003). It is the most interesting result for future work.</li>
-<li><strong>Not just the sector.</strong> Against sector peers instead of XU100, the same pattern appears but is weaker
-  (q ≈ 0.07–0.12). Part of the reaction is sector-wide, because peers report similar news in the same weeks.</li>
+  day as clearly as net income does, in both halves of the sample. Revenue growth, which in high-inflation Türkiye
+  is mostly price increases, does not.</li>
+<li><strong>No reliable move before the filing.</strong> Top-third companies rise before they report, but the pre-event spread is
+  not significant after correction (q = 0.11 across all 22 tests) and its size depends on the ranking method. An earlier version of
+  this report found it significant; that result relied on figures that were not yet public (Section 2).</li>
+<li><strong>Drift.</strong> Net income shows no drift after the first days (days 1–20: +0.2 pt, p = 0.92). The one exception is
+  the <strong>net-margin change</strong>: +5.1 pt over days 1–20, positive in both halves (q = 0.046). It is the most interesting
+  result for future work.</li>
+<li><strong>Mostly company-specific.</strong> Against sector peers instead of XU100, the event-day and days 0–4 spreads also
+  survive correction (+1.75 and +2.22 pt).</li>
 </ul>
 <h2>2. Data and point-in-time alignment</h2>
 <ul>
@@ -6348,14 +6563,24 @@ The question is not "good earnings = price rises".</p>
   deadlines instead of real dates would have put information into the wrong days.</li>
 <li><strong>Events.</strong> 545 disclosures. 11 have no event day in the price data,
   3 fall in the earthquake window, leaving <strong>531</strong>.</li>
-<li><strong>Ranking.</strong> Each quarter, the 30 stocks are ranked by year-over-year net-income change into thirds. Ranking
-  within the same quarter removes the common inflation effect (in 2022 the median company's profit roughly doubled
-  in nominal TRY). A quarter needs ≥ 15 ranked stocks. 2022Q4 and 2023Q4 drop out, because Fintables lacks the 2022Q4
-  quarter for 24 of 30 stocks.</li>
+<li><strong>Figures as known on the event day.</strong> Fintables keeps the latest version of every figure. For the 24
+  companies that apply inflation accounting (TMS 29) it re-states 2022Q4 – 2023Q3 and re-expresses all later
+  figures in the money of the latest balance-sheet month (checked against 20 published figures). The restated
+  2022Q4 – 2023Q3 figures were first published a year later, so these quarters carry no fundamentals on their own
+  event day; they are used only as comparatives in the next year's reports. Year-over-year changes always compare
+  two figures in the same unit (<code>src/data/pit_fundamentals.py</code>, Data Dictionary).</li>
+<li><strong>Ranking without look-ahead.</strong> A company's third is decided with information available on its own event day:
+  its year-over-year net-income change is compared with the 1/3 and 2/3 points of the <strong>previous quarter's</strong>
+  changes, using only previous-quarter figures already published (at least 15). Ranking against all companies of
+  the same quarter, as an earlier version of this report did, used the results of companies that reported weeks
+  later. 381 of 531 events are ranked. Quarters without enough comparable previous-quarter
+  figures (2023Q1 – 2024Q1, around the TMS 29 switch) are not ranked. Section 4 compares this with ranking among
+  the companies that had already reported in the same quarter.</li>
 <li><strong>Returns.</strong> Abnormal return = stock return − XU100 return over the window, and separately stock return − the
   equal-weight return of its sector peers. Windows are in trading days, with the event day = 0.</li>
-<li><strong>Statistics.</strong> Each quarter's top-minus-bottom spread is one observation (17 quarters), because stocks in the
-  same quarter are not independent. All 22 tests in this report share one Benjamini–Hochberg correction.</li>
+<li><strong>Statistics.</strong> Each quarter's top-minus-bottom spread is one observation (13 quarters with at least 15 ranked
+  events), because stocks in the same quarter are not independent. All 22 tests in this report share one
+  Benjamini–Hochberg correction.</li>
 </ul>
 <h2>3. Main result: reaction by net-income ranking</h2>
 <p><strong>Table 1. Mean abnormal return vs XU100 by net-income YoY third (%)</strong></p>
@@ -6374,30 +6599,30 @@ The question is not "good earnings = price rises".</p>
 <tbody>
 <tr>
 <td style="text-align: left;">bottom</td>
-<td style="text-align: right;">167</td>
-<td style="text-align: right;">-0.10</td>
-<td style="text-align: right;">-1.34</td>
-<td style="text-align: right;">-1.23</td>
-<td style="text-align: right;">0.58</td>
-<td style="text-align: right;">31.1</td>
+<td style="text-align: right;">133</td>
+<td style="text-align: right;">-0.23</td>
+<td style="text-align: right;">-1.75</td>
+<td style="text-align: right;">-2.14</td>
+<td style="text-align: right;">0.94</td>
+<td style="text-align: right;">26.3</td>
 </tr>
 <tr>
 <td style="text-align: left;">middle</td>
-<td style="text-align: right;">165</td>
-<td style="text-align: right;">0.62</td>
-<td style="text-align: right;">-0.64</td>
-<td style="text-align: right;">-0.89</td>
-<td style="text-align: right;">1.27</td>
-<td style="text-align: right;">37.6</td>
+<td style="text-align: right;">114</td>
+<td style="text-align: right;">0.75</td>
+<td style="text-align: right;">-0.35</td>
+<td style="text-align: right;">-0.31</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: right;">43.0</td>
 </tr>
 <tr>
 <td style="text-align: left;">top</td>
-<td style="text-align: right;">166</td>
-<td style="text-align: right;">1.62</td>
-<td style="text-align: right;">0.11</td>
-<td style="text-align: right;">0.74</td>
-<td style="text-align: right;">1.86</td>
-<td style="text-align: right;">50.6</td>
+<td style="text-align: right;">134</td>
+<td style="text-align: right;">1.36</td>
+<td style="text-align: right;">0.28</td>
+<td style="text-align: right;">0.45</td>
+<td style="text-align: right;">0.68</td>
+<td style="text-align: right;">53.7</td>
 </tr>
 <tr>
 <td style="text-align: left;">any stock-day (baseline)</td>
@@ -6430,111 +6655,186 @@ The question is not "good earnings = price rises".</p>
 <tbody>
 <tr>
 <td style="text-align: left;">5 days before</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.67</td>
-<td style="text-align: right;">2.93</td>
-<td style="text-align: right;">0.0099</td>
 <td style="text-align: right;">13</td>
-<td style="text-align: right;">2.93</td>
-<td style="text-align: right;">0.55</td>
-<td style="text-align: right;">0.030</td>
-<td style="text-align: right;">0.059</td>
+<td style="text-align: right;">1.26</td>
+<td style="text-align: right;">2.11</td>
+<td style="text-align: right;">0.0567</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">2.80</td>
+<td style="text-align: right;">-0.07</td>
+<td style="text-align: right;">0.085</td>
+<td style="text-align: right;">0.340</td>
 </tr>
 <tr>
 <td style="text-align: left;">event day</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.39</td>
-<td style="text-align: right;">3.00</td>
-<td style="text-align: right;">0.0084</td>
-<td style="text-align: right;">12</td>
-<td style="text-align: right;">1.88</td>
-<td style="text-align: right;">0.96</td>
-<td style="text-align: right;">0.030</td>
-<td style="text-align: right;">0.051</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">2.01</td>
+<td style="text-align: right;">3.72</td>
+<td style="text-align: right;">0.0029</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">2.58</td>
+<td style="text-align: right;">1.53</td>
+<td style="text-align: right;">0.016</td>
+<td style="text-align: right;">0.017</td>
 </tr>
 <tr>
 <td style="text-align: left;">days 0–1</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.52</td>
+<td style="text-align: right;">13</td>
 <td style="text-align: right;">2.40</td>
-<td style="text-align: right;">0.0290</td>
-<td style="text-align: right;">11</td>
-<td style="text-align: right;">1.53</td>
-<td style="text-align: right;">1.51</td>
-<td style="text-align: right;">0.058</td>
-<td style="text-align: right;">0.174</td>
+<td style="text-align: right;">3.39</td>
+<td style="text-align: right;">0.0053</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">3.41</td>
+<td style="text-align: right;">1.54</td>
+<td style="text-align: right;">0.016</td>
+<td style="text-align: right;">0.032</td>
 </tr>
 <tr>
 <td style="text-align: left;">days 0–4</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.76</td>
-<td style="text-align: right;">2.23</td>
-<td style="text-align: right;">0.0404</td>
-<td style="text-align: right;">12</td>
-<td style="text-align: right;">1.89</td>
-<td style="text-align: right;">1.64</td>
-<td style="text-align: right;">0.061</td>
-<td style="text-align: right;">0.242</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">2.48</td>
+<td style="text-align: right;">2.36</td>
+<td style="text-align: right;">0.0364</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">3.72</td>
+<td style="text-align: right;">1.41</td>
+<td style="text-align: right;">0.073</td>
+<td style="text-align: right;">0.218</td>
 </tr>
 <tr>
 <td style="text-align: left;">days 1–5</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">0.46</td>
-<td style="text-align: right;">0.71</td>
-<td style="text-align: right;">0.4854</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">0.37</td>
-<td style="text-align: right;">0.54</td>
-<td style="text-align: right;">0.485</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">0.65</td>
+<td style="text-align: right;">0.79</td>
+<td style="text-align: right;">0.4463</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1.62</td>
+<td style="text-align: right;">-0.18</td>
+<td style="text-align: right;">0.536</td>
 <td style="text-align: right;">1.000</td>
 </tr>
 <tr>
 <td style="text-align: left;">days 1–20</td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">1.28</td>
-<td style="text-align: right;">1.00</td>
-<td style="text-align: right;">0.3343</td>
-<td style="text-align: right;">11</td>
-<td style="text-align: right;">-0.23</td>
-<td style="text-align: right;">2.79</td>
-<td style="text-align: right;">0.401</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">0.9158</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">-1.40</td>
+<td style="text-align: right;">1.80</td>
+<td style="text-align: right;">0.916</td>
 <td style="text-align: right;">1.000</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Reading Table 1, Table 2 and Figure 1.</strong></p>
 <ul>
-<li><strong>Before the event.</strong> Top-third companies rise +1.6% above XU100 in the five days before the event day; bottom
-  third is flat. The market partly anticipates good results: peers have often reported already, sector data is
-  public, analysts publish estimates. We cannot tell anticipation from leakage with this data.</li>
-<li><strong>On the event day.</strong> Bottom-third companies fall −1.34% vs XU100 and only 31% of them beat the index.
-  Top-third companies are roughly flat (+0.11%).</li>
-<li><strong>Disclosure days are negative on average.</strong> Every group, even companies with profit growth, has a negative
-  average event-day return. The average across all events is about −0.6% vs the index, against a +0.03% baseline.
-  Combined with the positive pre-event drift, this looks like "buy the rumour, sell the news". We report it as an
-  observation, not a tested effect.</li>
-<li><strong>The spread is significant around the disclosure</strong> (pre-event and event day) and <strong>not after it</strong>: days 1–5
-  +0.46 pt, p = 0.49. Once the information is public it is priced within a few days. A rule that buys after reading
-  the statement is mostly too late.</li>
+<li><strong>Before the event.</strong> Top-third companies rise +1.36% above XU100 in the five days before the event day; the
+  bottom third is flat (−0.23%). Peers have often reported already and sector data is public, so part of the news
+  can be read early. The spread is not significant after correction (p = 0.057; q = 0.085 among the six windows of Table 2), so we report it only as
+  an observation. We cannot tell anticipation from leakage with this data.</li>
+<li><strong>On the event day.</strong> Bottom-third companies fall −1.75% vs XU100 and only 26% of them beat the index. Top-third
+  companies are slightly positive (+0.28%, 54% beat the index).</li>
+<li><strong>Disclosure days are negative on average.</strong> The average event-day return across all events is −0.64% vs the
+  index, against a +0.03% baseline; only the top third is positive. We report it as an observation, not a tested
+  effect.</li>
+<li><strong>The spread is concentrated on the event day and the day after</strong> (days 0–1: +2.40 pt, q = 0.016 in Table 2) and is <strong>not
+  there afterwards</strong>: days 1–5 +0.65 pt (p = 0.45), days 1–20 +0.20 pt (p = 0.92). Once the information is public it
+  is priced within a day or two. A rule that buys after reading the statement is mostly too late.</li>
 </ul>
-<h2>4. Quarter by quarter</h2>
+<h2>4. Does the result depend on how companies are ranked?</h2>
+<p>The same top-minus-bottom test with three ways of deciding a company's third. A is used everywhere else in this
+report, in the strategies and in the harness. B is the strictest alternative without look-ahead: a company is
+ranked only among the companies of the same quarter that had already reported, so early reporters are not ranked.
+The old method is shown only to measure what the look-ahead changed. These are three measurements of one
+hypothesis, so they are not added to the multiple-testing family.</p>
+<p><strong>Table 2b. Top-minus-bottom spread by ranking method (pt vs XU100, one observation per quarter)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">method</th>
+<th style="text-align: left;">ranked events (quarters)</th>
+<th style="text-align: right;">5 days before pt</th>
+<th style="text-align: right;">5 days before p</th>
+<th style="text-align: right;">event day pt</th>
+<th style="text-align: right;">event day p</th>
+<th style="text-align: right;">days 0–4 pt</th>
+<th style="text-align: right;">days 0–4 p</th>
+<th style="text-align: right;">days 1–20 pt</th>
+<th style="text-align: right;">days 1–20 p</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">A: previous quarter's cut-offs (main)</td>
+<td style="text-align: left;">381 (13)</td>
+<td style="text-align: right;">+1.26</td>
+<td style="text-align: right;">0.057</td>
+<td style="text-align: right;">+2.01</td>
+<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">+2.48</td>
+<td style="text-align: right;">0.036</td>
+<td style="text-align: right;">+0.20</td>
+<td style="text-align: right;">0.916</td>
+</tr>
+<tr>
+<td style="text-align: left;">B: same quarter, stocks already reported (robustness)</td>
+<td style="text-align: left;">229 (13)</td>
+<td style="text-align: right;">+1.51</td>
+<td style="text-align: right;">0.181</td>
+<td style="text-align: right;">+2.01</td>
+<td style="text-align: right;">0.020</td>
+<td style="text-align: right;">+2.49</td>
+<td style="text-align: right;">0.077</td>
+<td style="text-align: right;">-0.42</td>
+<td style="text-align: right;">0.805</td>
+</tr>
+<tr>
+<td style="text-align: left;">old: whole quarter, uses later reporters (look-ahead; comparison only)</td>
+<td style="text-align: left;">408 (14)</td>
+<td style="text-align: right;">+1.33</td>
+<td style="text-align: right;">0.053</td>
+<td style="text-align: right;">+1.54</td>
+<td style="text-align: right;">0.010</td>
+<td style="text-align: right;">+2.04</td>
+<td style="text-align: right;">0.043</td>
+<td style="text-align: right;">+1.10</td>
+<td style="text-align: right;">0.459</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>The event-day result does not depend on the ranking method.</strong> Ranking against the previous quarter's cut-offs
+  (A) and ranking only among companies that had already reported (B) both give +2.01 pt on the event day
+  (p = 0.003 and 0.020). B ranks 229 events instead of 381, because early reporters have too few comparisons.</li>
+<li><strong>The pre-event and 20-day results do depend on it.</strong> The five-day pre-event spread is +1.26 pt (A), +1.51 (B)
+  and +1.33 (old), none significant; days 1–20 range from −0.42 to +1.10 pt. These are not findings.</li>
+<li><strong>What the corrections changed.</strong> The earlier version of this report ranked each company against the whole
+  quarter, which used the results of companies that reported weeks later, and it used the inflation-accounting
+  restatements of 2023 on their original dates although they were published a year later. It reported +1.67 pt
+  before the event (q = 0.030) and +1.39 pt on the event day. The corrected picture is the reverse: a larger
+  event-day reaction and no reliable move before it.</li>
+</ul>
+<h2>5. Quarter by quarter</h2>
 <p><img alt="Figure 2" src="fig/04_quarter_spread.png" /></p>
 <ul>
-<li><strong>Across quarters.</strong> The event-window spread is positive in 12 of 17 quarters and averages +1.76 pt. It is not
+<li><strong>Across quarters.</strong> The days 0–4 spread is positive in 10 of 13 quarters and averages +2.48 pt. It is not
   stable.</li>
-<li><strong>Largest positive quarters.</strong> 2022Q1 and Q2 (+6–7 pt), when nominal profit growth was extreme and dispersion
-  between companies was large.</li>
+<li><strong>Largest positive quarters.</strong> 2022Q1 and Q2 (+7.4 and +6.8 pt), when nominal profit growth was extreme and the
+  dispersion between companies was large, and 2025Q3 (+6.7 pt).</li>
 <li><strong>Negative quarters.</strong><ul>
-<li>2022Q3 (−5.9 pt): results were published in Oct–Nov 2022, during a strong broad rally.</li>
+<li>2022Q3 (−3.7 pt): results were published in Oct–Nov 2022, during a strong broad rally.</li>
 <li>2026Q3 (−2.6 pt): results were published during the Oct–Nov 2026 fund-liquidation sell-off (Report 1). In such
   weeks, market-wide flows dominate company news.</li>
+<li>2025Q1 (−1.2 pt).</li>
 </ul>
 </li>
-<li><strong>Inflation-accounting quarters</strong> (orange, statements under TMS 29) show a steadier positive spread (+1.5 to
-  +4.4 pt in most quarters). Real (inflation-adjusted) profit figures may be more informative than the nominal
-  figures of 2022–2023. We have too few quarters to test this.</li>
+<li><strong>Missing quarters.</strong> 2022Q4 – 2024Q1 are not ranked: around the inflation-accounting switch there are no
+  comparable previous-quarter figures (Section 2).</li>
+<li><strong>Inflation-accounting quarters</strong> (orange, statements under TMS 29) are positive in 8 of 10, with a mean of
+  +2.2 pt, close to the full-sample mean. They are not steadier than the nominal quarters of 2022.</li>
 </ul>
-<h2>5. Against sector peers</h2>
+<h2>6. Against sector peers</h2>
 <p><strong>Table 3. Mean abnormal return vs the sector peer basket by net-income third (%)</strong></p>
 <table>
 <thead>
@@ -6549,24 +6849,24 @@ The question is not "good earnings = price rises".</p>
 <tbody>
 <tr>
 <td style="text-align: left;">bottom</td>
-<td style="text-align: right;">0.26</td>
-<td style="text-align: right;">-1.19</td>
-<td style="text-align: right;">-1.21</td>
-<td style="text-align: right;">-0.91</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: right;">-1.53</td>
+<td style="text-align: right;">-2.00</td>
+<td style="text-align: right;">-0.13</td>
 </tr>
 <tr>
 <td style="text-align: left;">middle</td>
-<td style="text-align: right;">0.22</td>
-<td style="text-align: right;">-0.64</td>
-<td style="text-align: right;">-1.56</td>
-<td style="text-align: right;">0.23</td>
+<td style="text-align: right;">0.49</td>
+<td style="text-align: right;">-0.34</td>
+<td style="text-align: right;">-0.56</td>
+<td style="text-align: right;">0.26</td>
 </tr>
 <tr>
 <td style="text-align: left;">top</td>
-<td style="text-align: right;">1.55</td>
-<td style="text-align: right;">-0.09</td>
-<td style="text-align: right;">0.25</td>
-<td style="text-align: right;">0.96</td>
+<td style="text-align: right;">1.59</td>
+<td style="text-align: right;">0.22</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">-0.20</td>
 </tr>
 </tbody>
 </table>
@@ -6585,44 +6885,45 @@ The question is not "good earnings = price rises".</p>
 <tbody>
 <tr>
 <td style="text-align: left;">5 days before</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.30</td>
-<td style="text-align: right;">2.36</td>
-<td style="text-align: right;">0.0315</td>
-<td style="text-align: right;">0.069</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">1.13</td>
+<td style="text-align: right;">1.54</td>
+<td style="text-align: right;">0.1505</td>
+<td style="text-align: right;">0.224</td>
 </tr>
 <tr>
 <td style="text-align: left;">event day</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.06</td>
-<td style="text-align: right;">2.11</td>
-<td style="text-align: right;">0.0507</td>
-<td style="text-align: right;">0.093</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">1.75</td>
+<td style="text-align: right;">3.23</td>
+<td style="text-align: right;">0.0072</td>
+<td style="text-align: right;">0.032</td>
 </tr>
 <tr>
 <td style="text-align: left;">days 0–4</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.43</td>
-<td style="text-align: right;">1.92</td>
-<td style="text-align: right;">0.0734</td>
-<td style="text-align: right;">0.124</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">2.22</td>
+<td style="text-align: right;">2.75</td>
+<td style="text-align: right;">0.0175</td>
+<td style="text-align: right;">0.046</td>
 </tr>
 <tr>
 <td style="text-align: left;">days 1–20</td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">1.87</td>
-<td style="text-align: right;">1.29</td>
-<td style="text-align: right;">0.2168</td>
-<td style="text-align: right;">0.298</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">-0.08</td>
+<td style="text-align: right;">-0.04</td>
+<td style="text-align: right;">0.9662</td>
+<td style="text-align: right;">0.966</td>
 </tr>
 </tbody>
 </table>
-<p>Against sector peers the top-minus-bottom spread keeps its sign in every window (pre-event +1.30, event day +1.06,
-days 0–4 +1.43 pt) but loses significance after correction.</p>
+<p>Against sector peers the top-minus-bottom spread <strong>survives correction on the event day (+1.75 pt, q = 0.032) and
+over days 0–4 (+2.22 pt, q = 0.046)</strong>, and it is positive in both halves of the sample. The pre-event spread does
+not survive (+1.13 pt, q = 0.22).</p>
 <p>Peers report in the same weeks, and sector-wide news (a bank-sector margin squeeze, steel prices) moves the whole
-group. Some of the "stock reaction" is therefore a "sector reaction". The company-specific part is real but
-smaller than the XU100-based numbers suggest.</p>
-<h2>6. Which fundamental change does the market react to?</h2>
+group, so part of a "stock reaction" can be a "sector reaction". With that part removed, the reaction is still about
+90% of its size against XU100: it is mostly company-specific.</p>
+<h2>7. Which fundamental change does the market react to?</h2>
 <p><strong>Table 5. Top-minus-bottom third spread by metric (pt vs XU100, one observation per quarter).</strong> Net income is
 in Table 2; it is not repeated here so that it is not counted twice in the multiple-testing correction.</p>
 <table>
@@ -6644,162 +6945,164 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <tr>
 <td style="text-align: left;">revenue YoY (non-financial)</td>
 <td style="text-align: left;">event day</td>
-<td style="text-align: right;">455</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">0.14</td>
-<td style="text-align: right;">1.12</td>
-<td style="text-align: right;">-0.72</td>
-<td style="text-align: right;">0.27</td>
-<td style="text-align: right;">0.7937</td>
-<td style="text-align: right;">0.794</td>
-</tr>
-<tr>
-<td style="text-align: left;">revenue YoY (non-financial)</td>
-<td style="text-align: left;">days 0–4</td>
-<td style="text-align: right;">455</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">0.71</td>
-<td style="text-align: right;">2.00</td>
-<td style="text-align: right;">-0.45</td>
-<td style="text-align: right;">0.83</td>
-<td style="text-align: right;">0.4214</td>
-<td style="text-align: right;">0.515</td>
-</tr>
-<tr>
-<td style="text-align: left;">revenue YoY (non-financial)</td>
-<td style="text-align: left;">days 1–20</td>
-<td style="text-align: right;">455</td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">-0.43</td>
-<td style="text-align: right;">0.07</td>
-<td style="text-align: right;">-0.92</td>
-<td style="text-align: right;">-0.34</td>
-<td style="text-align: right;">0.7389</td>
-<td style="text-align: right;">0.774</td>
-</tr>
-<tr>
-<td style="text-align: left;">operating income YoY (non-financial)</td>
-<td style="text-align: left;">event day</td>
-<td style="text-align: right;">455</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.64</td>
-<td style="text-align: right;">1.62</td>
-<td style="text-align: right;">1.66</td>
-<td style="text-align: right;">3.91</td>
-<td style="text-align: right;">0.0012</td>
-<td style="text-align: right;">0.009</td>
-</tr>
-<tr>
-<td style="text-align: left;">operating income YoY (non-financial)</td>
-<td style="text-align: left;">days 0–4</td>
-<td style="text-align: right;">455</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.93</td>
-<td style="text-align: right;">2.65</td>
-<td style="text-align: right;">1.29</td>
-<td style="text-align: right;">2.36</td>
-<td style="text-align: right;">0.0316</td>
-<td style="text-align: right;">0.069</td>
-</tr>
-<tr>
-<td style="text-align: left;">operating income YoY (non-financial)</td>
-<td style="text-align: left;">days 1–20</td>
-<td style="text-align: right;">455</td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">-0.82</td>
-<td style="text-align: right;">-1.24</td>
+<td style="text-align: right;">386</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">0.45</td>
+<td style="text-align: right;">1.45</td>
 <td style="text-align: right;">-0.40</td>
-<td style="text-align: right;">-0.70</td>
-<td style="text-align: right;">0.4932</td>
-<td style="text-align: right;">0.543</td>
+<td style="text-align: right;">0.74</td>
+<td style="text-align: right;">0.4706</td>
+<td style="text-align: right;">0.609</td>
 </tr>
 <tr>
-<td style="text-align: left;">net margin change, pt (non-financial)</td>
-<td style="text-align: left;">event day</td>
-<td style="text-align: right;">455</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.69</td>
-<td style="text-align: right;">2.01</td>
-<td style="text-align: right;">1.40</td>
-<td style="text-align: right;">4.39</td>
-<td style="text-align: right;">0.0005</td>
-<td style="text-align: right;">0.005</td>
-</tr>
-<tr>
-<td style="text-align: left;">net margin change, pt (non-financial)</td>
+<td style="text-align: left;">revenue YoY (non-financial)</td>
 <td style="text-align: left;">days 0–4</td>
-<td style="text-align: right;">455</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">2.36</td>
-<td style="text-align: right;">3.09</td>
-<td style="text-align: right;">1.72</td>
-<td style="text-align: right;">2.84</td>
-<td style="text-align: right;">0.0118</td>
-<td style="text-align: right;">0.043</td>
+<td style="text-align: right;">386</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: right;">2.61</td>
+<td style="text-align: right;">-0.53</td>
+<td style="text-align: right;">0.62</td>
+<td style="text-align: right;">0.5463</td>
+<td style="text-align: right;">0.665</td>
 </tr>
 <tr>
-<td style="text-align: left;">net margin change, pt (non-financial)</td>
+<td style="text-align: left;">revenue YoY (non-financial)</td>
 <td style="text-align: left;">days 1–20</td>
-<td style="text-align: right;">455</td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">1.73</td>
-<td style="text-align: right;">1.46</td>
-<td style="text-align: right;">2.00</td>
-<td style="text-align: right;">1.32</td>
-<td style="text-align: right;">0.2081</td>
-<td style="text-align: right;">0.298</td>
+<td style="text-align: right;">386</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">0.69</td>
+<td style="text-align: right;">2.21</td>
+<td style="text-align: right;">-0.83</td>
+<td style="text-align: right;">0.32</td>
+<td style="text-align: right;">0.7575</td>
+<td style="text-align: right;">0.833</td>
 </tr>
 <tr>
-<td style="text-align: left;">ROE change, pt</td>
+<td style="text-align: left;">operating income YoY (non-financial)</td>
 <td style="text-align: left;">event day</td>
-<td style="text-align: right;">507</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.14</td>
-<td style="text-align: right;">1.93</td>
-<td style="text-align: right;">0.44</td>
-<td style="text-align: right;">2.52</td>
-<td style="text-align: right;">0.0228</td>
-<td style="text-align: right;">0.069</td>
+<td style="text-align: right;">386</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">1.95</td>
+<td style="text-align: right;">2.23</td>
+<td style="text-align: right;">1.71</td>
+<td style="text-align: right;">4.43</td>
+<td style="text-align: right;">0.0008</td>
+<td style="text-align: right;">0.018</td>
 </tr>
 <tr>
-<td style="text-align: left;">ROE change, pt</td>
+<td style="text-align: left;">operating income YoY (non-financial)</td>
 <td style="text-align: left;">days 0–4</td>
-<td style="text-align: right;">507</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">1.41</td>
-<td style="text-align: right;">2.10</td>
-<td style="text-align: right;">0.79</td>
+<td style="text-align: right;">386</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">1.81</td>
+<td style="text-align: right;">2.07</td>
 <td style="text-align: right;">1.60</td>
-<td style="text-align: right;">0.1281</td>
-<td style="text-align: right;">0.201</td>
+<td style="text-align: right;">1.59</td>
+<td style="text-align: right;">0.1389</td>
+<td style="text-align: right;">0.224</td>
+</tr>
+<tr>
+<td style="text-align: left;">operating income YoY (non-financial)</td>
+<td style="text-align: left;">days 1–20</td>
+<td style="text-align: right;">386</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">-0.90</td>
+<td style="text-align: right;">-1.96</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: right;">-0.58</td>
+<td style="text-align: right;">0.5740</td>
+<td style="text-align: right;">0.665</td>
+</tr>
+<tr>
+<td style="text-align: left;">net margin change, pt (non-financial)</td>
+<td style="text-align: left;">event day</td>
+<td style="text-align: right;">386</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">1.97</td>
+<td style="text-align: right;">2.61</td>
+<td style="text-align: right;">1.42</td>
+<td style="text-align: right;">4.03</td>
+<td style="text-align: right;">0.0017</td>
+<td style="text-align: right;">0.018</td>
+</tr>
+<tr>
+<td style="text-align: left;">net margin change, pt (non-financial)</td>
+<td style="text-align: left;">days 0–4</td>
+<td style="text-align: right;">386</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">3.57</td>
+<td style="text-align: right;">5.45</td>
+<td style="text-align: right;">1.95</td>
+<td style="text-align: right;">3.12</td>
+<td style="text-align: right;">0.0089</td>
+<td style="text-align: right;">0.033</td>
+</tr>
+<tr>
+<td style="text-align: left;">net margin change, pt (non-financial)</td>
+<td style="text-align: left;">days 1–20</td>
+<td style="text-align: right;">386</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">5.07</td>
+<td style="text-align: right;">5.57</td>
+<td style="text-align: right;">4.56</td>
+<td style="text-align: right;">2.75</td>
+<td style="text-align: right;">0.0187</td>
+<td style="text-align: right;">0.046</td>
+</tr>
+<tr>
+<td style="text-align: left;">ROE change, pt</td>
+<td style="text-align: left;">event day</td>
+<td style="text-align: right;">363</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1.79</td>
+<td style="text-align: right;">2.36</td>
+<td style="text-align: right;">1.33</td>
+<td style="text-align: right;">3.06</td>
+<td style="text-align: right;">0.0156</td>
+<td style="text-align: right;">0.046</td>
+</tr>
+<tr>
+<td style="text-align: left;">ROE change, pt</td>
+<td style="text-align: left;">days 0–4</td>
+<td style="text-align: right;">363</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">2.58</td>
+<td style="text-align: right;">2.58</td>
+<td style="text-align: right;">2.58</td>
+<td style="text-align: right;">1.60</td>
+<td style="text-align: right;">0.1527</td>
+<td style="text-align: right;">0.224</td>
 </tr>
 <tr>
 <td style="text-align: left;">ROE change, pt</td>
 <td style="text-align: left;">days 1–20</td>
-<td style="text-align: right;">507</td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">2.65</td>
-<td style="text-align: right;">2.87</td>
-<td style="text-align: right;">2.43</td>
-<td style="text-align: right;">5.15</td>
-<td style="text-align: right;">0.0001</td>
-<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">363</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">3.41</td>
+<td style="text-align: right;">3.48</td>
+<td style="text-align: right;">3.35</td>
+<td style="text-align: right;">2.02</td>
+<td style="text-align: right;">0.0833</td>
+<td style="text-align: right;">0.153</td>
 </tr>
 </tbody>
 </table>
 <p><strong>What the market reacts to is profitability, not growth in sales.</strong></p>
 <ul>
-<li><strong>Revenue YoY:</strong> event-day spread +0.14 pt (p = 0.79), and the sign flips between halves. In 2022–2024, sales
+<li><strong>Revenue YoY:</strong> event-day spread +0.45 pt (p = 0.47), and the sign flips between halves. In 2022–2024, sales
   growth of 50–100% was mostly inflation, not volume, so it carried little news.</li>
-<li><strong>Operating income YoY:</strong> +1.64 pt on the event day (q = 0.009), the same size in both halves (+1.62 / +1.66).
-  Operating income is the closest line to EBITDA in our data; depreciation is not available.</li>
-<li><strong>Net margin change:</strong> +1.69 pt on the event day (q = 0.005) and +2.36 pt over days 0–4 (q = 0.043), positive in
-  both halves. Margins show whether a company passes inflation on to its prices.</li>
-<li><strong>ROE change:</strong> a moderate event-day reaction, but a <strong>+2.65 pt drift over days 1–20</strong> (t = 5.2, q = 0.003,
-  +2.87 / +2.43 in the two halves). This is the only post-disclosure drift that survives correction. We did not plan
-  this test in advance and it is one of 22. It is a candidate finding to re-test on new quarters, not a rule.</li>
+<li><strong>Operating income YoY:</strong> +1.95 pt on the event day (q = 0.018), similar in both halves (+2.23 / +1.71).</li>
+<li><strong>Net margin change:</strong> +1.97 pt on the event day (q = 0.018), +3.57 pt over days 0–4 (q = 0.033) and
+  <strong>+5.07 pt over days 1–20</strong> (q = 0.046, +5.57 / +4.56 in the two halves). Margins show whether a company passes
+  inflation on to its prices. This is the only post-disclosure drift that survives correction. We did not plan this
+  test in advance and it is one of 22, so it is a candidate to re-test on new quarters, not a rule.</li>
+<li><strong>ROE change:</strong> +1.79 pt on the event day (q = 0.046), but only 9 quarters can be ranked. ROE needs a balance sheet
+  and an income statement in the same unit, and for 2023 the inflation-accounting restatements exist only for the
+  income statement. The 20-day drift (+3.41 pt, q = 0.15) does not survive. The earlier version of this report
+  found a strong ROE drift (q = 0.003); it relied on restated figures that were not yet public.</li>
 </ul>
-<h2>7. Profit direction, losses and financials</h2>
+<h2>8. Profit direction, losses and financials</h2>
 <p>The "+48%" for a company whose loss shrank (PETKM, Step 14) showed that a percentage alone can mislead. Here are
 the same words the harness now uses (<code>profit_direction</code>).</p>
 <p><strong>Table 6. By direction of quarterly net income vs the same quarter a year earlier (%)</strong></p>
@@ -6818,21 +7121,21 @@ the same words the harness now uses (<code>profit_direction</code>).</p>
 <tbody>
 <tr>
 <td style="text-align: left;">profit up</td>
-<td style="text-align: right;">251</td>
-<td style="text-align: right;">1.54</td>
-<td style="text-align: right;">-0.11</td>
-<td style="text-align: right;">-0.12</td>
-<td style="text-align: right;">1.63</td>
-<td style="text-align: right;">45.4</td>
+<td style="text-align: right;">202</td>
+<td style="text-align: right;">1.47</td>
+<td style="text-align: right;">-0.00</td>
+<td style="text-align: right;">-0.10</td>
+<td style="text-align: right;">1.89</td>
+<td style="text-align: right;">47.0</td>
 </tr>
 <tr>
 <td style="text-align: left;">profit down</td>
-<td style="text-align: right;">129</td>
-<td style="text-align: right;">-0.22</td>
-<td style="text-align: right;">-1.24</td>
-<td style="text-align: right;">-1.91</td>
-<td style="text-align: right;">-0.12</td>
-<td style="text-align: right;">28.7</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: right;">-0.13</td>
+<td style="text-align: right;">-1.27</td>
+<td style="text-align: right;">-1.95</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">28.8</td>
 </tr>
 <tr>
 <td style="text-align: left;">loss → profit</td>
@@ -6845,12 +7148,12 @@ the same words the harness now uses (<code>profit_direction</code>).</p>
 </tr>
 <tr>
 <td style="text-align: left;">profit → loss</td>
-<td style="text-align: right;">57</td>
-<td style="text-align: right;">-0.45</td>
-<td style="text-align: right;">-1.29</td>
-<td style="text-align: right;">-0.10</td>
-<td style="text-align: right;">0.90</td>
-<td style="text-align: right;">38.6</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">-0.14</td>
+<td style="text-align: right;">-1.57</td>
+<td style="text-align: right;">-1.14</td>
+<td style="text-align: right;">-0.06</td>
+<td style="text-align: right;">35.9</td>
 </tr>
 <tr>
 <td style="text-align: left;">loss narrowed</td>
@@ -6863,12 +7166,12 @@ the same words the harness now uses (<code>profit_direction</code>).</p>
 </tr>
 <tr>
 <td style="text-align: left;">loss widened</td>
-<td style="text-align: right;">12</td>
-<td style="text-align: right;">-1.19</td>
-<td style="text-align: right;">-0.97</td>
-<td style="text-align: right;">0.89</td>
-<td style="text-align: right;">6.43</td>
-<td style="text-align: right;">25.0</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">-1.45</td>
+<td style="text-align: right;">-0.71</td>
+<td style="text-align: right;">1.24</td>
+<td style="text-align: right;">6.17</td>
+<td style="text-align: right;">27.3</td>
 </tr>
 </tbody>
 </table>
@@ -6888,21 +7191,21 @@ the same words the harness now uses (<code>profit_direction</code>).</p>
 <tbody>
 <tr>
 <td style="text-align: left;">reported a profit</td>
-<td style="text-align: right;">444</td>
-<td style="text-align: right;">0.87</td>
-<td style="text-align: right;">-0.52</td>
-<td style="text-align: right;">-0.63</td>
-<td style="text-align: right;">1.00</td>
-<td style="text-align: right;">39.4</td>
+<td style="text-align: right;">368</td>
+<td style="text-align: right;">0.84</td>
+<td style="text-align: right;">-0.55</td>
+<td style="text-align: right;">-0.66</td>
+<td style="text-align: right;">1.19</td>
+<td style="text-align: right;">39.7</td>
 </tr>
 <tr>
 <td style="text-align: left;">reported a loss</td>
-<td style="text-align: right;">87</td>
-<td style="text-align: right;">-0.27</td>
-<td style="text-align: right;">-1.26</td>
-<td style="text-align: right;">-0.31</td>
-<td style="text-align: right;">1.64</td>
-<td style="text-align: right;">37.9</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">-0.07</td>
+<td style="text-align: right;">-1.31</td>
+<td style="text-align: right;">-0.90</td>
+<td style="text-align: right;">1.22</td>
+<td style="text-align: right;">37.3</td>
 </tr>
 <tr>
 <td style="text-align: left;">non-financial</td>
@@ -6926,15 +7229,15 @@ the same words the harness now uses (<code>profit_direction</code>).</p>
 </table>
 <ul>
 <li><strong>The worst case is not "profit → loss" but "profit down".</strong> Companies whose profit fell (but stayed positive)
-  lose −1.24% on the event day (only 29% beat the index) and −1.91% over days 0–4.</li>
-<li><strong>Loss → profit and profit → loss</strong> are both negative on the day (about −1%) but recover over 20 days. With
-  41–57 events each, these are noisy.</li>
-<li><strong>Small groups.</strong> "Loss narrowed" (n = 17) and "loss widened" (n = 12) are too small to interpret. The +6.43% for
-  "loss widened" is a few large rebounds.</li>
+  lose −1.27% on the event day (only 29% beat the index) and −1.95% over days 0–4.</li>
+<li><strong>Loss → profit and profit → loss</strong> are both negative on the day (−1.04% and −1.57%). Over days 1–20 the first
+  recovers (+1.15%), the second does not (−0.06%). With about 40 events each, these are noisy.</li>
+<li><strong>Small groups.</strong> "Loss narrowed" (n = 17) and "loss widened" (n = 11) are too small to interpret. The +6.17% for
+  "loss widened" over days 1–20 comes from 9 events and one +33% rebound; the median is +4.2%.</li>
 <li><strong>Financials vs others.</strong> The three financials react like the non-financials. Banks are ranked on net income and
   ROE only; revenue, operating-income and margin metrics exclude them.</li>
 </ul>
-<h2>8. Strong fundamentals with weak technicals, and vice versa</h2>
+<h2>9. Strong fundamentals with weak technicals, and vice versa</h2>
 <p>The technical state is measured at the close <strong>before</strong> the event day: is the price above its 200-day average?</p>
 <p><strong>Table 8. Net-income third × technical state (abnormal return vs XU100, %)</strong></p>
 <table>
@@ -6952,66 +7255,66 @@ the same words the harness now uses (<code>profit_direction</code>).</p>
 <tr>
 <td style="text-align: left;">bottom</td>
 <td style="text-align: left;">above SMA200</td>
-<td style="text-align: right;">92</td>
-<td style="text-align: right;">-1.46</td>
-<td style="text-align: right;">-1.03</td>
-<td style="text-align: right;">0.02</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">-2.25</td>
+<td style="text-align: right;">-2.38</td>
+<td style="text-align: right;">0.71</td>
 </tr>
 <tr>
 <td style="text-align: left;">bottom</td>
 <td style="text-align: left;">below SMA200</td>
-<td style="text-align: right;">58</td>
-<td style="text-align: right;">-0.38</td>
-<td style="text-align: right;">-0.12</td>
-<td style="text-align: right;">1.79</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">-0.52</td>
+<td style="text-align: right;">-0.58</td>
+<td style="text-align: right;">1.58</td>
 </tr>
 <tr>
 <td style="text-align: left;">middle</td>
 <td style="text-align: left;">above SMA200</td>
-<td style="text-align: right;">103</td>
-<td style="text-align: right;">-1.13</td>
-<td style="text-align: right;">-1.87</td>
-<td style="text-align: right;">1.41</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">-0.56</td>
+<td style="text-align: right;">-0.96</td>
+<td style="text-align: right;">1.76</td>
 </tr>
 <tr>
 <td style="text-align: left;">middle</td>
 <td style="text-align: left;">below SMA200</td>
-<td style="text-align: right;">44</td>
-<td style="text-align: right;">0.05</td>
-<td style="text-align: right;">0.67</td>
-<td style="text-align: right;">2.03</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">-0.15</td>
+<td style="text-align: right;">0.37</td>
+<td style="text-align: right;">0.00</td>
 </tr>
 <tr>
 <td style="text-align: left;">top</td>
 <td style="text-align: left;">above SMA200</td>
-<td style="text-align: right;">129</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">-0.37</td>
+<td style="text-align: right;">-0.46</td>
 <td style="text-align: right;">-0.18</td>
-<td style="text-align: right;">0.44</td>
-<td style="text-align: right;">1.60</td>
 </tr>
 <tr>
 <td style="text-align: left;">top</td>
 <td style="text-align: left;">below SMA200</td>
-<td style="text-align: right;">21</td>
-<td style="text-align: right;">0.96</td>
-<td style="text-align: right;">1.87</td>
-<td style="text-align: right;">1.78</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">1.88</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">2.24</td>
 </tr>
 </tbody>
 </table>
 <p>The spec asks to compare good fundamentals with weak technicals and vice versa. The pattern is consistent with
 <strong>surprise relative to expectations</strong>, if the price trend is read as a proxy for expectations:</p>
 <ul>
-<li><strong>Strong trend, weak earnings</strong> (bottom third, price above its 200-day average, n = 92): the largest event-day
-  loss (−1.46%). Investors expected more.</li>
-<li><strong>Weak trend, weak earnings</strong> (n = 58): only −0.38%. The bad news was already in the price.</li>
-<li><strong>Weak trend, strong earnings</strong> (top third below its 200-day average, n = 21): the best event-window reaction
-  (+1.87% over days 0–4), against +0.44% for top-third companies already in an uptrend.</li>
+<li><strong>Strong trend, weak earnings</strong> (bottom third, price above its 200-day average, n = 61): the largest event-day
+  loss (−2.25%). Investors expected more.</li>
+<li><strong>Weak trend, weak earnings</strong> (n = 55): only −0.52%. The bad news was already in the price.</li>
+<li><strong>Weak trend, strong earnings</strong> (top third below its 200-day average, n = 23): the best event-window reaction
+  (+3.00% over days 0–4), against −0.46% for top-third companies already in an uptrend (n = 94).</li>
 </ul>
 <p>These cells were not tested for significance and the "weak trend, strong earnings" group is small. It is an
 interpretation to check on new data. It also shows why the harness never treats strong earnings alone as
 sufficient.</p>
-<h2>9. Is there unusual activity in reporting season?</h2>
+<h2>10. Is there unusual activity in reporting season?</h2>
 <p>Step 7 compared how often large volume spikes and large abnormal moves happen inside reporting windows vs
 outside them (share of stock-days).</p>
 <p><strong>Table 9. Spikes inside vs outside reporting season</strong></p>
@@ -7059,10 +7362,9 @@ outside them (share of stock-days).</p>
 </table>
 <p>Reporting season as a whole shows <strong>no more</strong> volume spikes or large abnormal moves than other weeks (ratios
 0.87–1.11). The reaction is concentrated on each company's own event day, not spread across the season. This also
-argues against widespread pre-announcement trading. The pre-event drift in Table 1 is more likely the market reading
-public signals (peers' results, sector data) than leakage. We cannot prove either.</p>
-<h2>10. Multiple testing</h2>
-<p>22 tests were corrected together; <strong>6</strong> have q &lt; 0.05:</p>
+argues against widespread pre-announcement trading.</p>
+<h2>11. Multiple testing</h2>
+<p>22 tests were corrected together; <strong>9</strong> have q &lt; 0.05:</p>
 <table>
 <thead>
 <tr>
@@ -7075,121 +7377,156 @@ public signals (peers' results, sector data) than leakage. We cannot prove eithe
 <tbody>
 <tr>
 <td style="text-align: left;">metric spreads</td>
-<td style="text-align: left;">ROE change, pt / days 1–20</td>
-<td style="text-align: right;">0.00012</td>
-<td style="text-align: right;">0.003</td>
+<td style="text-align: left;">operating income YoY (non-financial) / event day</td>
+<td style="text-align: right;">0.00083</td>
+<td style="text-align: right;">0.018</td>
 </tr>
 <tr>
 <td style="text-align: left;">metric spreads</td>
 <td style="text-align: left;">net margin change, pt (non-financial) / event day</td>
-<td style="text-align: right;">0.00046</td>
-<td style="text-align: right;">0.005</td>
-</tr>
-<tr>
-<td style="text-align: left;">metric spreads</td>
-<td style="text-align: left;">operating income YoY (non-financial) / event day</td>
-<td style="text-align: right;">0.00124</td>
-<td style="text-align: right;">0.009</td>
+<td style="text-align: right;">0.00168</td>
+<td style="text-align: right;">0.018</td>
 </tr>
 <tr>
 <td style="text-align: left;">net income spread vs XU100</td>
 <td style="text-align: left;">event day</td>
-<td style="text-align: right;">0.00842</td>
-<td style="text-align: right;">0.043</td>
+<td style="text-align: right;">0.00291</td>
+<td style="text-align: right;">0.021</td>
 </tr>
 <tr>
 <td style="text-align: left;">net income spread vs XU100</td>
-<td style="text-align: left;">5 days before</td>
-<td style="text-align: right;">0.00991</td>
-<td style="text-align: right;">0.043</td>
+<td style="text-align: left;">days 0–1</td>
+<td style="text-align: right;">0.00534</td>
+<td style="text-align: right;">0.029</td>
+</tr>
+<tr>
+<td style="text-align: left;">net income spread vs peers</td>
+<td style="text-align: left;">event day</td>
+<td style="text-align: right;">0.00717</td>
+<td style="text-align: right;">0.032</td>
 </tr>
 <tr>
 <td style="text-align: left;">metric spreads</td>
 <td style="text-align: left;">net margin change, pt (non-financial) / days 0–4</td>
-<td style="text-align: right;">0.01181</td>
-<td style="text-align: right;">0.043</td>
+<td style="text-align: right;">0.00888</td>
+<td style="text-align: right;">0.033</td>
+</tr>
+<tr>
+<td style="text-align: left;">metric spreads</td>
+<td style="text-align: left;">ROE change, pt / event day</td>
+<td style="text-align: right;">0.01561</td>
+<td style="text-align: right;">0.046</td>
+</tr>
+<tr>
+<td style="text-align: left;">net income spread vs peers</td>
+<td style="text-align: left;">days 0–4</td>
+<td style="text-align: right;">0.01751</td>
+<td style="text-align: right;">0.046</td>
+</tr>
+<tr>
+<td style="text-align: left;">metric spreads</td>
+<td style="text-align: left;">net margin change, pt (non-financial) / days 1–20</td>
+<td style="text-align: right;">0.01874</td>
+<td style="text-align: right;">0.046</td>
 </tr>
 </tbody>
 </table>
 <ul>
-<li><strong>Six of 22 tests survive.</strong> Two are net-income spreads (pre-event and event day), three are the
-  operating-income and net-margin event-day/event-window spreads, and one is the ROE drift.</li>
-<li><strong>All six keep their sign in both halves</strong> of the sample.</li>
-<li><strong>The 20-day net-income drift does not survive</strong> (p = 0.33). Neither does any vs-peers spread, nor revenue.</li>
+<li><strong>Nine of 22 tests survive.</strong><ul>
+<li>Four net-income spreads: event day and days 0–1 vs XU100; event day and days 0–4 vs peers.</li>
+<li>Four event-window spreads of other metrics: operating income and net margin on the event day, net margin over
+  days 0–4, ROE change on the event day.</li>
+<li>One drift: net margin over days 1–20.</li>
+</ul>
+</li>
+<li><strong>All nine keep their sign in both halves</strong> of the sample.</li>
+<li><strong>Not surviving:</strong> the pre-event spread (q = 0.11), the 20-day net-income drift (p = 0.92), the ROE drift and
+  revenue.</li>
 </ul>
 <p>The pattern of survivors is economically coherent: profitability measures, around the disclosure. That makes it
 more believable than a single isolated p-value would be.</p>
-<h2>11. Türkiye context</h2>
+<h2>12. Türkiye context</h2>
 <ul>
 <li><strong>Nominal profits in 2022–2023.</strong> With annual CPI above 50–80%, the median company's net income grew 75–200%
-  year over year in nominal TRY. Ranking within each quarter is essential; raw growth rates would mostly measure
-  inflation.</li>
+  year over year in nominal TRY. Ranking companies against each other is essential; raw growth rates would mostly
+  measure inflation.</li>
 <li><strong>Inflation accounting (TMS 29) from 2023 year-end.</strong><ul>
 <li>KGK announced in November 2023 that companies applying TFRS must restate their 31 Dec 2023 statements for
   inflation.</li>
 <li>SPK confirmed this for listed companies on 28 Dec 2023 and gave <strong>10 extra weeks</strong> for the first annual reports.</li>
 <li>This is why 60–80% of 2023Q4–2024Q1 filings in our KAP data came after the usual deadline, and why we use real
   KAP timestamps.</li>
-<li>Restated figures include a "monetary loss" line, so net income fell sharply for many companies. The 2024Q4
-  median net-income change in our data is −73%.</li>
+<li>The 2024Q4 median net-income change in our data is −73%. For a third of the companies the restated 2023Q4 profit
+  was more than twice their average 2023 quarter, so the comparison base is unusually high. Against the previous
+  quarter's cut-offs, 22 of the 30 companies fall into the bottom third in 2024Q4.</li>
 </ul>
 </li>
+<li><strong>How Fintables stores these years.</strong> Fintables keeps the latest version of each figure. It shows the
+  restatements of 2022Q4 – 2023Q3 (published a year later, in the next year's reports) instead of the original
+  figures, and it re-expresses all later figures in the money of each company's latest balance sheet. We verified
+  this against 20 published figures and use each figure only from the day its version became public. This is why
+  2022Q4 – 2024Q1 cannot be ranked.</li>
 <li><strong>Banks were treated differently.</strong> BDDK decided that banks would not restate their 2023 statements. A December
   2025 BDDK decision says banks and other financial institutions will not apply inflation accounting to their
   2025 statements either. AKBNK's figures are therefore not on the same accounting basis as the industrial companies,
   another reason to rank them on net income and ROE only. We did not find a source for the 2024 bank decision.</li>
-<li><strong>2022Q4 missing.</strong> Fintables lacks 2022Q4 for 24 of 30 stocks, so 2022Q4 and 2023Q4 (which needs 2022Q4 for the
-  YoY change) cannot be ranked.</li>
 </ul>
 <p>Verified by search: KGK and SPK TMS 29 announcements and BDDK bank decisions for 2023 and 2025
 (<a href="https://www.kgk.gov.tr/Portalv2Uploads/files/Duyurular/v2/Diger/Y%C3%BCksek%20Enflasyonlu%20Sunum%20Para%20Birimine%20%C3%87evrim%20Duyuru.pdf">KGK duyuru</a>,
 <a href="https://www.bloomberght.com/spkdan-enflasyon-muhasebesi-aciklamasi-2344793">BloombergHT: SPK</a>,
 <a href="https://www.sozcu.com.tr/bddk-dan-enflasyon-duzeltmesi-aciklamasi-p8411">Sözcü: BDDK</a>,
 <a href="https://www.alomaliye.com/2025/12/23/enflasyon-muhasebesi-uygulamasi-banka-ve-finans-sirketlerinde-kaldirildi/">Alomaliye: BDDK 2025</a>).
-From our own data: the filing delays, the missing quarters and the median changes.</p>
-<h2>12. How the harness uses these results</h2>
+From our own data: the filing delays, the unranked quarters, the median changes and the check of Fintables against
+published figures (Data Dictionary, <code>fundamentals</code>).</p>
+<h2>13. How the harness uses these results</h2>
 <p>The harness uses this scenario for <code>FUNDAMENTAL_IMPROVEMENT_CANDIDATE</code>. The rule requires:</p>
 <ul>
-<li>the latest <strong>public</strong> statement (event day ≤ analysis date) in the top net-income third;</li>
+<li>the latest <strong>public</strong> statement (event day ≤ analysis date) in the top net-income third, decided against the
+  previous quarter's cut-offs;</li>
 <li>not a loss;</li>
 <li>no more than 63 trading days since the event day.</li>
 </ul>
 <p>The attached history is the top-minus-bottom spread over days 0–4, computed only from events whose window had
-closed before the analysis date. The evidence sentence states the quarter, the two net-income amounts, the
-direction in words ("profit up", "loss narrowed", …) and the tercile.</p>
+closed before the analysis date. The evidence sentence states the quarter, the two net-income amounts in the money
+of that report, the direction in words ("profit up", "loss narrowed", …), the third and its cut-offs.</p>
 <p>Given this report, the label means "recent profitability news was strong". It does <strong>not</strong> predict further gains:</p>
 <ul>
-<li>most of the reaction happens before and on the event day;</li>
+<li>most of the reaction happens on the event day and the day after;</li>
 <li>the label can be up to three months old.</li>
 </ul>
-<p>ROE improvement, the one metric with post-disclosure drift, is not yet used by the harness. Adding it would need a
-pre-registered test on new quarters first.</p>
-<h2>13. Limitations</h2>
+<p>Net-margin improvement, the one metric with a post-disclosure drift, is not used by the harness. Adding it would
+need a pre-registered test on new quarters first.</p>
+<h2>14. Limitations</h2>
 <ul>
 <li><strong>No expectations data.</strong> There is no analyst consensus, so "surprise" is approximated by the change vs the
   same quarter last year and by the price trend.</li>
-<li><strong>No valuation or liquidity.</strong> We have no share counts or market values (P/E, P/B) and no current
-  assets/liabilities (liquidity ratios), so the spec's "valuation changes" and "liquidity" are not covered.</li>
-<li><strong>Operating income instead of EBITDA.</strong> Depreciation is not in the downloaded statements.</li>
-<li><strong>Low power.</strong> 17 quarters is a small number of independent observations. 2022Q4 and 2023Q4 are missing.</li>
-<li><strong>Comparability under TMS 29.</strong> It is not documented whether Fintables restates prior-year figures, so
-  year-over-year changes across the switch may mix accounting bases.</li>
+<li><strong>Valuation, liquidity and EBITDA not covered yet.</strong> The Fintables files contain paid-in capital (the share
+  count), current assets and liabilities, financial debt and depreciation; an earlier version of this report wrongly
+  said they did not. They are not used in this version. Market values also need daily market capitalisation.</li>
+<li><strong>Low power.</strong> 13 quarters (12 for days 1–20) is a small number of independent observations; 2022Q4 – 2024Q1
+  cannot be ranked.</li>
+<li><strong>Latest versions only.</strong> Fintables carries later corrections back into earlier periods. We found one small case
+  (0.1%); larger corrections would not be visible to us.</li>
+<li><strong>Previous-quarter cut-offs</strong> avoid look-ahead but follow shifts between quarters with a lag (2024Q4). Table 2b
+  shows that the event-day result does not depend on this choice.</li>
 <li><strong>Same-day reaction partly missed.</strong> For the 12% of filings published during trading hours, part of the reaction
   happens on the publication day, which counts as day −1 here.</li>
 <li><strong>Small, sensitive groups.</strong> Only three financial companies. Returns are nominal TRY vs XU100 or peers.</li>
 </ul>
-<h2>14. Conclusion</h2>
+<h2>15. Conclusion</h2>
 <p>Quarterly fundamentals carry information that the market prices quickly:</p>
 <ul>
-<li>profitability changes (operating income, margins, net income) separate winners from losers around the
-  disclosure;</li>
+<li>profitability changes (operating income, margins, net income) separate winners from losers on the disclosure day
+  and the day after;</li>
 <li>sales growth does not;</li>
-<li>most of the move happens within a few days, partly before the filing.</li>
+<li>once figures are used only from the day they were public, there is no reliable move before the filing.</li>
 </ul>
 <p>"Fundamental strength ≠ guaranteed price increase": strong results in a stock that had already run up reacted
 little, and weak results in such a stock were punished most. The harness therefore uses fundamentals as <strong>dated,
-point-in-time evidence</strong> next to the technical and sector picture, and only ROE improvement shows a post-disclosure
-drift worth testing further.</p></section><section class="report"><h1>Report 5 — Macro and Contextual Evidence Integration</h1>
+point-in-time evidence</strong> next to the technical and sector picture. Only the net-margin change shows a
+post-disclosure drift worth testing further.</p>
+<p>The corrections of 22 November also show why point-in-time data matter: two earlier "findings", the pre-event move
+and the ROE drift, disappeared once each figure was used only from the day it became public.</p></section><section class="report"><h1>Report 5 — Macro and Contextual Evidence Integration</h1>
 <p><em>Educational research output for CSE-481. Historical evidence only: not a forecast, not investment advice. Returns are nominal TRY.</em></p>
 <p>Generated by <code>python -m src.reports.build_reports --only 5</code> from committed outputs and the cached price data.</p>
 <table>
@@ -7234,7 +7571,7 @@ drift worth testing further.</p></section><section class="report"><h1>Report 5 �
 <tr>
 <td style="text-align: left;"><code>reports/backtest_strategies.csv</code></td>
 <td style="text-align: left;">6 kB</td>
-<td style="text-align: left;">7abc36342ce3</td>
+<td style="text-align: left;">5266ca6a8032</td>
 </tr>
 </tbody>
 </table>
@@ -7250,13 +7587,14 @@ decisions in practice, and (c) how unstructured text (news, speeches) can be use
   inflation in every full year except 2022. Most of the "returns" in Reports 1–4 are nominal, which is why every
   report measures against XU100 or peers.</li>
 <li><strong>Macro as a position-sizing rule hurt.</strong> Halving positions when the macro risk flag is on cut the strategy's
-  return from 241% to 176% and barely reduced its worst drawdown (−25% → −22%). In this sample, XU100 actually did
+  return from 213% to 163% and did not reduce its worst drawdown (about −21% in both). In this sample, XU100 actually did
   <em>better</em> in the 20 days after the flag turned on (+5.4% vs +3.2%).</li>
 <li><strong>The lira matters for sectors.</strong> When USD/TRY rises, metal and mining stocks (exporters, a gold miner) beat the
   index and banks lag it. Only the metals result survives correction.</li>
 <li><strong>News: one useful category.</strong> Of the pre-registered KAP news categories, only "new contract / order"
   disclosures moved prices: +0.5 pt on the day (q = 0.002), mostly ASELS and EKGYO, with no follow-through.
-  Negative categories showed no average effect. Adding news to the strategy (E) changed nothing.</li>
+  Negative categories showed no average effect. Adding news to the strategy (E) changed little (176% vs 163% for
+  D, not tested for significance).</li>
 <li><strong>Speeches: verified claims only.</strong> Of 33 numerical claims in two central-bank speeches, 3 could be verified
   against our data and only those entered the evidence. Forecasts and targets stay as context: expert commentary
   ≠ verified fact.</li>
@@ -7474,152 +7812,152 @@ during rate-hiking periods, and <code>E_haber</code> adds the KAP news rules (St
 <tr>
 <td style="text-align: left;">C_temel</td>
 <td style="text-align: left;">full</td>
-<td style="text-align: right;">241</td>
+<td style="text-align: right;">213</td>
 <td style="text-align: right;">189</td>
 <td style="text-align: right;">342</td>
-<td style="text-align: right;">1.57</td>
-<td style="text-align: right;">-25</td>
-<td style="text-align: right;">536</td>
+<td style="text-align: right;">1.44</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">627</td>
 </tr>
 <tr>
 <td style="text-align: left;">C_temel</td>
 <td style="text-align: left;">first half</td>
-<td style="text-align: right;">209</td>
+<td style="text-align: right;">175</td>
 <td style="text-align: right;">118</td>
 <td style="text-align: right;">199</td>
-<td style="text-align: right;">2.57</td>
-<td style="text-align: right;">-19</td>
-<td style="text-align: right;">287</td>
+<td style="text-align: right;">2.23</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">357</td>
 </tr>
 <tr>
 <td style="text-align: left;">C_temel</td>
 <td style="text-align: left;">second half</td>
-<td style="text-align: right;">11</td>
+<td style="text-align: right;">14</td>
 <td style="text-align: right;">33</td>
 <td style="text-align: right;">48</td>
-<td style="text-align: right;">0.36</td>
-<td style="text-align: right;">-25</td>
-<td style="text-align: right;">249</td>
+<td style="text-align: right;">0.44</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">270</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">163</td>
+<td style="text-align: right;">189</td>
+<td style="text-align: right;">342</td>
+<td style="text-align: right;">1.30</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">627</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro</td>
+<td style="text-align: left;">first half</td>
+<td style="text-align: right;">145</td>
+<td style="text-align: right;">118</td>
+<td style="text-align: right;">199</td>
+<td style="text-align: right;">2.10</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">357</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro</td>
+<td style="text-align: left;">second half</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">0.29</td>
+<td style="text-align: right;">-19</td>
+<td style="text-align: right;">270</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_oynaklik</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">164</td>
+<td style="text-align: right;">189</td>
+<td style="text-align: right;">342</td>
+<td style="text-align: right;">1.31</td>
+<td style="text-align: right;">-20</td>
+<td style="text-align: right;">627</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_oynaklik</td>
+<td style="text-align: left;">first half</td>
+<td style="text-align: right;">148</td>
+<td style="text-align: right;">118</td>
+<td style="text-align: right;">199</td>
+<td style="text-align: right;">2.14</td>
+<td style="text-align: right;">-20</td>
+<td style="text-align: right;">357</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_oynaklik</td>
+<td style="text-align: left;">second half</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">-19</td>
+<td style="text-align: right;">270</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_faiz</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">189</td>
+<td style="text-align: right;">342</td>
+<td style="text-align: right;">1.16</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">627</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_faiz</td>
+<td style="text-align: left;">first half</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">118</td>
+<td style="text-align: right;">199</td>
+<td style="text-align: right;">2.05</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">357</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_faiz</td>
+<td style="text-align: left;">second half</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">0.29</td>
+<td style="text-align: right;">-19</td>
+<td style="text-align: right;">270</td>
+</tr>
+<tr>
+<td style="text-align: left;">E_haber</td>
 <td style="text-align: left;">full</td>
 <td style="text-align: right;">176</td>
 <td style="text-align: right;">189</td>
 <td style="text-align: right;">342</td>
-<td style="text-align: right;">1.39</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">536</td>
-</tr>
-<tr>
-<td style="text-align: left;">D_makro</td>
-<td style="text-align: left;">first half</td>
-<td style="text-align: right;">163</td>
-<td style="text-align: right;">118</td>
-<td style="text-align: right;">199</td>
-<td style="text-align: right;">2.37</td>
-<td style="text-align: right;">-19</td>
-<td style="text-align: right;">287</td>
-</tr>
-<tr>
-<td style="text-align: left;">D_makro</td>
-<td style="text-align: left;">second half</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">33</td>
-<td style="text-align: right;">48</td>
-<td style="text-align: right;">0.23</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">249</td>
-</tr>
-<tr>
-<td style="text-align: left;">D_makro_oynaklik</td>
-<td style="text-align: left;">full</td>
-<td style="text-align: right;">169</td>
-<td style="text-align: right;">189</td>
-<td style="text-align: right;">342</td>
-<td style="text-align: right;">1.36</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">536</td>
-</tr>
-<tr>
-<td style="text-align: left;">D_makro_oynaklik</td>
-<td style="text-align: left;">first half</td>
-<td style="text-align: right;">164</td>
-<td style="text-align: right;">118</td>
-<td style="text-align: right;">199</td>
-<td style="text-align: right;">2.40</td>
-<td style="text-align: right;">-19</td>
-<td style="text-align: right;">287</td>
-</tr>
-<tr>
-<td style="text-align: left;">D_makro_oynaklik</td>
-<td style="text-align: left;">second half</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">33</td>
-<td style="text-align: right;">48</td>
-<td style="text-align: right;">0.14</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">249</td>
-</tr>
-<tr>
-<td style="text-align: left;">D_makro_faiz</td>
-<td style="text-align: left;">full</td>
-<td style="text-align: right;">111</td>
-<td style="text-align: right;">189</td>
-<td style="text-align: right;">342</td>
-<td style="text-align: right;">1.18</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">536</td>
-</tr>
-<tr>
-<td style="text-align: left;">D_makro_faiz</td>
-<td style="text-align: left;">first half</td>
-<td style="text-align: right;">101</td>
-<td style="text-align: right;">118</td>
-<td style="text-align: right;">199</td>
-<td style="text-align: right;">2.23</td>
-<td style="text-align: right;">-19</td>
-<td style="text-align: right;">287</td>
-</tr>
-<tr>
-<td style="text-align: left;">D_makro_faiz</td>
-<td style="text-align: left;">second half</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">33</td>
-<td style="text-align: right;">48</td>
-<td style="text-align: right;">0.23</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">249</td>
-</tr>
-<tr>
-<td style="text-align: left;">E_haber</td>
-<td style="text-align: left;">full</td>
-<td style="text-align: right;">171</td>
-<td style="text-align: right;">189</td>
-<td style="text-align: right;">342</td>
-<td style="text-align: right;">1.39</td>
-<td style="text-align: right;">-23</td>
-<td style="text-align: right;">525</td>
+<td style="text-align: right;">1.37</td>
+<td style="text-align: right;">-20</td>
+<td style="text-align: right;">611</td>
 </tr>
 <tr>
 <td style="text-align: left;">E_haber</td>
 <td style="text-align: left;">first half</td>
-<td style="text-align: right;">159</td>
+<td style="text-align: right;">145</td>
 <td style="text-align: right;">118</td>
 <td style="text-align: right;">199</td>
-<td style="text-align: right;">2.38</td>
-<td style="text-align: right;">-19</td>
-<td style="text-align: right;">277</td>
+<td style="text-align: right;">2.11</td>
+<td style="text-align: right;">-20</td>
+<td style="text-align: right;">343</td>
 </tr>
 <tr>
 <td style="text-align: left;">E_haber</td>
 <td style="text-align: left;">second half</td>
-<td style="text-align: right;">5</td>
+<td style="text-align: right;">12</td>
 <td style="text-align: right;">33</td>
 <td style="text-align: right;">48</td>
-<td style="text-align: right;">0.22</td>
-<td style="text-align: right;">-23</td>
-<td style="text-align: right;">248</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: right;">-17</td>
+<td style="text-align: right;">268</td>
 </tr>
 </tbody>
 </table>
@@ -7630,9 +7968,10 @@ hold half positions. The data do not support it as a timing rule:</p>
   (+3.19%, p = 0.001). In Türkiye a lira shock or a sell-off has often been followed by a rebound: equities are
   bought as an inflation and currency hedge (Dec 2021, mid-2023), and sharp political sell-offs partly reversed
   (spring 2025).</li>
-<li><strong>Strategies.</strong> Every D variant earns less than C. The interest-rate variant earns the least (111%), and the
-  drawdown improves by only 3 pt. Adding the news filter (E) gives 171% vs 176% for D.</li>
-<li><strong>No help in the second half.</strong> In the tighter second half, all of them lag XU100 (+2–11% vs +33%).</li>
+<li><strong>Strategies.</strong> Every D variant earns less than C (213%). The interest-rate variant earns the least (110%), and
+  the drawdown barely changes (−21% for C, −20% to −21% for the D variants). Adding the news filter (E) gives 176%
+  vs 163% for D.</li>
+<li><strong>No help in the second half.</strong> In the tighter second half, all of them lag XU100 (+7–14% vs +33%).</li>
 </ul>
 <p>The macro layer stays in the harness as <strong>context and as a gate warning</strong>, not as an automatic sizing rule. This
 was the main negative result of Step 9, and Table 3 shows it was not just bad luck in the backtest.</p>
@@ -8284,12 +8623,12 @@ tool list and the replays are recomputed when the report is built (no API key ne
 <tr>
 <td style="text-align: left;"><code>reports/backtest_strategies.csv</code></td>
 <td style="text-align: left;">6 kB</td>
-<td style="text-align: left;">7abc36342ce3</td>
+<td style="text-align: left;">5266ca6a8032</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/backtest_cost_sensitivity.csv</code></td>
 <td style="text-align: left;">1 kB</td>
-<td style="text-align: left;">58e99b35c201</td>
+<td style="text-align: left;">5adf4069e31b</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/harness_experiments.csv</code></td>
@@ -8319,7 +8658,7 @@ the <strong>decision-log and replay demonstration</strong>.</p>
 <p><strong>Short answer.</strong></p>
 <ul>
 <li><strong>Backtests.</strong> No rule-based strategy variant beat a simple equal-weight buy-and-hold of the 30 stocks after
-  costs. The best variant (C, fundamental filter) beat XU100 over the full period (+53 pt), but every variant lagged
+  costs. The best variant (C, fundamental filter) beat XU100 over the full period (+24 pt), but every variant lagged
   XU100 in the second half. The macro and news layers (D, E) lowered returns. The backtest engine passes its own
   look-ahead self-test.</li>
 <li><strong>Harness.</strong> 15 deterministic MCP tools sit under a fixed 17-state machine with per-state tool permissions,
@@ -8333,8 +8672,9 @@ the <strong>decision-log and replay demonstration</strong>.</p>
 </li>
 <li><strong>Numbers.</strong> After fixing a validator false alarm, no version invented numbers. The differences are in <strong>which
   action</strong> is chosen and <strong>how completely</strong> the evidence is explained.</li>
-<li><strong>Replay.</strong> Replaying the real decision log with today's code reproduces the same actions and correctly reports
-  that the data are unchanged but the procedure has changed since the decisions were made.</li>
+<li><strong>Replay.</strong> Replaying the real decision log with today's code reproduces the same actions and gates and correctly
+  reports what changed since the decisions were made: the procedure, and one data file (the earnings table rebuilt
+  by the point-in-time fix of 22 November).</li>
 </ul>
 <h2>1. Backtests and benchmarks</h2>
 <h3>1.1 Strategy variants (spec §29)</h3>
@@ -8509,242 +8849,242 @@ are indicator warm-up and are not evaluated.</p>
 <tr>
 <td style="text-align: left;">C_temel</td>
 <td style="text-align: left;">full</td>
-<td style="text-align: right;">241</td>
-<td style="text-align: right;">36</td>
+<td style="text-align: right;">213</td>
+<td style="text-align: right;">33</td>
 <td style="text-align: right;">21</td>
-<td style="text-align: right;">1.57</td>
-<td style="text-align: right;">-25</td>
+<td style="text-align: right;">1.44</td>
+<td style="text-align: right;">-21</td>
 <td style="text-align: right;">55</td>
-<td style="text-align: right;">94</td>
-<td style="text-align: right;">536</td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">-100</td>
-<td style="text-align: right;">+53</td>
-<td style="text-align: right;">-0.45</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">627</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">-129</td>
+<td style="text-align: right;">+24</td>
+<td style="text-align: right;">-0.58</td>
 </tr>
 <tr>
 <td style="text-align: left;">C_temel</td>
 <td style="text-align: left;">first half</td>
-<td style="text-align: right;">209</td>
-<td style="text-align: right;">76</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">2.57</td>
-<td style="text-align: right;">-19</td>
-<td style="text-align: right;">58</td>
-<td style="text-align: right;">94</td>
-<td style="text-align: right;">287</td>
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">+10</td>
-<td style="text-align: right;">+91</td>
-<td style="text-align: right;">-0.03</td>
+<td style="text-align: right;">175</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">2.23</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">357</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">-23</td>
+<td style="text-align: right;">+57</td>
+<td style="text-align: right;">-0.32</td>
 </tr>
 <tr>
 <td style="text-align: left;">C_temel</td>
 <td style="text-align: left;">second half</td>
-<td style="text-align: right;">11</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">19</td>
-<td style="text-align: right;">0.36</td>
-<td style="text-align: right;">-25</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">0.44</td>
+<td style="text-align: right;">-21</td>
 <td style="text-align: right;">53</td>
-<td style="text-align: right;">93</td>
-<td style="text-align: right;">249</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">270</td>
 <td style="text-align: right;">8</td>
-<td style="text-align: right;">-37</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">-0.97</td>
+<td style="text-align: right;">-34</td>
+<td style="text-align: right;">-19</td>
+<td style="text-align: right;">-0.90</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro</td>
 <td style="text-align: left;">full</td>
-<td style="text-align: right;">176</td>
-<td style="text-align: right;">29</td>
+<td style="text-align: right;">163</td>
+<td style="text-align: right;">27</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">1.39</td>
-<td style="text-align: right;">-22</td>
+<td style="text-align: right;">1.30</td>
+<td style="text-align: right;">-21</td>
 <td style="text-align: right;">55</td>
-<td style="text-align: right;">94</td>
-<td style="text-align: right;">536</td>
-<td style="text-align: right;">15</td>
-<td style="text-align: right;">-166</td>
-<td style="text-align: right;">-13</td>
-<td style="text-align: right;">-0.73</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">627</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">-178</td>
+<td style="text-align: right;">-26</td>
+<td style="text-align: right;">-0.81</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro</td>
 <td style="text-align: left;">first half</td>
-<td style="text-align: right;">163</td>
-<td style="text-align: right;">62</td>
-<td style="text-align: right;">21</td>
-<td style="text-align: right;">2.37</td>
-<td style="text-align: right;">-19</td>
-<td style="text-align: right;">58</td>
-<td style="text-align: right;">94</td>
-<td style="text-align: right;">287</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">-36</td>
-<td style="text-align: right;">+45</td>
-<td style="text-align: right;">-0.44</td>
+<td style="text-align: right;">145</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">2.10</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">357</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">-54</td>
+<td style="text-align: right;">+27</td>
+<td style="text-align: right;">-0.62</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro</td>
 <td style="text-align: left;">second half</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">3</td>
-<td style="text-align: right;">18</td>
-<td style="text-align: right;">0.23</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">53</td>
-<td style="text-align: right;">93</td>
-<td style="text-align: right;">249</td>
 <td style="text-align: right;">7</td>
-<td style="text-align: right;">-43</td>
-<td style="text-align: right;">-27</td>
-<td style="text-align: right;">-1.09</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">0.29</td>
+<td style="text-align: right;">-19</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">270</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">-40</td>
+<td style="text-align: right;">-25</td>
+<td style="text-align: right;">-1.04</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_oynaklik</td>
 <td style="text-align: left;">full</td>
-<td style="text-align: right;">169</td>
+<td style="text-align: right;">164</td>
 <td style="text-align: right;">28</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">1.36</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">55</td>
-<td style="text-align: right;">94</td>
-<td style="text-align: right;">536</td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">-173</td>
+<td style="text-align: right;">1.31</td>
 <td style="text-align: right;">-20</td>
-<td style="text-align: right;">-0.77</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">627</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">-177</td>
+<td style="text-align: right;">-24</td>
+<td style="text-align: right;">-0.81</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_oynaklik</td>
 <td style="text-align: left;">first half</td>
-<td style="text-align: right;">164</td>
-<td style="text-align: right;">62</td>
-<td style="text-align: right;">21</td>
-<td style="text-align: right;">2.40</td>
-<td style="text-align: right;">-19</td>
+<td style="text-align: right;">148</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">2.14</td>
+<td style="text-align: right;">-20</td>
 <td style="text-align: right;">57</td>
-<td style="text-align: right;">94</td>
-<td style="text-align: right;">287</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">-35</td>
-<td style="text-align: right;">+46</td>
-<td style="text-align: right;">-0.44</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">357</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">-50</td>
+<td style="text-align: right;">+30</td>
+<td style="text-align: right;">-0.59</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_oynaklik</td>
 <td style="text-align: left;">second half</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">18</td>
-<td style="text-align: right;">0.14</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">53</td>
-<td style="text-align: right;">93</td>
-<td style="text-align: right;">249</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">-46</td>
-<td style="text-align: right;">-31</td>
-<td style="text-align: right;">-1.19</td>
-</tr>
-<tr>
-<td style="text-align: left;">D_makro_faiz</td>
-<td style="text-align: left;">full</td>
-<td style="text-align: right;">111</td>
-<td style="text-align: right;">21</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">3</td>
 <td style="text-align: right;">17</td>
-<td style="text-align: right;">1.18</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">55</td>
-<td style="text-align: right;">94</td>
-<td style="text-align: right;">536</td>
-<td style="text-align: right;">13</td>
-<td style="text-align: right;">-231</td>
-<td style="text-align: right;">-78</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">-19</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">270</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">-41</td>
+<td style="text-align: right;">-26</td>
 <td style="text-align: right;">-1.07</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_faiz</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">1.16</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">627</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">-231</td>
+<td style="text-align: right;">-79</td>
+<td style="text-align: right;">-1.09</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_faiz</td>
 <td style="text-align: left;">first half</td>
-<td style="text-align: right;">101</td>
-<td style="text-align: right;">42</td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">2.23</td>
-<td style="text-align: right;">-19</td>
-<td style="text-align: right;">58</td>
-<td style="text-align: right;">94</td>
-<td style="text-align: right;">287</td>
-<td style="text-align: right;">6</td>
-<td style="text-align: right;">-98</td>
-<td style="text-align: right;">-17</td>
-<td style="text-align: right;">-1.06</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">2.05</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">357</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">-103</td>
+<td style="text-align: right;">-22</td>
+<td style="text-align: right;">-1.15</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_faiz</td>
 <td style="text-align: left;">second half</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">3</td>
-<td style="text-align: right;">18</td>
-<td style="text-align: right;">0.23</td>
-<td style="text-align: right;">-22</td>
-<td style="text-align: right;">53</td>
-<td style="text-align: right;">93</td>
-<td style="text-align: right;">249</td>
 <td style="text-align: right;">7</td>
-<td style="text-align: right;">-43</td>
-<td style="text-align: right;">-27</td>
-<td style="text-align: right;">-1.09</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">0.29</td>
+<td style="text-align: right;">-19</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">270</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">-40</td>
+<td style="text-align: right;">-25</td>
+<td style="text-align: right;">-1.04</td>
 </tr>
 <tr>
 <td style="text-align: left;">E_haber</td>
 <td style="text-align: left;">full</td>
-<td style="text-align: right;">171</td>
-<td style="text-align: right;">28</td>
-<td style="text-align: right;">19</td>
-<td style="text-align: right;">1.39</td>
-<td style="text-align: right;">-23</td>
-<td style="text-align: right;">55</td>
+<td style="text-align: right;">176</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">1.37</td>
+<td style="text-align: right;">-20</td>
+<td style="text-align: right;">56</td>
 <td style="text-align: right;">93</td>
-<td style="text-align: right;">525</td>
-<td style="text-align: right;">15</td>
-<td style="text-align: right;">-170</td>
-<td style="text-align: right;">-18</td>
+<td style="text-align: right;">611</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">-166</td>
+<td style="text-align: right;">-13</td>
 <td style="text-align: right;">-0.75</td>
 </tr>
 <tr>
 <td style="text-align: left;">E_haber</td>
 <td style="text-align: left;">first half</td>
-<td style="text-align: right;">159</td>
-<td style="text-align: right;">61</td>
-<td style="text-align: right;">21</td>
-<td style="text-align: right;">2.38</td>
-<td style="text-align: right;">-19</td>
+<td style="text-align: right;">145</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">2.11</td>
+<td style="text-align: right;">-20</td>
 <td style="text-align: right;">58</td>
-<td style="text-align: right;">94</td>
-<td style="text-align: right;">277</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">-39</td>
-<td style="text-align: right;">+41</td>
-<td style="text-align: right;">-0.47</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">343</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">-53</td>
+<td style="text-align: right;">+27</td>
+<td style="text-align: right;">-0.61</td>
 </tr>
 <tr>
 <td style="text-align: left;">E_haber</td>
 <td style="text-align: left;">second half</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">6</td>
 <td style="text-align: right;">17</td>
-<td style="text-align: right;">0.22</td>
-<td style="text-align: right;">-23</td>
-<td style="text-align: right;">52</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: right;">-17</td>
+<td style="text-align: right;">54</td>
 <td style="text-align: right;">92</td>
-<td style="text-align: right;">248</td>
-<td style="text-align: right;">7</td>
-<td style="text-align: right;">-43</td>
-<td style="text-align: right;">-28</td>
-<td style="text-align: right;">-1.10</td>
+<td style="text-align: right;">268</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">-36</td>
+<td style="text-align: right;">-20</td>
+<td style="text-align: right;">-0.90</td>
 </tr>
 </tbody>
 </table>
@@ -8801,33 +9141,33 @@ are indicator warm-up and are not evaluated.</p>
 </tr>
 <tr>
 <td style="text-align: left;">C_temel</td>
-<td style="text-align: right;">301</td>
-<td style="text-align: right;">241</td>
-<td style="text-align: right;">191</td>
+<td style="text-align: right;">277</td>
+<td style="text-align: right;">213</td>
+<td style="text-align: right;">159</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro</td>
-<td style="text-align: right;">221</td>
-<td style="text-align: right;">176</td>
-<td style="text-align: right;">137</td>
+<td style="text-align: right;">214</td>
+<td style="text-align: right;">163</td>
+<td style="text-align: right;">120</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_oynaklik</td>
-<td style="text-align: right;">215</td>
-<td style="text-align: right;">169</td>
-<td style="text-align: right;">129</td>
+<td style="text-align: right;">218</td>
+<td style="text-align: right;">164</td>
+<td style="text-align: right;">120</td>
 </tr>
 <tr>
 <td style="text-align: left;">D_makro_faiz</td>
-<td style="text-align: right;">140</td>
-<td style="text-align: right;">111</td>
-<td style="text-align: right;">86</td>
+<td style="text-align: right;">143</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">82</td>
 </tr>
 <tr>
 <td style="text-align: left;">E_haber</td>
-<td style="text-align: right;">215</td>
-<td style="text-align: right;">171</td>
-<td style="text-align: right;">133</td>
+<td style="text-align: right;">228</td>
+<td style="text-align: right;">176</td>
+<td style="text-align: right;">132</td>
 </tr>
 </tbody>
 </table>
@@ -8870,18 +9210,20 @@ is run once without the one-day shift and once with it.</p>
 <p><strong>Reading Tables 1–4 and Figure 1.</strong></p>
 <ul>
 <li><strong>Strong first half, weak second half.</strong><ul>
-<li>First half (2022-10 – 2024-11, the inflation rally): every variant except the rate filter beat XU100 by 41–91 pt (the rate filter: −17 pt), and C even beat
-  equal-weight buy-and-hold.</li>
-<li>Second half: every variant earned only +2% to +11% while XU100 rose 33% and equal-weight 48%.</li>
+<li>First half (2022-10 – 2024-11, the inflation rally): every variant except the rate filter beat XU100 by
+  27–58 pt (the rate filter: −22 pt), but none beat equal-weight buy-and-hold.</li>
+<li>Second half: every variant earned only +2% to +14% while XU100 rose 33% and equal-weight 48%.</li>
 <li>A trend-following, long-only rule set that worked in a strong nominal bull market did not survive the
   tight-money period. This is the most important out-of-sample result of the project.</li>
 </ul>
 </li>
-<li><strong>Layers do not add return.</strong> Fundamentals (C vs B) helped: +53 pt, with a higher Sharpe and a smaller drawdown.
-  Macro (D) and news (E) cut returns by 65–70 pt. The rate filter cut 130 pt and gave a drawdown improvement of only
-  3 pt. The only material benefit of D/E is a slightly lower volatility (19–20% vs 21%).</li>
-<li><strong>Costs matter.</strong> With 500–700 position entries, cumulative costs are 13–21% of capital. Doubling the cost to
-  0.30% one-way removes about 50 pt from every variant.</li>
+<li><strong>Layers do not add return.</strong> Fundamentals (C vs B) helped: +25 pt, with a higher Sharpe (1.44 vs 1.29) and a
+  smaller drawdown (−21% vs −24%). Before the point-in-time fix of 22 November (findings 9 and 10) this gain looked
+  twice as large (+53 pt): part of it came from earnings information that was not yet public. Macro (D) and news
+  (E) cut returns by 37–50 pt. The rate filter cut 103 pt and did not improve the drawdown. The only material
+  benefit of D/E is a slightly lower volatility (about 20% vs 21%; the rate filter 17%).</li>
+<li><strong>Costs matter.</strong> With about 600–700 position entries, cumulative costs are 15–21% of capital. Doubling the cost
+  to 0.30% one-way removes 28–54 pt.</li>
 <li><strong>The engine is honest.</strong><ul>
 <li>A deliberately impossible "buy today's winners" signal returns an absurd 5 × 10¹¹ % when the one-day shift is
   removed. With the shift it returns +11%.</li>
@@ -9686,6 +10028,60 @@ output). Before the fix, six B runs were flagged; every flagged number was a mov
 </tr>
 </tbody>
 </table>
+<p><strong>Status of this experiment.</strong> It ran on 19–20 November 2026, before the point-in-time fix of 22 November (findings
+9 and 10). We recomputed the rule result for all six cases with the corrected data. The action, the secondary
+candidates and the gate are unchanged in every case, so the reference labels and the agreement figures below stand.
+Some numbers in the evidence the models saw have changed:</p>
+<table>
+<thead>
+<tr>
+<th>case</th>
+<th>evidence item</th>
+<th>in the experiment</th>
+<th>now</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASELS, KRDMD (2026-11-06)</td>
+<td>C backtest return (max drawdown)</td>
+<td>241% (−25%)</td>
+<td>213% (−21%)</td>
+</tr>
+<tr>
+<td>ASELS, KRDMD</td>
+<td>earnings-reaction history, top − bottom over days 0–4</td>
+<td>+1.97 pt (n = 162)</td>
+<td>+2.59 pt (n = 131)</td>
+</tr>
+<tr>
+<td>TURSG, PETKM (2026-11-06)</td>
+<td>D backtest return (max drawdown)</td>
+<td>176% (−22%)</td>
+<td>163% (−21%)</td>
+</tr>
+<tr>
+<td>PETKM</td>
+<td>earnings third</td>
+<td>top</td>
+<td>middle (+48.1% vs cut-off +50.5%)</td>
+</tr>
+<tr>
+<td>the four 2026 cases</td>
+<td>earnings sentence</td>
+<td>third within the quarter</td>
+<td>third against the previous quarter's cut-offs; amounts with their unit</td>
+</tr>
+<tr>
+<td>ASELS, 2023-02-15</td>
+<td>D backtest return</td>
+<td>38%</td>
+<td>41%</td>
+</tr>
+</tbody>
+</table>
+<p>The stored explanations therefore quote the pre-fix numbers. The experiment will be re-run once, after the remaining
+corrections from the 22 November review, so that explanations and evidence match again.</p>
 <p><strong>What each layer added</strong> (Tables 7–8, Figure 2).</p>
 <ul>
 <li><strong>A — raw LLM.</strong><ul>
@@ -9859,7 +10255,7 @@ output). Before the fix, six B runs were flagged; every flagged number was a mov
 <td style="text-align: left;">FUNDAMENTAL_IMPROVEMENT_CANDIDATE</td>
 <td style="text-align: left;">PASS</td>
 <td style="text-align: left;">PASS</td>
-<td style="text-align: left;">none</td>
+<td style="text-align: left;">reports/earnings_events.parquet</td>
 <td style="text-align: left;">yes</td>
 </tr>
 <tr>
@@ -9869,7 +10265,7 @@ output). Before the fix, six B runs were flagged; every flagged number was a mov
 <td style="text-align: left;">FUNDAMENTAL_IMPROVEMENT_CANDIDATE</td>
 <td style="text-align: left;">PASS</td>
 <td style="text-align: left;">PASS</td>
-<td style="text-align: left;">none</td>
+<td style="text-align: left;">reports/earnings_events.parquet</td>
 <td style="text-align: left;">yes</td>
 </tr>
 </tbody>
@@ -9881,16 +10277,18 @@ translation: "strong earnings, but the strategy does not beat buy-and-hold; watc
 <p><strong>What the replay shows (Table 13).</strong> Replaying both records today gives:</p>
 <ul>
 <li>the <strong>same action and the same gate</strong>;</li>
-<li><strong>no changed data file</strong> (all hashes match);</li>
+<li><strong>one changed data file</strong>: <code>reports/earnings_events.parquet</code>;</li>
 <li><strong>procedure changed = yes</strong>, and a different fingerprint.</li>
 </ul>
-<p>That is the correct diagnosis: since 18 November the rules were extended (the conflicting-signal rule) and the
-evidence sentences were improved (shock direction, profit direction), while the data stayed identical. A replay
-separates "the world changed" from "our method changed". That is the purpose of storing data hashes and a
-procedure hash with every decision.</p>
+<p>That is the correct diagnosis. Since 18 November the rules were extended (the conflicting-signal rule), the evidence
+sentences were improved (shock direction, profit direction, units, earnings cut-offs), and on 22 November the
+earnings table was rebuilt so that it contains only figures that were public on each event day (findings 9–10).
+Neither change alters these two decisions. A replay separates "the data changed" from "our method changed". That is
+the purpose of storing data hashes and a procedure hash with every decision.</p>
 <h2>5. Problems found by the system's own checks</h2>
 <p>The checks built into the system (point-in-time gate, replay, numerical validator, tests) and the experiments
-found the following problems during Steps 14–15. Each was fixed with a test that fails without the fix:</p>
+found problems 1–8 during Steps 14–15. Problems 9–10 were found on 22 November, while checking the project brief's
+fundamental-analysis requirements against the data. Each was fixed with a test that fails without the fix:</p>
 <table>
 <thead>
 <tr>
@@ -9958,6 +10356,20 @@ found the following problems during Steps 14–15. Each was fixed with a test th
 <td>mock runs use the demo database</td>
 <td>none</td>
 </tr>
+<tr>
+<td>9</td>
+<td>Fintables stores inflation-accounting restatements and re-expressed figures, not the figures published at the time</td>
+<td>2023Q1–Q2 median profit growth was +178% and +209% for the 24 restating companies against +58% and +105% for the other six: restated figures, published a year later, were compared with original ones</td>
+<td>point-in-time fundamentals layer: a figure is used only after the version we hold was published, comparisons only within one unit, amounts in the report's money; checked against 20 published figures</td>
+<td>2023Q1–Q3 no longer ranked; with row 10: Report 4's pre-event result and ROE drift no longer significant, C backtest 241% → 213%</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Earnings thirds used companies that reported later</td>
+<td>an early reporter's third depended on results published weeks later, and on 11 companies that reported after the data end</td>
+<td>thirds from the previous quarter's cut-offs, using only figures already published; same-quarter ranking kept as a robustness check (Report 4)</td>
+<td>C/D/E backtests, Reports 2 and 4, experiment evidence (Section 3)</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Not caught automatically.</strong> Some explanations cite the wrong evidence id. The KRDMD orchestrator attributed
@@ -9971,7 +10383,7 @@ numbers, not meaning. Catching such errors needs a second check (evidence-id con
   human-labelled reference set would measure whether the <em>rules</em> are good.</li>
 <li><strong>Mixed evidence bases.</strong> Evidence completeness is a heuristic (evidence id cited, a number from the evidence, or
   a topic keyword). For PETKM and KRDMD, A–C were scored against the evidence list before the Step 15 rule changes,
-  D/E against the new one.</li>
+  D/E against the new one. All stored explanations predate the point-in-time fix of 22 November (Section 3).</li>
 <li><strong>Backtest simplifications.</strong> Halves instead of walk-forward, a fixed 0.15% cost instead of a slippage model, 0%
   interest on cash, weekly rebalancing only, no ML layer.</li>
 <li><strong>Short decision log.</strong> It holds two real records. A longer history would make episodic memory meaningful.</li>

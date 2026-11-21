@@ -5,7 +5,8 @@
 peers in 10 days, without a price shock, beats its peers by +0.59 pt on average over the next 10 days. A random
 stock-day gives +0.15. This is the only result in the report that survives multiple-testing correction
 (q = 0.041). The harness's extra conditions (strong sector, price recovering) raise the effect to about +0.8–0.9 pt,
-and only the full harness rule keeps the same size in the second half of the sample (+0.80 → +0.81).
+and only the full harness rule keeps most of its size in the second half of the sample (+0.88 → +0.72, while the
+other laggards fall from +1.00 to +0.02).
 
 The effect is small and noisy:
 
@@ -31,9 +32,11 @@ The effect is small and noisy:
 - **Shock filter:** removing shock cases is the single most useful step (+0.41 → +0.59).
 - **Sector strength and price recovery:** requiring both pushes the 10-day gap to +0.88 pt (hit rate 54.4%).
 - **Earnings filter:** the last harness filter (drop laggards whose latest earnings are in the bottom third)
-  does **not** help here: 10 days +0.88 → +0.80, 5 days +0.43 → +0.09. It removes 160 events without improving
-  the rest. We keep it in the harness because it is a defensible risk rule: do not call a fundamentally weakening
-  company a "temporary" laggard. But this table shows it is a judgement, not something the data proved.
+  does **not** help here: 10 days +0.88 → +0.82, 5 days +0.43 → +0.16. The 94 events it removes caught up
+  *better* than the rest (+1.20 pt at 10 days). We keep it in the harness because it is a defensible risk rule: do
+  not call a fundamentally weakening company a "temporary" laggard. But this table shows it is a judgement, not
+  something the data proved. (The thirds are decided without look-ahead, against the previous quarter's cut-offs;
+  see Report 4.)
 
 <!-- structural -->
 **Which evidence separates structural from temporary laggards?**
@@ -44,9 +47,12 @@ The effect is small and noisy:
 - **Price recovery** (Table 3c) helps: +0.73 vs +0.36 at 10 days.
 - **Macro risk** (Table 3d) matters. When XU100 is below its 200-day average or USD/TRY is spiking, catch-up
   mostly disappears (+0.21 vs +0.77). In stress periods investors sell the weaker names and do not rotate back.
-- **Earnings tercile** (Table 3a) does not separate them at 10 days (bottom +0.63, top +0.68). At 20 days, top-third
-  companies do better (+1.75 vs +0.33), so fundamentals may matter on a slower clock than the 10-day rule. This
-  is a hypothesis; the t-values are small.
+- **Earnings tercile** (Table 3a) points the expected way but weakly. Across all no-shock laggards, those whose
+  latest earnings are in the bottom third show no catch-up (+0.08 pt at 10 days, −0.05 at 20), while middle- and
+  top-third laggards do (+0.65 / +0.48 at 10 days, +0.80 / +1.30 at 20). The t-values are small, and inside the
+  harness's filtered set the bottom-third events caught up well (see the ladder), so this is a hypothesis, not a
+  rule. "Statement public, quarter not ranked" are dates whose latest statement falls in the inflation-accounting
+  switch (2022Q4 – 2024Q1), when no comparable previous-quarter cut-offs exist.
 
 <!-- groups -->
 Catch-up is clearest in Construction/Real Estate/Utilities (+1.09 pt), Banking (+0.92, but only 19 events) and
@@ -61,26 +67,27 @@ they describe the sample rather than prove differences.
 
 - About half of no-shock laggards, including those that pass every harness filter, are still behind their
   peers 20 days later.
-- The harness filters move the *median* outcome from about 0 to +0.32 pt, but they do not reduce the share of bad
-  cases (28.9% fell more than 5 pt further in both rows).
+- The harness filters move the *median* outcome from about 0 to +0.47 pt, but they barely reduce the share of bad
+  cases (28.9% vs 27.5% fell more than 5 pt further).
 
-Table 6 shows what the worst cases have in common. In almost all of them **the peers rallied** (+17% to +51% in
-20 days) while the stock stayed flat:
+Table 6 shows what the worst cases have in common. In all of them **the peers rallied** (+18% to +51% in
+20 days) while the stock stayed flat or fell:
 
 | Case | Stock (20 days) | Peer median (20 days) |
 |---|---|---|
 | KCHOL, July 2023 | +26% | +51% |
 | ISMEN, Sep 2023 | −3% | +30% |
-| TUPRS, Apr 2026 | 0% | +23% |
+| TCELL, Feb 2025 | −11% | +18% |
 
 So the failure is usually "the sector ran away", not "the stock collapsed". The 3-member groups make this worse.
 In Other Financials (KCHOL, ISMEN, TURSG), each stock's benchmark is the median of only two very different
 companies: a holding, a broker and an insurer.
 
 <!-- oos -->
-This is the most encouraging table in the report. The full harness rule gives +0.80 pt in the first half and
-+0.81 in the second half. Laggards that fail the harness filters drop from +1.06 to +0.02. The extra conditions are
-what made the effect stable. Leaders stay slightly positive in both halves (momentum, not reversal).
+This is the most encouraging table in the report. The full harness rule gives +0.88 pt in the first half and
++0.72 in the second half. Laggards that fail the harness filters drop from +1.00 to +0.02. The extra conditions are
+what kept most of the effect in the later sample. Leaders stay slightly positive in both halves (momentum, not
+reversal).
 
 <!-- backtest -->
 **The backtest is the reality check.** A small, stable 10-day edge at the event level did not become a
@@ -111,9 +118,9 @@ sample.
 <!-- turkey -->
 - **2022 – mid 2023: inflation rally and sector rotation.** With negative real rates, BIST rose strongly in
   nominal TRY and money rotated quickly between sectors. That favours catch-up: a stock left behind by its sector
-  tends to be pulled along. The first-half results (other laggards +1.06 pt) reflect this.
-- **Rallies where peers ran away.** Several of the worst false positives (KCHOL, ISMEN, TURSG, SASA in June–Sep
-  2023; AKSEN and KCHOL in Nov 2022) fall in strong, fast rallies. In June–July 2023 the market rose after the May
+  tends to be pulled along. The first-half results (other laggards +1.00 pt) reflect this.
+- **Rallies where peers ran away.** Most of the worst false positives (KCHOL, ISMEN, TURSG, SASA in June–Sep
+  2023; AKSEN, KCHOL and TCELL in Nov 2022) fall in strong, fast rallies. In June–July 2023 the market rose after the May
   2023 elections and the new economic team's return to orthodox policy, and leaders moved much faster than the
   rest. In such phases a laggard can stay behind even while it rises.
 - **Second half (May 2024 – Nov 2026): tight policy and shocks.** Policy rates stayed high, and the March 2025
@@ -142,7 +149,8 @@ close to a coin flip, and the explanation agents are required to say that.
   stocks. Healthcare (2 members) is excluded. Groups such as Other Financials and Chemicals & Energy mix different
   businesses.
 - **Coarse fundamentals.** "Structural" is approximated by one earnings measure (year-over-year net-income
-  tercile). Margins, debt and bank-specific ratios are not used here.
+  third, decided against the previous quarter's cut-offs). Margins, debt and bank-specific ratios are not used here.
+  Dates in the inflation-accounting switch (2022Q4 – 2024Q1) have no third.
 - **Fixed thresholds.** The 5-pt / 10-day and 10-pt / 20-day thresholds and the 10-day dedupe gap were fixed in
   Step 5. Other values could give different numbers.
 - **Strategy ≠ rule.** The backtest strategy differs from the harness rule: it is a weekly top-10 portfolio with a
@@ -152,8 +160,8 @@ close to a coin flip, and the explanation agents are required to say that.
 
 <!-- conclusion -->
 Sector-relative lag carries **some** information. Laggards without a shock, in a rising sector, that already
-show signs of recovery, beat their peers by about 0.8 pt over the next 10 days, and this held in both halves of
-the sample. But half of them still fail, the effect is smaller than a single bad day, and a portfolio built on
+show signs of recovery, beat their peers by about 0.8 pt over the next 10 days (+0.88 in the first half, +0.72 in
+the second). But half of them still fail, the effect is smaller than a single bad day, and a portfolio built on
 the idea did not beat XU100 after costs. The right use is the one the harness makes: a laggard that passes the
 rules is a **candidate for investigation**, shown with its historical hit rate, backtest and risks, and the
 decision stays with a human.

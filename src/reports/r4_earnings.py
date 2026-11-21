@@ -1,7 +1,8 @@
 """Rapor 4 — Quarterly fundamentals and post-disclosure price reaction (PDF Bölüm 9 ve 14).
 
-Kaynak: reports/earnings_events.parquet (Adım 7C, KAP yayın tarihleriyle hizalı) + earnings_*.csv +
-kap_disclosure_dates.csv + Fintables tabloları (load_all) + fiyat önbelleği.
+Kaynak: reports/earnings_events.parquet (Adım 7C, KAP yayın tarihleriyle hizalı; temel veriler Adım 1b'den beri
+src/data/pit_fundamentals.py ile açıklama gününde bilinebilen değerler) + earnings_*.csv + kap_disclosure_dates.csv +
+fiyat önbelleği.
 Ek kırılımlar: gelir / faaliyet kârı / net marj / ROE değişimi üçte birleri, sektör sepetine göre anormal getiri,
 bilanço x teknik durum, kâr yönü kategorileri, finans / finans dışı. Tüm testler tek BH ailesinde.
 """
@@ -12,10 +13,10 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from src.data.fundamentals import load_all
 from src.data.prices import get_index_history, get_stock_history
 from src.data.universe import build_sector_peer_groups
-from src.events.earnings_reaction import WINDOWS, add_terciles, baseline
+from src.events.earnings_reaction import (WINDOWS, add_terciles, baseline, tercile_spread, terciles_expanding,
+                                          terciles_expost)
 from src.harness.evidence import profit_direction
 from src.indicators.features import full_features
 from src.reports.common import C, DISCLAIMER, bh, load_notes, md_table, note, save_fig, stamp, style, write
@@ -32,36 +33,15 @@ TMS29 = pd.Timestamp("2023-12-31")      # enflasyon muhasebesi (TMS 29) ilk kez 
 PATH = range(-5, 21)
 
 
-def _yoy(a: pd.DataFrame, col: str) -> pd.Series:
-    """Aynı tarihli 4 çeyrek önceki değere göre değişim; eksik çeyrek varsa NaN (kaydırma değil tarih eşleşmesi)."""
-    out = []
-    for t, g in a.groupby("ticker"):
-        s = g.set_index("period_end")[col]
-        prev = s.copy()
-        prev.index = prev.index + pd.offsets.QuarterEnd(4)
-        prev = prev.reindex(s.index)
-        out.append(pd.Series((s - prev).to_numpy() / (prev.abs().to_numpy() if col not in ("net_margin", "roe_q")
-                                                       else 1.0), index=g.index))
-    return pd.concat(out).replace([np.inf, -np.inf], np.nan)
-
-
 def load_events() -> pd.DataFrame:
+    """Olay tablosu + kâr yönü + teknik durum + akran sepetine göre getiri. Gelir, faaliyet kârı, marj ve ROE
+    değişimleri olay tablosundan gelir: açıklama gününde bilinebilen, aynı birimdeki iki çeyreğin karşılaştırması
+    (margin_chg ve roe_chg puan farkı, diğerleri oran)."""
     e = pd.read_parquet("reports/earnings_events.parquet")
     e = e[e["event_day"].notna() & ~e["quake_window"]].copy()
     for c in ("event_day", "period_end"):
         e[c] = pd.to_datetime(e[c])
-    a = pd.concat(load_all(), names=["ticker"]).reset_index()
-    a["period_end"] = pd.to_datetime(a["period_end"])
-    a = a.sort_values(["ticker", "period_end"]).reset_index(drop=True)
-    a["revenue_yoy"] = _yoy(a, "revenue")
-    a["op_income_yoy"] = _yoy(a, "op_income")
-    a["margin_chg"] = _yoy(a, "net_margin")            # puan farkı (oran değil)
-    a["roe_chg"] = _yoy(a, "roe_q")
-    prev = a[["ticker", "period_end", "net_income"]].copy()
-    prev["period_end"] = prev["period_end"] + pd.offsets.QuarterEnd(4)
-    a = a.merge(prev.rename(columns={"net_income": "ni_prev"}), on=["ticker", "period_end"], how="left")
-    e = e.merge(a[["ticker", "period_end", "revenue_yoy", "op_income_yoy", "margin_chg", "roe_chg", "ni_prev"]],
-                on=["ticker", "period_end"], how="left")
+    e = e.rename(columns={"net_income_prev": "ni_prev"})
     e["direction"] = [profit_direction(c, p) if pd.notna(c) and pd.notna(p) else None
                       for c, p in zip(e["net_income"], e["ni_prev"])]
     # teknik durum: açıklamadan önceki son kapanış (event_day - 1) 200 günlük ortalamanın üstünde mi
@@ -99,10 +79,9 @@ def sector_abnormal(e: pd.DataFrame) -> pd.DataFrame:
     return e
 
 
-def quarter_spread(e: pd.DataFrame, col: str, windows=SHOW) -> pd.DataFrame:
-    d = add_terciles(e, col)
-    g = d.dropna(subset=["tercile"]).groupby(["period_end", "tercile"])[list(windows)].mean()
-    return (g.xs("ust", level="tercile") - g.xs("alt", level="tercile")).dropna(how="all")
+def quarter_spread(e: pd.DataFrame, col: str, windows=SHOW, method=add_terciles) -> pd.DataFrame:
+    """Ölçüt col'a göre üçte birler (varsayılan A: önceki çeyreğin eşikleri), çeyrek başına üst eksi alt."""
+    return tercile_spread(method(e, col), windows)
 
 
 def t_over_quarters(s: pd.Series) -> tuple:
@@ -129,6 +108,44 @@ def metric_table(e: pd.DataFrame) -> pd.DataFrame:
                          "top − bottom (pt)": sp[k].mean(), "first half": sp[k].iloc[:half].mean(),
                          "second half": sp[k].iloc[half:].mean(), "t": t, "p": p})
     return pd.DataFrame(rows)
+
+
+METHODS = (("A: previous quarter's cut-offs (main)", add_terciles),
+           ("B: same quarter, stocks already reported (robustness)", terciles_expanding),
+           ("old: whole quarter, uses later reporters (look-ahead; comparison only)", terciles_expost))
+
+
+def method_table(e: pd.DataFrame) -> pd.DataFrame:
+    """Net kâr üçte birinin yöntemine göre üst eksi alt farkı. Aynı hipotezin başka ölçümleri: BH ailesine girmez."""
+    rows = []
+    for name, fn in METHODS:
+        d = fn(e, "ni_yoy")
+        sp = tercile_spread(d, SHOW)
+        row = {"method": name, "ranked events (quarters)": f"{int(d['tercile'].notna().sum())} ({len(sp)})"}
+        for k in SHOW:
+            t, p, _ = t_over_quarters(sp[k]) if k in sp else (np.nan, np.nan, 0)
+            row[f"{LABEL[k]} pt"] = sp[k].mean() if k in sp else np.nan
+            row[f"{LABEL[k]} p"] = p
+        rows.append(row)
+    return pd.DataFrame(rows).set_index("method")
+
+
+def test_family(e: pd.DataFrame, sp_tests: pd.DataFrame) -> tuple:
+    """Raporun tek BH ailesi: 6 pencere (net kâr, XU100'e göre) + 4 pencere (akranlara göre) + 12 metrik testi.
+    Final rapor da aynı fonksiyonu kullanır (iki raporun anlamlılık sonucu ayrışamaz).
+    Döner: (aile tablosu, q eklenmiş metrik tablosu, akranlara göre çeyreklik fark)."""
+    peer_sp = quarter_spread(e.rename(columns={f"{k}_vs_peers": f"{k}p" for k in SHOW}), "ni_yoy",
+                             windows=[f"{k}p" for k in SHOW])
+    met = metric_table(e)
+    fam = [("net income spread vs XU100", LABEL.get(w, w), p) for w, p in zip(sp_tests.index, sp_tests["p"])]
+    for k in SHOW:
+        t, p, _ = t_over_quarters(peer_sp[f"{k}p"])
+        fam.append(("net income spread vs peers", LABEL[k], p))
+    fam += [("metric spreads", f"{m} / {w}", p) for m, w, p in zip(met["metric"], met["window"], met["p"])]
+    fam = pd.DataFrame(fam, columns=["family", "test", "p"])
+    fam["q (all tests)"] = bh(fam["p"])
+    met["q (all tests)"] = fam.loc[fam["family"] == "metric spreads", "q (all tests)"].to_numpy()
+    return fam, met, peer_sp
 
 
 def car_path(e: pd.DataFrame) -> pd.DataFrame:
@@ -219,9 +236,7 @@ def build() -> str:
                                         "positive quarters", "ilk_yari": "first half", "ikinci_yari": "second half",
                                         "q_bh": "q (6 windows)", "p_bonf": "p Bonferroni"})
     sp_q = pd.read_csv("reports/earnings_spread_by_quarter.csv", parse_dates=["period_end"]).set_index("period_end")
-    peer_sp = quarter_spread(e.rename(columns={f"{k}_vs_peers": f"{k}p" for k in SHOW}), "ni_yoy",
-                             windows=[f"{k}p" for k in SHOW])
-    met = metric_table(e)
+    fam, met, peer_sp = test_family(e, sp_tests)
     fin = by("financial", labels={True: "financial (AKBNK, ISMEN, TURSG)", False: "non-financial"})
     loss = by("loss", labels={True: "reported a loss", False: "reported a profit"})
     dirn = by("direction", order=["kâr arttı", "kâr azaldı", "zarardan kâra geçti", "kârdan zarara geçti",
@@ -241,15 +256,6 @@ def build() -> str:
     spike.index = pd.Index(["volume z-score > 2", "volume z-score > 3", "abs. abnormal return > 4%",
                             "abs. abnormal return > 6%", "both (z > 2 and > 4%)"], name="share of stock-days with")
 
-    # tek BH ailesi: 6 pencere (net kâr) + 4 pencere (akranlara göre) + 15 metrik testi
-    fam = [("net income spread vs XU100", w, p) for w, p in zip(sp_tests.index, sp_tests["p"])]
-    for k in SHOW:
-        t, p, _ = t_over_quarters(peer_sp[f"{k}p"])
-        fam.append(("net income spread vs peers", LABEL[k], p))
-    fam += [("metric spreads", f"{m} / {w}", p) for m, w, p in zip(met["metric"], met["window"], met["p"])]
-    fam = pd.DataFrame(fam, columns=["family", "test", "p"])
-    fam["q (all tests)"] = bh(fam["p"])
-    met["q (all tests)"] = fam.loc[fam["family"] == "metric spreads", "q (all tests)"].to_numpy()
     peer_tab = []
     for k in SHOW:
         t, p, nq = t_over_quarters(peer_sp[f"{k}p"])
@@ -258,6 +264,9 @@ def build() -> str:
     peer_tab = pd.DataFrame(peer_tab).set_index("window")
     peer_tab["q (all tests)"] = fam.loc[fam["family"] == "net income spread vs peers", "q (all tests)"].to_numpy()
     survivors = fam[fam["q (all tests)"] < 0.05].sort_values("p")
+    methods = method_table(e)
+    ranked = e["tercile"].notna()
+    n_q = int(sp_tests["quarters"].max())
 
     path = car_path(e)
     f1, f2 = fig_car(path), fig_quarters(sp_q)
@@ -295,14 +304,24 @@ The question is not "good earnings = price rises".
   deadlines instead of real dates would have put information into the wrong days.
 - **Events.** {len(raw)} disclosures. {int(raw['event_day'].isna().sum())} have no event day in the price data,
   {int(raw['quake_window'].sum())} fall in the earthquake window, leaving **{len(e)}**.
-- **Ranking.** Each quarter, the 30 stocks are ranked by year-over-year net-income change into thirds. Ranking
-  within the same quarter removes the common inflation effect (in 2022 the median company's profit roughly doubled
-  in nominal TRY). A quarter needs ≥ 15 ranked stocks. 2022Q4 and 2023Q4 drop out, because Fintables lacks the 2022Q4
-  quarter for 24 of 30 stocks.
+- **Figures as known on the event day.** Fintables keeps the latest version of every figure. For the 24
+  companies that apply inflation accounting (TMS 29) it re-states 2022Q4 – 2023Q3 and re-expresses all later
+  figures in the money of the latest balance-sheet month (checked against 20 published figures). The restated
+  2022Q4 – 2023Q3 figures were first published a year later, so these quarters carry no fundamentals on their own
+  event day; they are used only as comparatives in the next year's reports. Year-over-year changes always compare
+  two figures in the same unit (`src/data/pit_fundamentals.py`, Data Dictionary).
+- **Ranking without look-ahead.** A company's third is decided with information available on its own event day:
+  its year-over-year net-income change is compared with the 1/3 and 2/3 points of the **previous quarter's**
+  changes, using only previous-quarter figures already published (at least 15). Ranking against all companies of
+  the same quarter, as an earlier version of this report did, used the results of companies that reported weeks
+  later. {int(ranked.sum())} of {len(e)} events are ranked. Quarters without enough comparable previous-quarter
+  figures (2023Q1 – 2024Q1, around the TMS 29 switch) are not ranked. Section 4 compares this with ranking among
+  the companies that had already reported in the same quarter.
 - **Returns.** Abnormal return = stock return − XU100 return over the window, and separately stock return − the
   equal-weight return of its sector peers. Windows are in trading days, with the event day = 0.
-- **Statistics.** Each quarter's top-minus-bottom spread is one observation (17 quarters), because stocks in the
-  same quarter are not independent. All {len(fam)} tests in this report share one Benjamini–Hochberg correction.
+- **Statistics.** Each quarter's top-minus-bottom spread is one observation ({n_q} quarters with at least 15 ranked
+  events), because stocks in the same quarter are not independent. All {len(fam)} tests in this report share one
+  Benjamini–Hochberg correction.
 
 ## 3. Main result: reaction by net-income ranking
 
@@ -318,13 +337,28 @@ The question is not "good earnings = price rises".
 
 {note(notes, "main")}
 
-## 4. Quarter by quarter
+## 4. Does the result depend on how companies are ranked?
+
+The same top-minus-bottom test with three ways of deciding a company's third. A is used everywhere else in this
+report, in the strategies and in the harness. B is the strictest alternative without look-ahead: a company is
+ranked only among the companies of the same quarter that had already reported, so early reporters are not ranked.
+The old method is shown only to measure what the look-ahead changed. These are three measurements of one
+hypothesis, so they are not added to the multiple-testing family.
+
+**Table 2b. Top-minus-bottom spread by ranking method (pt vs XU100, one observation per quarter)**
+
+{md_table(methods, fmt={**{f"{LABEL[k]} pt": "{:+.2f}" for k in SHOW},
+                       **{f"{LABEL[k]} p": "{:.3f}" for k in SHOW}})}
+
+{note(notes, "robustness")}
+
+## 5. Quarter by quarter
 
 ![Figure 2]({f2})
 
 {note(notes, "quarters")}
 
-## 5. Against sector peers
+## 6. Against sector peers
 
 **Table 3. Mean abnormal return vs the sector peer basket by net-income third (%)**
 
@@ -336,7 +370,7 @@ The question is not "good earnings = price rises".
 
 {note(notes, "peers")}
 
-## 6. Which fundamental change does the market react to?
+## 7. Which fundamental change does the market react to?
 
 **Table 5. Top-minus-bottom third spread by metric (pt vs XU100, one observation per quarter).** Net income is
 in Table 2; it is not repeated here so that it is not counted twice in the multiple-testing correction.
@@ -345,7 +379,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 
 {note(notes, "metrics")}
 
-## 7. Profit direction, losses and financials
+## 8. Profit direction, losses and financials
 
 The "+48%" for a company whose loss shrank (PETKM, Step 14) showed that a percentage alone can mislead. Here are
 the same words the harness now uses (`profit_direction`).
@@ -360,7 +394,7 @@ the same words the harness now uses (`profit_direction`).
 
 {note(notes, "direction")}
 
-## 8. Strong fundamentals with weak technicals, and vice versa
+## 9. Strong fundamentals with weak technicals, and vice versa
 
 The technical state is measured at the close **before** the event day: is the price above its 200-day average?
 
@@ -370,7 +404,7 @@ The technical state is measured at the close **before** the event day: is the pr
 
 {note(notes, "tech")}
 
-## 9. Is there unusual activity in reporting season?
+## 10. Is there unusual activity in reporting season?
 
 Step 7 compared how often large volume spikes and large abnormal moves happen inside reporting windows vs
 outside them (share of stock-days).
@@ -381,7 +415,7 @@ outside them (share of stock-days).
 
 {note(notes, "spikes")}
 
-## 10. Multiple testing
+## 11. Multiple testing
 
 {len(fam)} tests were corrected together; **{len(survivors)}** have q < 0.05:
 
@@ -389,19 +423,19 @@ outside them (share of stock-days).
 
 {note(notes, "multiple")}
 
-## 11. Türkiye context
+## 12. Türkiye context
 
 {note(notes, "turkey")}
 
-## 12. How the harness uses these results
+## 13. How the harness uses these results
 
 {note(notes, "harness")}
 
-## 13. Limitations
+## 14. Limitations
 
 {note(notes, "limitations")}
 
-## 14. Conclusion
+## 15. Conclusion
 
 {note(notes, "conclusion")}
 """

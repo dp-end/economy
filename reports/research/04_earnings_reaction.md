@@ -7,7 +7,7 @@ cached price data.
 
 | file | size | sha256 |
 |:---|:---|:---|
-| `reports/earnings_events.parquet` | 142 kB | a72fbdcb98ea |
+| `reports/earnings_events.parquet` | 215 kB | 25cfb998894d |
 | `reports/earnings_by_tercile.csv` | 1 kB | d4d8756745ae |
 | `reports/earnings_spread_tests.csv` | 1 kB | 6d7116e4fb14 |
 | `reports/earnings_spread_by_quarter.csv` | 2 kB | 61e25e9250de |
@@ -382,9 +382,10 @@ need a pre-registered test on new quarters first.
 
 - **No expectations data.** There is no analyst consensus, so "surprise" is approximated by the change vs the
   same quarter last year and by the price trend.
-- **Valuation, liquidity and EBITDA not covered yet.** The Fintables files contain paid-in capital (the share
-  count), current assets and liabilities, financial debt and depreciation; an earlier version of this report wrongly
-  said they did not. They are not used in this version. Market values also need daily market capitalisation.
+- **EBITDA, leverage, liquidity and cash flow not analysed yet.** The event table carries them (EBITDA, operating
+  cash flow and net debt checked against published company figures), but their price reactions are not yet tested
+  in this report. Valuation (P/E, P/B, EV/EBITDA) needs daily market capitalisation and is not covered yet. An earlier
+  version of this report wrongly said these lines were missing from the data.
 - **Low power.** 13 quarters (12 for days 1–20) is a small number of independent observations; 2022Q4 – 2024Q1
   cannot be ranked.
 - **Latest versions only.** Fintables carries later corrections back into earlier periods. We found one small case

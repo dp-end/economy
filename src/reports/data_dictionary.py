@@ -246,13 +246,32 @@ DATASETS = [
                "revenue_yoy": "revenue YoY change [fraction]", "op_income_yoy": "operating profit YoY change [fraction]",
                "margin_chg": "net margin minus net margin one year earlier [fraction points]",
                "roe_chg": "roe_q minus roe_q one year earlier [fraction points]",
+               "ebitda": "EBITDA of the quarter = gross profit − general & administrative − selling & marketing − R&D "
+                         "expenses + depreciation (the definition companies publish) [TRY]; empty for financials and "
+                         "KCHOL (a holding that consolidates a bank)",
+               "ebitda_ttm": "EBITDA of the last 12 months [TRY]", "revenue_ttm": "revenue of the last 12 months [TRY]",
+               "ocf_ttm": "operating cash flow of the last 12 months ('İşletme Faaliyetlerinden Nakit Akışları') [TRY]",
+               "fcf_ttm": "free cash flow of the last 12 months = operating cash flow − purchases of fixed and "
+                          "intangible assets [TRY]",
+               "net_debt": "financial debt (short + long term) − cash − short-term financial investments [TRY]",
+               "roa": "net income of the last 12 months / total assets at quarter end [fraction]",
+               "roe_ttm": "net income of the last 12 months / parent equity at quarter end [fraction]",
+               "ebitda_margin_ttm": "EBITDA / revenue, last 12 months [fraction]",
+               "ebitda_margin_q": "EBITDA / revenue, quarter [fraction]",
+               "ebitda_yoy": "EBITDA YoY change, both quarters in the same unit [fraction]",
+               "nd_ebitda": "net debt / EBITDA of the last 12 months [ratio]; empty when EBITDA ≤ 0",
+               "debt_to_equity": "financial debt / total equity (incl. minorities) [ratio]",
+               "current_ratio": "current assets / current liabilities [ratio]",
+               "quick_ratio": "(current assets − inventories) / current liabilities [ratio]",
+               "cash_conversion": "operating cash flow / EBITDA, last 12 months [ratio]; empty when EBITDA ≤ 0",
                "era_flow": "income-statement version: `A` as published (nominal), `B` inflation-accounting "
                            "restatement first published a year later, `C` inflation-accounting report",
                "era_stock": "balance-sheet version, same codes as `era_flow`",
                "unit_flow": "unit of income amounts: `TL nominal`, `TL@YYYY-MM` (money of that month) or `-` if none shown",
                "unit_stock": "unit of balance-sheet amounts, same codes as `unit_flow`",
                "pit_dropped": "values left empty and why: `gec(date)` known only from that date, `birim` inputs in "
-                              "different units, `eksik` input missing, `karsilastirilamaz` comparison not in the same unit",
+                              "different units, `eksik` input missing, `karsilastirilamaz` comparison not in the same "
+                              "unit, `anlamsiz` not meaningful (e.g. net debt / EBITDA when EBITDA ≤ 0)",
                "tercile": "`alt`/`orta`/`ust` = ni_yoy at or below the previous quarter's 1/3 point, up to its 2/3 "
                           "point, above it (no look-ahead: only previous-quarter values published by `event_day`)",
                "tercile_ref": "previous quarter whose values set the cut-offs",

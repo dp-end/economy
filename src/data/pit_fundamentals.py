@@ -40,7 +40,7 @@ import numpy as np
 import pandas as pd
 
 from src.data.disclosure_dates import START_PERIOD, legal_deadline
-from src.data.fundamentals import FINANCIALS, LABELS, _period_end, _row
+from src.data.fundamentals import FINANCIALS, LABELS, _norm, _period_end, _row
 from src.data.kap_dates import load_kap_table
 from src.data.macro import load_series
 from src.data.universe import load_universe
@@ -61,6 +61,39 @@ FISCAL_OFFSET_MONTHS = {"MAVI": 1}
 FLOW_ITEMS = LABELS["income"]      # net_income, revenue, gross_profit, op_income
 STOCK_ITEMS = LABELS["balance"]    # equity, total_assets
 NO_SALES_LINES = ("revenue", "gross_profit", "op_income")   # banka/sigorta/aracı kurumda anlamsız
+
+# ---- Adım 1c: sanayi oranları (kullanıcı kararları, 2026-11-22) ----
+# FAVÖK = brüt kâr − genel yönetim − pazarlama/satış − Ar-Ge giderleri + amortisman. Şirketlerin açıkladığı FAVÖK'le
+# birebir (BİM 2025: 43,484; ASELSAN 2026/6: 23,233; Tüpraş 2026/6: 71,246 milyar TL). "Faaliyet kârı + amortisman"
+# diğer faaliyet gelir/giderlerini de içerdiği için 1-4 milyar sapıyor.
+# Banka, sigorta, aracı kurum ve banka konsolide eden holding (KCHOL: yükümlülüklerinin %47-58'i finans sektörü
+# borcu) için FAVÖK, net borç, likidite ve nakit akışı oranları hesaplanmaz; yalnızca net kâr, ROE ve ROA.
+NO_INDUSTRIAL = FINANCIALS | {"KCHOL"}
+CASH_SHEET = "Nakit akış (dönemsel)"                       # birikimli; TMS 29 deseni gelir tablosuyla aynı
+IS_LINES = {"opex_ga": "genel yönetim giderleri (-)", "opex_sm": "pazarlama, satış ve dağıtım giderleri (-)",
+            "opex_rd": "araştırma ve geliştirme giderleri (-)", "da": "amortisman"}
+CF_LINES = {"ocf": "işletme faaliyetlerinden nakit akışları",    # BİM 2026/6: 37,91 (açıklanan 37,9)
+            "capex": "maddi ve maddi olmayan duran varlıkların alımından kaynaklanan nakit çıkışları"}  # negatif
+BS_LINES = {  # bilançoda aynı ad birden çok bölümde geçer (ör. "finansal borçlar" kısa ve uzun vadede): bölümüyle oku
+    "current_assets": ("dönen varlıklar", "toplam dönen varlıklar"),
+    "inventories": ("dönen varlıklar", "stoklar"),
+    "cash": ("dönen varlıklar", "nakit ve nakit benzerleri"),
+    "st_fin_inv": ("dönen varlıklar", "finansal yatırımlar"),
+    "current_liab": ("kısa vadeli yükümlülükler", "toplam kısa vadeli yükümlülükler"),
+    "fin_debt_st": ("kısa vadeli yükümlülükler", "finansal borçlar"),
+    "fin_debt_lt": ("uzun vadeli yükümlülükler", "finansal borçlar"),
+    "total_equity": ("özkaynaklar", "toplam özkaynaklar"),
+}
+# Satır yoksa ya da dönemde boşsa şirkette o kalem yoktur: 0 sayılır, ama yalnızca dönemin ana toplamı varsa
+# (eksik bir dönem yanlışlıkla sıfıra dönmesin).
+ZERO_IF_ABSENT = {"opex_ga": "gross_profit", "opex_sm": "gross_profit", "opex_rd": "gross_profit",
+                  "inventories": "current_assets", "st_fin_inv": "current_assets",
+                  "fin_debt_st": "current_liab", "fin_debt_lt": "current_liab"}
+IND_FLOWS = ["ebitda", "ocf", "capex", "fcf"]
+IND_STOCKS = ["current_assets", "inventories", "cash", "st_fin_inv", "current_liab", "fin_debt", "net_debt",
+              "total_equity"]
+FLOW_NAMES = list(FLOW_ITEMS) + IND_FLOWS
+STOCK_NAMES = list(STOCK_ITEMS) + IND_STOCKS
 
 
 def core_tickers() -> list:
@@ -148,9 +181,24 @@ def known_from(ticker: str, period_end, e: str):
 
 
 # ---------------------------------------------------------------- ham veri
+def _sectioned(df: pd.DataFrame) -> dict:
+    """Bilanço satırları bölümüyle: {(bölüm, satır): değerler}. Bölüm başlıkları girintisizdir, kalemler girintili."""
+    out, sec = {}, None
+    for i, lab in enumerate(df.iloc[:, 0].tolist()):
+        if not isinstance(lab, str):
+            continue
+        if not lab.startswith(" "):
+            sec = _norm(lab)
+        out.setdefault((sec, _norm(lab)), pd.to_numeric(df.iloc[i, 1:], errors="coerce"))
+    return out
+
+
 @lru_cache(maxsize=None)
 def read_raw(ticker: str) -> pd.DataFrame:
-    """Fintables'tan birikimli gelir kalemleri (flow) ve bilanço kalemleri (stock), dönem etiketine göre."""
+    """Fintables'tan birikimli gelir ve nakit akış kalemleri (flow) ve bilanço kalemleri (stock), dönem etiketine
+    göre. Sanayi şirketlerinde ek olarak FAVÖK, işletme nakit akışı, yatırım harcaması, serbest nakit akışı, dönen
+    varlık, stok, nakit, kısa vadeli finansal yatırım, kısa vadeli yükümlülük, finansal borç, net borç, toplam
+    özkaynak (Adım 1c)."""
     path = FT_DIR / f"{ticker} (TRY).xlsx"
     out = {}
     for kind, items in (("flow", FLOW_ITEMS), ("stock", STOCK_ITEMS)):
@@ -159,11 +207,32 @@ def read_raw(ticker: str) -> pd.DataFrame:
             s = _row(df, cands)
             if s is not None:
                 out[name] = s
-    res = pd.DataFrame(out)
+    if ticker not in NO_INDUSTRIAL:
+        inc = pd.read_excel(path, sheet_name=CUM_SHEETS["flow"])
+        cfs = pd.read_excel(path, sheet_name=CASH_SHEET)
+        bal = _sectioned(pd.read_excel(path, sheet_name=CUM_SHEETS["stock"]))
+        for name, lab in IS_LINES.items():
+            out[name] = _row(inc, [lab])
+        for name, lab in CF_LINES.items():
+            out[name] = _row(cfs, [lab])
+        for name, key in BS_LINES.items():
+            out[name] = bal.get(key)
+    res = pd.DataFrame({k: v for k, v in out.items() if v is not None})
     res.index = pd.DatetimeIndex([_period_end(c) for c in res.index], name="period_end")
     res = res.sort_index()
     if ticker in FINANCIALS:
         res = res.drop(columns=[c for c in NO_SALES_LINES if c in res.columns])
+    if ticker not in NO_INDUSTRIAL:
+        for name in ("gross_profit", "da", "ocf", "capex", "cash", "current_assets", "current_liab", "total_equity"):
+            if name not in res.columns:                 # satır hiç yoksa boş (bu sürümde 26 şirketin hepsinde var)
+                res[name] = np.nan
+        for name, anchor in ZERO_IF_ABSENT.items():
+            col = res[name] if name in res.columns else pd.Series(np.nan, index=res.index)
+            res[name] = col.where(col.notna() | res[anchor].isna(), 0.0)
+        res["ebitda"] = res["gross_profit"] + res["opex_ga"] + res["opex_sm"] + res["opex_rd"] + res["da"]
+        res["fcf"] = res["ocf"] + res["capex"]                        # yatırım harcaması negatif yazılı
+        res["fin_debt"] = res["fin_debt_st"] + res["fin_debt_lt"]
+        res["net_debt"] = res["fin_debt"] - res["cash"] - res["st_fin_inv"]   # THY 2026/6: 620,4 (açıklanan 620,3)
     return res
 
 
@@ -183,8 +252,9 @@ def _shifted(df: pd.DataFrame, name: str, n: int) -> pd.DataFrame:
     return src.rename(columns={c: c.replace(name, f"{name}_l{n}", 1) for c in cols})
 
 
-def _combine(df: pd.DataFrame, name: str, fn, inputs: list, rows=None):
-    """Girdilerden yeni nicelik. Girdilerden biri eksikse 'eksik', birim aileleri farklıysa 'birim'.
+def _combine(df: pd.DataFrame, name: str, fn, inputs: list, rows=None, meaningful=None):
+    """Girdilerden yeni nicelik. Girdilerden biri eksikse 'eksik', birim aileleri farklıysa 'birim', meaningful
+    (girdiler -> bool) yanlışsa 'anlamsiz' (ör. FAVÖK ≤ 0 iken net borç / FAVÖK).
     known = girdilerin en geç yayın günü. rows verilirse yalnızca o satırlar yazılır."""
     rows = df.index if rows is None else rows
     if name not in df.columns:
@@ -199,9 +269,12 @@ def _combine(df: pd.DataFrame, name: str, fn, inputs: list, rows=None):
     fam0 = fams.iloc[:, 0]
     same = fams.eq(fam0, axis=0).all(axis=1) & fam0.notna()
     ok = present & same
-    value = fn(*[sub[i] for i in inputs]).replace([np.inf, -np.inf], np.nan).where(ok)
-    known = knowns.max(axis=1, skipna=False).where(ok)
-    why = pd.Series(np.select([~present, ~same], ["eksik", "birim"], default=""), index=rows)
+    sense = (meaningful(*[sub[i] for i in inputs]).fillna(False).astype(bool) if meaningful is not None
+             else pd.Series(True, index=rows))
+    value = fn(*[sub[i] for i in inputs]).replace([np.inf, -np.inf], np.nan).where(ok & sense)
+    known = knowns.max(axis=1, skipna=False).where(ok & sense)
+    why = pd.Series(np.select([~present, ~same, ~sense], ["eksik", "birim", "anlamsiz"], default=""), index=rows)
+    ok = ok & sense
     df.loc[rows, name] = value
     df.loc[rows, f"{name}__fam"] = fam0.where(ok)
     df.loc[rows, f"{name}__known"] = known
@@ -224,8 +297,8 @@ def _panel(ticker: str) -> pd.DataFrame:
     df["era_flow"], df["era_stock"] = eras_f, eras_s
     kf = [known_from(ticker, p, e) for p, e in zip(raw.index, eras_f)]
     ks = [known_from(ticker, p, e) for p, e in zip(raw.index, eras_s)]
-    flows = [c for c in FLOW_ITEMS if c in raw.columns]
-    stocks = [c for c in STOCK_ITEMS if c in raw.columns]
+    flows = [c for c in FLOW_NAMES if c in raw.columns]
+    stocks = [c for c in STOCK_NAMES if c in raw.columns]
     for c in flows:
         _put(df, f"c_{c}", raw[c], [family(e) for e in eras_f], kf)
     for c in stocks:
@@ -271,21 +344,45 @@ def _panel(ticker: str) -> pd.DataFrame:
         _combine(df, "op_income_yoy", growth, ["q_op_income", "q_op_income_l4"])
     df = df.join(_shifted(df, "roe_q", 4))
     _combine(df, "roe_chg", lambda a, b: a - b, ["roe_q", "roe_q_l4"])
+
+    # Adım 1c: getiri oranları bütün şirketlerde (dönem sonu paydası; ortalama, 2023 ara bilançoları nominal olduğu
+    # için 2024'ün ilk üç çeyreğini kaybettirirdi)
+    div = lambda a, b: a / b
+    positive_den = lambda a, b: b > 0
+    _combine(df, "roa", div, ["ttm_net_income", "s_total_assets"], meaningful=positive_den)
+    _combine(df, "roe_ttm", div, ["ttm_net_income", "s_equity"], meaningful=positive_den)
+    if "ttm_ebitda" in df:                     # sanayi şirketleri (NO_INDUSTRIAL dışında)
+        _combine(df, "ebitda_margin_ttm", div, ["ttm_ebitda", "ttm_revenue"], meaningful=positive_den)
+        _combine(df, "ebitda_margin_q", div, ["q_ebitda", "q_revenue"], meaningful=positive_den)
+        _combine(df, "ebitda_yoy", growth, ["q_ebitda", "q_ebitda_l4"], meaningful=lambda a, b: b != 0)
+        _combine(df, "nd_ebitda", div, ["s_net_debt", "ttm_ebitda"], meaningful=positive_den)
+        _combine(df, "debt_to_equity", div, ["s_fin_debt", "s_total_equity"], meaningful=positive_den)
+        _combine(df, "current_ratio", div, ["s_current_assets", "s_current_liab"], meaningful=positive_den)
+        _combine(df, "quick_ratio", lambda a, b, c: (a - b) / c, ["s_current_assets", "s_inventories", "s_current_liab"],
+                 meaningful=lambda a, b, c: c > 0)
+        _combine(df, "cash_conversion", div, ["ttm_ocf", "ttm_ebitda"], meaningful=positive_den)
     return df
 
 
 # ---------------------------------------------------------------- olay günü görünümü
 RATIOS = ["ni_yoy", "ni_qoq", "roe_q", "leverage", "net_margin", "revenue_yoy", "op_income_yoy", "margin_chg",
-          "roe_chg"]
+          "roe_chg",
+          # Adım 1c
+          "roa", "roe_ttm", "ebitda_margin_ttm", "ebitda_margin_q", "ebitda_yoy", "nd_ebitda", "debt_to_equity",
+          "current_ratio", "quick_ratio", "cash_conversion"]
 LEVELS = {  # çıktı adı -> panel niceliği (TL; yayınlandığı raporun parasıyla)
     "net_income": "q_net_income", "net_income_prev": "q_net_income_l4", "revenue": "q_revenue",
     "gross_profit": "q_gross_profit", "op_income": "q_op_income", "net_income_ttm": "ttm_net_income",
     "equity": "s_equity", "total_assets": "s_total_assets",
+    # Adım 1c (sanayi şirketleri)
+    "ebitda": "q_ebitda", "ebitda_ttm": "ttm_ebitda", "revenue_ttm": "ttm_revenue", "ocf_ttm": "ttm_ocf",
+    "fcf_ttm": "ttm_fcf", "net_debt": "s_net_debt",
 }
 
 
-FLOW_LEVELS = ("net_income", "net_income_prev", "revenue", "gross_profit", "op_income", "net_income_ttm")
-STOCK_LEVELS = ("equity", "total_assets")
+FLOW_LEVELS = ("net_income", "net_income_prev", "revenue", "gross_profit", "op_income", "net_income_ttm",
+               "ebitda", "ebitda_ttm", "revenue_ttm", "ocf_ttm", "fcf_ttm")
+STOCK_LEVELS = ("equity", "total_assets", "net_debt")
 
 
 def _values(ticker: str, pan: pd.DataFrame, p, cutoff, factor: float, unit_u: str) -> dict:
@@ -371,7 +468,7 @@ def as_published(ticker: str, period_end, item: str, quarterly: bool = False) ->
     """Birikimli (ya da tek çeyrek) kalemi, İLK yayınlandığı raporun parasıyla döndürür.
     Sonuç: (değer, birim, yayınlandığı rapor dönemi). B rakamları bir yıl sonraki raporda yayınlandı."""
     p = pd.Timestamp(period_end)
-    kind = "stock" if item in STOCK_ITEMS else "flow"
+    kind = "stock" if item in STOCK_NAMES else "flow"
     col = f"{'s' if kind == 'stock' else ('q' if quarterly else 'c')}_{item}"
     pan = panel(ticker)
     v = pan.loc[p, col]
@@ -388,7 +485,7 @@ def as_published(ticker: str, period_end, item: str, quarterly: bool = False) ->
 def in_report_unit(ticker: str, period_end, item: str, report_period, quarterly: bool = False) -> float:
     """Bir dönemin rakamını, başka bir raporun (ör. ertesi yılın karşılaştırması) parasıyla döndürür."""
     p = pd.Timestamp(period_end)
-    kind = "stock" if item in STOCK_ITEMS else "flow"
+    kind = "stock" if item in STOCK_NAMES else "flow"
     col = f"{'s' if kind == 'stock' else ('q' if quarterly else 'c')}_{item}"
     v = panel(ticker).loc[p, col]
     return float(v) * (report_factor(ticker, report_period) if family(era(ticker, p, kind)) == "U" else 1.0)

@@ -33,7 +33,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 (news, speeches, LLM explanations, review reasons); all other fields are structured.</p>
 <p>Units: <code>[fraction]</code> 0.05 = 5%; <code>[%]</code> already in percent; <code>[pt]</code> percentage points; <code>[TRY]</code> Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.</p>
-<p><strong>19 datasets, 416 fields.</strong></p>
+<p><strong>19 datasets, 432 fields.</strong></p>
 <table>
 <thead>
 <tr>
@@ -106,7 +106,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">Earnings disclosure events</td>
 <td style="text-align: left;">structured (event table)</td>
 <td style="text-align: left;">7C</td>
-<td style="text-align: right;">45</td>
+<td style="text-align: right;">61</td>
 </tr>
 <tr>
 <td style="text-align: right;">10</td>
@@ -1400,6 +1400,118 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">-5.902 – 0.3713</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>ebitda</code></td>
+<td style="text-align: left;">EBITDA of the quarter = gross profit − general &amp; administrative − selling &amp; marketing − R&amp;D expenses + depreciation (the definition companies publish) [TRY]; empty for financials and KCHOL (a holding that consolidates a bank)</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">69%</td>
+<td style="text-align: left;">-1.664e+09 – 6.918e+10</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ebitda_ttm</code></td>
+<td style="text-align: left;">EBITDA of the last 12 months [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">73%</td>
+<td style="text-align: left;">-3.6e+09 – 1.693e+11</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>revenue_ttm</code></td>
+<td style="text-align: left;">revenue of the last 12 months [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">75%</td>
+<td style="text-align: left;">1.197e+09 – 2.316e+12</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ocf_ttm</code></td>
+<td style="text-align: left;">operating cash flow of the last 12 months ('İşletme Faaliyetlerinden Nakit Akışları') [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">73%</td>
+<td style="text-align: left;">-4.882e+10 – 1.946e+11</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>fcf_ttm</code></td>
+<td style="text-align: left;">free cash flow of the last 12 months = operating cash flow − purchases of fixed and intangible assets [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">72%</td>
+<td style="text-align: left;">-4.988e+10 – 1.522e+11</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>net_debt</code></td>
+<td style="text-align: left;">financial debt (short + long term) − cash − short-term financial investments [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">85%</td>
+<td style="text-align: left;">-2.133e+11 – 6.973e+11</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>roa</code></td>
+<td style="text-align: left;">net income of the last 12 months / total assets at quarter end [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">85%</td>
+<td style="text-align: left;">-0.1013 – 0.3344</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>roe_ttm</code></td>
+<td style="text-align: left;">net income of the last 12 months / parent equity at quarter end [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">85%</td>
+<td style="text-align: left;">-0.3621 – 1.179</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ebitda_margin_ttm</code></td>
+<td style="text-align: left;">EBITDA / revenue, last 12 months [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">73%</td>
+<td style="text-align: left;">-0.06548 – 0.5659</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ebitda_margin_q</code></td>
+<td style="text-align: left;">EBITDA / revenue, quarter [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">69%</td>
+<td style="text-align: left;">-0.5892 – 0.5893</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ebitda_yoy</code></td>
+<td style="text-align: left;">EBITDA YoY change, both quarters in the same unit [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">69%</td>
+<td style="text-align: left;">-378.2 – 89.18</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>nd_ebitda</code></td>
+<td style="text-align: left;">net debt / EBITDA of the last 12 months [ratio]; empty when EBITDA ≤ 0</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">70%</td>
+<td style="text-align: left;">-17.78 – 220.3</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>debt_to_equity</code></td>
+<td style="text-align: left;">financial debt / total equity (incl. minorities) [ratio]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">85%</td>
+<td style="text-align: left;">3.691e-05 – 10.3</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>current_ratio</code></td>
+<td style="text-align: left;">current assets / current liabilities [ratio]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">85%</td>
+<td style="text-align: left;">0.2836 – 10.98</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>quick_ratio</code></td>
+<td style="text-align: left;">(current assets − inventories) / current liabilities [ratio]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">85%</td>
+<td style="text-align: left;">0.1536 – 10.33</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>cash_conversion</code></td>
+<td style="text-align: left;">operating cash flow / EBITDA, last 12 months [ratio]; empty when EBITDA ≤ 0</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">70%</td>
+<td style="text-align: left;">-4.684 – 14.72</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>era_flow</code></td>
 <td style="text-align: left;">income-statement version: <code>A</code> as published (nominal), <code>B</code> inflation-accounting restatement first published a year later, <code>C</code> inflation-accounting report</td>
 <td style="text-align: left;">text</td>
@@ -1429,7 +1541,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 <tr>
 <td style="text-align: left;"><code>pit_dropped</code></td>
-<td style="text-align: left;">values left empty and why: <code>gec(date)</code> known only from that date, <code>birim</code> inputs in different units, <code>eksik</code> input missing, <code>karsilastirilamaz</code> comparison not in the same unit</td>
+<td style="text-align: left;">values left empty and why: <code>gec(date)</code> known only from that date, <code>birim</code> inputs in different units, <code>eksik</code> input missing, <code>karsilastirilamaz</code> comparison not in the same unit, <code>anlamsiz</code> not meaningful (e.g. net debt / EBITDA when EBITDA ≤ 0)</td>
 <td style="text-align: left;">text</td>
 <td style="text-align: left;">98%</td>
 <td style="text-align: left;"></td>
@@ -4543,8 +4655,8 @@ fundamental and risk-gate evidence, never alone.</p></section><section class="re
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_events.parquet</code></td>
-<td style="text-align: left;">142 kB</td>
-<td style="text-align: left;">a72fbdcb98ea</td>
+<td style="text-align: left;">215 kB</td>
+<td style="text-align: left;">25cfb998894d</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/backtest_strategies.csv</code></td>
@@ -6497,8 +6609,8 @@ cached price data.</p>
 <tbody>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_events.parquet</code></td>
-<td style="text-align: left;">142 kB</td>
-<td style="text-align: left;">a72fbdcb98ea</td>
+<td style="text-align: left;">215 kB</td>
+<td style="text-align: left;">25cfb998894d</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_by_tercile.csv</code></td>
@@ -7500,9 +7612,10 @@ need a pre-registered test on new quarters first.</p>
 <ul>
 <li><strong>No expectations data.</strong> There is no analyst consensus, so "surprise" is approximated by the change vs the
   same quarter last year and by the price trend.</li>
-<li><strong>Valuation, liquidity and EBITDA not covered yet.</strong> The Fintables files contain paid-in capital (the share
-  count), current assets and liabilities, financial debt and depreciation; an earlier version of this report wrongly
-  said they did not. They are not used in this version. Market values also need daily market capitalisation.</li>
+<li><strong>EBITDA, leverage, liquidity and cash flow not analysed yet.</strong> The event table carries them (EBITDA, operating
+  cash flow and net debt checked against published company figures), but their price reactions are not yet tested
+  in this report. Valuation (P/E, P/B, EV/EBITDA) needs daily market capitalisation and is not covered yet. An earlier
+  version of this report wrongly said these lines were missing from the data.</li>
 <li><strong>Low power.</strong> 13 quarters (12 for days 1–20) is a small number of independent observations; 2022Q4 – 2024Q1
   cannot be ranked.</li>
 <li><strong>Latest versions only.</strong> Fintables carries later corrections back into earlier periods. We found one small case

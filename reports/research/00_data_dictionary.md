@@ -10,7 +10,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage points; `[TRY]` Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.
 
-**19 datasets, 416 fields.**
+**19 datasets, 432 fields.**
 
 | # | dataset | kind | step | columns |
 |---:|:---|:---|:---|---:|
@@ -22,7 +22,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | 6 | KAP publication dates of financial statements | structured | 7B | 9 |
 | 7 | Technical reversal events | structured (event table) | 4 | 15 |
 | 8 | Sector laggard / leader events | structured (event table) | 5 | 17 |
-| 9 | Earnings disclosure events | structured (event table) | 7C | 45 |
+| 9 | Earnings disclosure events | structured (event table) | 7C | 61 |
 | 10 | News archive (KAP + RSS) | unstructured text + structured tags | 10 | 12 |
 | 11 | KAP news signal events | structured (event table) | 10C | 15 |
 | 12 | Speech segments | unstructured text | 10B | 16 |
@@ -264,11 +264,27 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `op_income_yoy` | operating profit YoY change [fraction] | float | 71% | -13.8 – 301.9 |
 | `margin_chg` | net margin minus net margin one year earlier [fraction points] | float | 71% | -1.417 – 1.077 |
 | `roe_chg` | roe_q minus roe_q one year earlier [fraction points] | float | 67% | -5.902 – 0.3713 |
+| `ebitda` | EBITDA of the quarter = gross profit − general & administrative − selling & marketing − R&D expenses + depreciation (the definition companies publish) [TRY]; empty for financials and KCHOL (a holding that consolidates a bank) | float | 69% | -1.664e+09 – 6.918e+10 |
+| `ebitda_ttm` | EBITDA of the last 12 months [TRY] | float | 73% | -3.6e+09 – 1.693e+11 |
+| `revenue_ttm` | revenue of the last 12 months [TRY] | float | 75% | 1.197e+09 – 2.316e+12 |
+| `ocf_ttm` | operating cash flow of the last 12 months ('İşletme Faaliyetlerinden Nakit Akışları') [TRY] | float | 73% | -4.882e+10 – 1.946e+11 |
+| `fcf_ttm` | free cash flow of the last 12 months = operating cash flow − purchases of fixed and intangible assets [TRY] | float | 72% | -4.988e+10 – 1.522e+11 |
+| `net_debt` | financial debt (short + long term) − cash − short-term financial investments [TRY] | float | 85% | -2.133e+11 – 6.973e+11 |
+| `roa` | net income of the last 12 months / total assets at quarter end [fraction] | float | 85% | -0.1013 – 0.3344 |
+| `roe_ttm` | net income of the last 12 months / parent equity at quarter end [fraction] | float | 85% | -0.3621 – 1.179 |
+| `ebitda_margin_ttm` | EBITDA / revenue, last 12 months [fraction] | float | 73% | -0.06548 – 0.5659 |
+| `ebitda_margin_q` | EBITDA / revenue, quarter [fraction] | float | 69% | -0.5892 – 0.5893 |
+| `ebitda_yoy` | EBITDA YoY change, both quarters in the same unit [fraction] | float | 69% | -378.2 – 89.18 |
+| `nd_ebitda` | net debt / EBITDA of the last 12 months [ratio]; empty when EBITDA ≤ 0 | float | 70% | -17.78 – 220.3 |
+| `debt_to_equity` | financial debt / total equity (incl. minorities) [ratio] | float | 85% | 3.691e-05 – 10.3 |
+| `current_ratio` | current assets / current liabilities [ratio] | float | 85% | 0.2836 – 10.98 |
+| `quick_ratio` | (current assets − inventories) / current liabilities [ratio] | float | 85% | 0.1536 – 10.33 |
+| `cash_conversion` | operating cash flow / EBITDA, last 12 months [ratio]; empty when EBITDA ≤ 0 | float | 70% | -4.684 – 14.72 |
 | `era_flow` | income-statement version: `A` as published (nominal), `B` inflation-accounting restatement first published a year later, `C` inflation-accounting report | text | 98% | A |
 | `era_stock` | balance-sheet version, same codes as `era_flow` | text | 98% | A |
 | `unit_flow` | unit of income amounts: `TL nominal`, `TL@YYYY-MM` (money of that month) or `-` if none shown | text | 98% | TL nominal |
 | `unit_stock` | unit of balance-sheet amounts, same codes as `unit_flow` | text | 98% | TL nominal |
-| `pit_dropped` | values left empty and why: `gec(date)` known only from that date, `birim` inputs in different units, `eksik` input missing, `karsilastirilamaz` comparison not in the same unit | text | 98% |  |
+| `pit_dropped` | values left empty and why: `gec(date)` known only from that date, `birim` inputs in different units, `eksik` input missing, `karsilastirilamaz` comparison not in the same unit, `anlamsiz` not meaningful (e.g. net debt / EBITDA when EBITDA ≤ 0) | text | 98% |  |
 | `tercile` | `alt`/`orta`/`ust` = ni_yoy at or below the previous quarter's 1/3 point, up to its 2/3 point, above it (no look-ahead: only previous-quarter values published by `event_day`) | text | 70% | ust |
 | `tercile_ref` | previous quarter whose values set the cut-offs | datetime | 70% | 2021-12-31 – 2026-06-30 |
 | `tercile_n` | number of previous-quarter values used (at least 15, else no tercile) | float | 70% | 30 – 30 |

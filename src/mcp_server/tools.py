@@ -248,7 +248,11 @@ FUND_NOTE = ("Değerler analiz gününde bilinebilenlerdir: enflasyon muhasebesi
              "parasıyla (2022/9 ve öncesi nominal); birimler unit_flow (gelir) ve unit_stock (bilanço) alanlarında, "
              "ör. 'TL@2026-09' Eylül 2026 TL'si. Boş değerlerin nedeni pit_dropped alanında. tercile: açıklama "
              "günündeki sınıf; eşikler bir önceki çeyrekte o güne kadar açıklanmış en az 15 hissenin yıllık net kâr "
-             "değişiminin 1/3 ve 2/3 noktaları (sektör içi değil).")
+             "değişiminin 1/3 ve 2/3 noktaları (sektör içi değil). Tanımlar: FAVÖK = brüt kâr − genel yönetim − "
+             "pazarlama − Ar-Ge giderleri + amortisman (şirketlerin açıkladığı tanım); net borç = finansal borç − "
+             "nakit − kısa vadeli finansal yatırım; *_ttm son 12 ay; roa ve roe_ttm son 12 ay net kâr / dönem sonu "
+             "varlık ve özkaynak; nakit dönüşümü = işletme nakit akışı / FAVÖK. Banka, sigorta, aracı kurum ve KCHOL "
+             "(banka konsolide eden holding) için FAVÖK, net borç, likidite ve nakit akışı hesaplanmaz.")
 
 
 def _visible_quarters(t: str, d: pd.Timestamp) -> pd.DataFrame:
@@ -277,6 +281,10 @@ def get_fundamental_metrics(ticker: str, period: str = None, asof: str = None) -
     r = q.iloc[-1]
     cols = ["period_end", "publish_time", "event_day", "net_income", "revenue", "gross_profit", "op_income", "equity",
             "total_assets", "ni_yoy", "ni_qoq", "roe_q", "leverage", "net_margin", "loss", "tercile", "financial",
+            # Adım 1c
+            "ebitda", "ebitda_ttm", "revenue_ttm", "ocf_ttm", "fcf_ttm", "net_debt", "roa", "roe_ttm",
+            "ebitda_margin_ttm", "ebitda_yoy", "nd_ebitda", "debt_to_equity", "current_ratio", "quick_ratio",
+            "cash_conversion",
             "unit_flow", "unit_stock", "pit_dropped"]
     out = {c: r[c] for c in cols if c in r.index}
     out.update(ticker=t, asof=str(d.date()), source="Fintables (elle indirilen Excel), yayın zamanı KAP",
@@ -296,7 +304,9 @@ def calculate_fundamental_change(ticker: str, periods: int = 4, asof: str = None
         raise ToolError(f"{t} için {d.date()} itibarıyla açıklanmış bilanço yok")
     q = q.assign(roe_change=q["roe_q"].diff(), margin_change=q["net_margin"].diff() if "net_margin" in q else np.nan)
     cols = ["period_end", "event_day", "net_income", "ni_yoy", "ni_qoq", "roe_q", "roe_change", "net_margin",
-            "margin_change", "leverage", "loss", "tercile", "unit_flow", "unit_stock", "pit_dropped"]
+            "margin_change", "leverage", "loss", "tercile",
+            "ebitda", "ebitda_yoy", "ebitda_margin_q", "nd_ebitda", "current_ratio", "cash_conversion", "roa",
+            "unit_flow", "unit_stock", "pit_dropped"]
     return to_json(dict(ticker=t, asof=str(d.date()), quarters=q[[c for c in cols if c in q]].to_dict("records"),
                         note=FUND_NOTE))
 

@@ -184,10 +184,11 @@ No test calls a paid API or uses a key. LLM behaviour is tested with `MockLLM`.
 
 - **Sample:** 30 stocks, five years, nominal TRY. Survivorship: the 2026 index list is used for the whole period.
 - **Fundamentals data:** around the inflation-accounting switch (2022Q4 – 2024Q1) earnings cannot be ranked,
-  because the restated figures were published a year later. Valuation, liquidity and EBITDA are not computed yet,
-  although the Fintables files contain the needed lines (paid-in capital, current assets and liabilities, financial
-  debt, depreciation). Fintables keeps only the latest version of each figure, so later corrections are carried
-  back into earlier periods (one small case found).
+  because the restated figures were published a year later. EBITDA, leverage, liquidity, cash-flow and return
+  ratios are computed (`src/data/pit_fundamentals.py`; EBITDA, operating cash flow and net debt checked against
+  published company figures) but their price reactions are not yet tested in Report 4. Valuation ratios (P/E, P/B,
+  EV/EBITDA) need daily market capitalisation and are not computed yet. Fintables keeps only the latest version of
+  each figure, so later corrections are carried back into earlier periods (one small case found).
 - **News:** RSS has no history, so news statistics rely on KAP. Categories come from keyword rules.
 - **Speeches:** only two official speeches (no instructor-approved list arrived). The TCMB YouTube video required a
   bot sign-in that we did not bypass, so the official text was used instead.

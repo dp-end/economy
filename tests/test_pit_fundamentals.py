@@ -181,3 +181,59 @@ def test_synthetic_restater(monkeypatch):
     assert np.isnan(q.loc["2023-09-30", "net_income_ttm"])
     assert np.isclose(q.loc["2022-09-30", "ni_qoq"], (6 - 6) / 6)    # geçiş öncesi: 16-10 ile 10-4
     assert q.loc["2022-09-30", "unit_flow"] == "TL nominal"
+
+
+# ------------------------------------------------------------------ Adım 1c: sanayi oranları
+PUBLISHED_1C = [   # (hisse, dönem, kalem, açıklanan, kaynak)
+    ("BIMAS", "2025-12-31", "ebitda", 43.484e9),     # BİM 2025 FAVÖK (paratic, 2025 yılı)
+    ("ASELS", "2026-06-30", "ebitda", 23.233e9),     # ASELSAN 2026/6 FAVÖK (borsamatik 180045)
+    ("TUPRS", "2026-06-30", "ebitda", 71.246e9),     # Tüpraş 2026/6 FAVÖK (borsaningundemi 1904028)
+    ("BIMAS", "2026-06-30", "ocf", 37.9e9),          # BİM 2026/6 işletme faaliyetlerinden nakit akışı (cnbce h35228)
+    ("THYAO", "2026-06-30", "net_debt", 620.3e9),    # THY 2026/6 net borç (cnbce h34421)
+]
+
+
+@pytest.mark.parametrize("t,p,item,pub", PUBLISHED_1C)
+def test_industrial_items_match_published(t, p, item, pub):
+    """FAVÖK = brüt kâr − genel yönetim − pazarlama − Ar-Ge + amortisman; net borç = finansal borç − nakit −
+    kısa vadeli finansal yatırım; işletme nakit akışı = 'İşletme Faaliyetlerinden Nakit Akışları'."""
+    assert np.isclose(pf.as_published(t, p, item)[0], pub, rtol=1e-3)
+
+
+def test_ocf_comparative_in_next_report():
+    assert np.isclose(pf.in_report_unit("BIMAS", "2025-06-30", "ocf", "2026-06-30"), 29.45e9, rtol=1e-3)
+
+
+def test_ratios_recomputed_by_hand():
+    raw, r = pf.read_raw("ASELS"), _row("ASELS", "2026-09-30")
+    p, ye, l4 = pd.Timestamp("2026-09-30"), pd.Timestamp("2025-12-31"), pd.Timestamp("2025-09-30")
+    x = raw.loc[p]
+    ttm = lambda c: raw.loc[p, c] + raw.loc[ye, c] - raw.loc[l4, c]     # aynı birim (son rapor), faktör 1
+    assert np.isclose(r["current_ratio"], x["current_assets"] / x["current_liab"])
+    assert np.isclose(r["quick_ratio"], (x["current_assets"] - x["inventories"]) / x["current_liab"])
+    assert np.isclose(r["debt_to_equity"], (x["fin_debt_st"] + x["fin_debt_lt"]) / x["total_equity"])
+    assert np.isclose(r["nd_ebitda"], x["net_debt"] / ttm("ebitda"))
+    assert np.isclose(r["cash_conversion"], ttm("ocf") / ttm("ebitda"))
+    assert np.isclose(r["roa"], ttm("net_income") / x["total_assets"])
+    assert np.isclose(r["roe_ttm"], ttm("net_income") / x["equity"])
+
+
+def test_no_industrial_ratios_for_banks_insurers_brokers_and_kchol():
+    a = pf.pit_all()
+    for t in ("AKBNK", "TURSG", "ISMEN", "KCHOL"):
+        assert "ebitda" not in pf.read_raw(t).columns and "net_debt" not in pf.read_raw(t).columns
+        g = a[a["ticker"] == t]
+        assert g["current_ratio"].isna().all() and g["nd_ebitda"].isna().all()
+        assert g["roa"].notna().sum() >= 12                    # net kâr temelli oranlar var
+
+
+def test_not_meaningful_when_ebitda_negative():
+    r = _row("PETKM", "2024-12-31")
+    assert r["ebitda_ttm"] < 0 and np.isnan(r["nd_ebitda"]) and np.isnan(r["cash_conversion"])
+    assert "nd_ebitda:anlamsiz" in r["pit_dropped"]
+
+
+def test_missing_expense_line_counts_as_zero_only_when_period_exists():
+    raw = pf.read_raw("BIMAS")                                    # BİM'de Ar-Ge satırı yok
+    has = raw["gross_profit"].notna()
+    assert (raw.loc[has, "opex_rd"] == 0).all() and raw.loc[~has, "opex_rd"].isna().all()

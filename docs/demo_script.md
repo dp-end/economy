@@ -6,7 +6,7 @@ Sahte model (`--mock`) yalnızca `reports/decision_log_demo.sqlite` dosyasına y
 ## Hazırlık (sunumdan önce, 2 dk)
 
 ```bash
-cd ~/Downloads/economy
+cd ~/Okul/Ekonomi/BIST-Proje
 source venv/bin/activate
 pytest -q                     # 161 passed beklenir (~1 dk); sunumdan önce bir kez
 clear

@@ -33,7 +33,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 (news, speeches, LLM explanations, review reasons); all other fields are structured.</p>
 <p>Units: <code>[fraction]</code> 0.05 = 5%; <code>[%]</code> already in percent; <code>[pt]</code> percentage points; <code>[TRY]</code> Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.</p>
-<p><strong>19 datasets, 432 fields.</strong></p>
+<p><strong>21 datasets, 453 fields.</strong></p>
 <table>
 <thead>
 <tr>
@@ -61,118 +61,132 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 <tr>
 <td style="text-align: right;">3</td>
+<td style="text-align: left;">Daily market capitalisation</td>
+<td style="text-align: left;">structured</td>
+<td style="text-align: left;">1d (review of 22 Nov)</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">Daily valuation ratios</td>
+<td style="text-align: left;">structured (derived)</td>
+<td style="text-align: left;">1d (review of 22 Nov)</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
 <td style="text-align: left;">Quarterly fundamentals (Fintables)</td>
 <td style="text-align: left;">structured</td>
 <td style="text-align: left;">2, 7</td>
 <td style="text-align: right;">13</td>
 </tr>
 <tr>
-<td style="text-align: right;">4</td>
+<td style="text-align: right;">6</td>
 <td style="text-align: left;">Technical, support/resistance and relative features</td>
 <td style="text-align: left;">structured</td>
 <td style="text-align: left;">3, 5</td>
 <td style="text-align: right;">46</td>
 </tr>
 <tr>
-<td style="text-align: right;">5</td>
+<td style="text-align: right;">7</td>
 <td style="text-align: left;">Macro panel</td>
 <td style="text-align: left;">structured</td>
 <td style="text-align: left;">8</td>
 <td style="text-align: right;">12</td>
 </tr>
 <tr>
-<td style="text-align: right;">6</td>
+<td style="text-align: right;">8</td>
 <td style="text-align: left;">KAP publication dates of financial statements</td>
 <td style="text-align: left;">structured</td>
 <td style="text-align: left;">7B</td>
 <td style="text-align: right;">9</td>
 </tr>
 <tr>
-<td style="text-align: right;">7</td>
+<td style="text-align: right;">9</td>
 <td style="text-align: left;">Technical reversal events</td>
 <td style="text-align: left;">structured (event table)</td>
 <td style="text-align: left;">4</td>
 <td style="text-align: right;">15</td>
 </tr>
 <tr>
-<td style="text-align: right;">8</td>
+<td style="text-align: right;">10</td>
 <td style="text-align: left;">Sector laggard / leader events</td>
 <td style="text-align: left;">structured (event table)</td>
 <td style="text-align: left;">5</td>
 <td style="text-align: right;">17</td>
 </tr>
 <tr>
-<td style="text-align: right;">9</td>
+<td style="text-align: right;">11</td>
 <td style="text-align: left;">Earnings disclosure events</td>
 <td style="text-align: left;">structured (event table)</td>
 <td style="text-align: left;">7C</td>
-<td style="text-align: right;">61</td>
+<td style="text-align: right;">62</td>
 </tr>
 <tr>
-<td style="text-align: right;">10</td>
+<td style="text-align: right;">12</td>
 <td style="text-align: left;">News archive (KAP + RSS)</td>
 <td style="text-align: left;">unstructured text + structured tags</td>
 <td style="text-align: left;">10</td>
 <td style="text-align: right;">12</td>
 </tr>
 <tr>
-<td style="text-align: right;">11</td>
+<td style="text-align: right;">13</td>
 <td style="text-align: left;">KAP news signal events</td>
 <td style="text-align: left;">structured (event table)</td>
 <td style="text-align: left;">10C</td>
 <td style="text-align: right;">15</td>
 </tr>
 <tr>
-<td style="text-align: right;">12</td>
+<td style="text-align: right;">14</td>
 <td style="text-align: left;">Speech segments</td>
 <td style="text-align: left;">unstructured text</td>
 <td style="text-align: left;">10B</td>
 <td style="text-align: right;">16</td>
 </tr>
 <tr>
-<td style="text-align: right;">13</td>
+<td style="text-align: right;">15</td>
 <td style="text-align: left;">Speech features and claim checks</td>
 <td style="text-align: left;">structured features from unstructured text</td>
 <td style="text-align: left;">10B</td>
 <td style="text-align: right;">26</td>
 </tr>
 <tr>
-<td style="text-align: right;">14</td>
+<td style="text-align: right;">16</td>
 <td style="text-align: left;">Numerical claims in speeches</td>
 <td style="text-align: left;">structured</td>
 <td style="text-align: left;">10B</td>
 <td style="text-align: right;">9</td>
 </tr>
 <tr>
-<td style="text-align: right;">15</td>
+<td style="text-align: right;">17</td>
 <td style="text-align: left;">Evidence bundle (one per stock and analysis day)</td>
 <td style="text-align: left;">structured + text evidence</td>
 <td style="text-align: left;">11</td>
 <td style="text-align: right;">109</td>
 </tr>
 <tr>
-<td style="text-align: right;">16</td>
+<td style="text-align: right;">18</td>
 <td style="text-align: left;">Decision log: analyses</td>
 <td style="text-align: left;">structured (JSON fields)</td>
 <td style="text-align: left;">11, 13</td>
 <td style="text-align: right;">21</td>
 </tr>
 <tr>
-<td style="text-align: right;">17</td>
+<td style="text-align: right;">19</td>
 <td style="text-align: left;">Decision log: human reviews</td>
 <td style="text-align: left;">structured + text</td>
 <td style="text-align: left;">11</td>
 <td style="text-align: right;">7</td>
 </tr>
 <tr>
-<td style="text-align: right;">18</td>
+<td style="text-align: right;">20</td>
 <td style="text-align: left;">Decision log: harness traces</td>
 <td style="text-align: left;">structured (JSON)</td>
 <td style="text-align: left;">13</td>
 <td style="text-align: right;">5</td>
 </tr>
 <tr>
-<td style="text-align: right;">19</td>
+<td style="text-align: right;">21</td>
 <td style="text-align: left;">Harness experiment results</td>
 <td style="text-align: left;">structured + text</td>
 <td style="text-align: left;">14</td>
@@ -295,7 +309,185 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>3. Quarterly fundamentals (Fintables)</h2>
+<h2>3. Daily market capitalisation</h2>
+<ul>
+<li><strong>File:</strong> <code>data/isyatirim_mcap/&lt;TICKER&gt;.parquet (example: ASELS)</code></li>
+<li><strong>Type:</strong> structured · <strong>Built in step:</strong> 1d (review of 22 Nov) · <strong>Grain:</strong> one row per stock and trading day, 2021-11-01 – 2026-11-06</li>
+<li><strong>Point-in-time rule:</strong> known at that day's close. Downloaded on 22 Nov 2026 from the same İş Yatırım endpoint as the prices; <code>PD</code> = unadjusted close × paid-in capital. On three days İş Yatırım updated the capital one day before the price split (TURSG 2025-06-03, 2026-06-12; BIMAS 2026-05-13); <code>market_cap()</code> aligns them</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">column</th>
+<th style="text-align: left;">description</th>
+<th style="text-align: left;">type</th>
+<th style="text-align: left;">filled</th>
+<th style="text-align: left;">range / example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>date</code></td>
+<td style="text-align: left;">trading day</td>
+<td style="text-align: left;">datetime</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">2021-11-01 – 2026-11-06</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>PD</code></td>
+<td style="text-align: left;">market capitalisation as published by İş Yatırım [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">3.703e+10 – 1.979e+12</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>HG_KAPANIS</code></td>
+<td style="text-align: left;">unadjusted close [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">16.24 – 434</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>SERMAYE</code></td>
+<td style="text-align: left;">paid-in capital = number of shares (1 TRY nominal)</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">2.28e+09 – 4.56e+09</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>HAO_PD</code></td>
+<td style="text-align: left;">market capitalisation of the free float [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">9.546e+09 – 5.102e+11</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>HGDG_KAPANIS</code></td>
+<td style="text-align: left;">adjusted close, same series as <code>prices.Close</code> [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">7.966 – 434</td>
+</tr>
+</tbody>
+</table>
+<h2>4. Daily valuation ratios</h2>
+<ul>
+<li><strong>File:</strong> <code>reports/valuation_daily.parquet</code></li>
+<li><strong>Type:</strong> structured (derived) · <strong>Built in step:</strong> 1d (review of 22 Nov) · <strong>Grain:</strong> one row per stock and trading day from the first KAP statement (2022Q1) on</li>
+<li><strong>Point-in-time rule:</strong> market cap at that close; statement values of the latest report public that day; inflation-accounting figures moved to the money of the latest CPI published that day; net debt not moved (a TRY debt does not grow with inflation)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">column</th>
+<th style="text-align: left;">description</th>
+<th style="text-align: left;">type</th>
+<th style="text-align: left;">filled</th>
+<th style="text-align: left;">range / example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>date</code></td>
+<td style="text-align: left;">trading day</td>
+<td style="text-align: left;">datetime</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">2022-04-25 – 2026-11-06</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ticker</code></td>
+<td style="text-align: left;">stock code</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">AKBNK</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>market_cap</code></td>
+<td style="text-align: left;">aligned market capitalisation [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">4.622e+09 – 1.979e+12</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>report_period</code></td>
+<td style="text-align: left;">quarter of the latest public statement</td>
+<td style="text-align: left;">datetime</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">2022-03-31 – 2026-09-30</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>report_event_day</code></td>
+<td style="text-align: left;">its KAP event day</td>
+<td style="text-align: left;">datetime</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">2022-04-25 – 2026-11-06</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>cpi_month</code></td>
+<td style="text-align: left;">latest CPI month published by that day (empty for nominal figures)</td>
+<td style="text-align: left;">datetime</td>
+<td style="text-align: left;">46%</td>
+<td style="text-align: left;">2024-01-01 – 2026-10-01</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>factor_flow</code></td>
+<td style="text-align: left;">CPI factor applied to net income and EBITDA (1 for nominal figures)</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">1 – 1.247</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>factor_stock</code></td>
+<td style="text-align: left;">CPI factor applied to equity and minority interests</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">1 – 1.247</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>pe</code></td>
+<td style="text-align: left;">P/E = market cap / last-12-month net income in that day's money; empty if net income ≤ 0</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">75%</td>
+<td style="text-align: left;">1.157 – 659.3</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>pb</code></td>
+<td style="text-align: left;">P/B = market cap / parent equity in that day's money; empty if equity ≤ 0</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">0.2398 – 32.1</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ev</code></td>
+<td style="text-align: left;">enterprise value = market cap + net debt + minority interests [TRY]; industrial companies only</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">87%</td>
+<td style="text-align: left;">2.862e+09 – 2.003e+12</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ev_ebitda</code></td>
+<td style="text-align: left;">EV / last-12-month EBITDA in that day's money; empty if EBITDA ≤ 0</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">70%</td>
+<td style="text-align: left;">0.5118 – 612.3</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>pe_reported</code></td>
+<td style="text-align: left;">P/E with net income in the money of its report (as on data screens), for comparison</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">75%</td>
+<td style="text-align: left;">1.157 – 659.3</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>val_dropped</code></td>
+<td style="text-align: left;">ratios left empty and why: <code>anlamsiz</code> denominator ≤ 0, <code>rapor_degeri_yok</code> statement value not known on its event day, <code>sanayi_disi_ya_da_rapor_degeri_yok</code> no EBITDA/net debt</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">ev_ebitda:sanayi_disi_ya_da_rapor_degeri…</td>
+</tr>
+</tbody>
+</table>
+<h2>5. Quarterly fundamentals (Fintables)</h2>
 <ul>
 <li><strong>File:</strong> <code>data/fintables/*.xlsx → load_all() (example: TUPRS)</code></li>
 <li><strong>Type:</strong> structured · <strong>Built in step:</strong> 2, 7 · <strong>Grain:</strong> one row per stock and quarter, 2022Q1 – 2026Q3 (2022Q4 missing for 24 of 30 stocks)</li>
@@ -405,7 +597,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>4. Technical, support/resistance and relative features</h2>
+<h2>6. Technical, support/resistance and relative features</h2>
 <ul>
 <li><strong>File:</strong> <code>computed: full_features(ticker) (example: ASELS; price columns as above)</code></li>
 <li><strong>Type:</strong> structured · <strong>Built in step:</strong> 3, 5 · <strong>Grain:</strong> one row per stock and trading day</li>
@@ -746,7 +938,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>5. Macro panel</h2>
+<h2>7. Macro panel</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/macro_panel.csv</code></li>
 <li><strong>Type:</strong> structured · <strong>Built in step:</strong> 8 · <strong>Grain:</strong> one row per BIST trading day</li>
@@ -849,7 +1041,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>6. KAP publication dates of financial statements</h2>
+<h2>8. KAP publication dates of financial statements</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/kap_disclosure_dates.csv</code></li>
 <li><strong>Type:</strong> structured · <strong>Built in step:</strong> 7B · <strong>Grain:</strong> one row per stock and quarter (545)</li>
@@ -931,7 +1123,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>7. Technical reversal events</h2>
+<h2>9. Technical reversal events</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/technical_events.parquet</code></li>
 <li><strong>Type:</strong> structured (event table) · <strong>Built in step:</strong> 4 · <strong>Grain:</strong> one row per event; repeats of the same event within 5 days dropped</li>
@@ -1055,7 +1247,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>8. Sector laggard / leader events</h2>
+<h2>10. Sector laggard / leader events</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/sector_events.parquet</code></li>
 <li><strong>Type:</strong> structured (event table) · <strong>Built in step:</strong> 5 · <strong>Grain:</strong> one row per trigger (first day the lag threshold is crossed; 10-day gap per stock)</li>
@@ -1193,7 +1385,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>9. Earnings disclosure events</h2>
+<h2>11. Earnings disclosure events</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/earnings_events.parquet</code></li>
 <li><strong>Type:</strong> structured (event table) · <strong>Built in step:</strong> 7C · <strong>Grain:</strong> one row per stock and quarter</li>
@@ -1442,6 +1634,13 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">-2.133e+11 – 6.973e+11</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>minority_interest</code></td>
+<td style="text-align: left;">minority (non-controlling) interests = total equity − parent equity [TRY]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">85%</td>
+<td style="text-align: left;">-1.45e+08 – 1.697e+10</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>roa</code></td>
 <td style="text-align: left;">net income of the last 12 months / total assets at quarter end [fraction]</td>
 <td style="text-align: left;">float</td>
@@ -1639,7 +1838,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>10. News archive (KAP + RSS)</h2>
+<h2>12. News archive (KAP + RSS)</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/news_events.parquet</code></li>
 <li><strong>Type:</strong> unstructured text + structured tags · <strong>Built in step:</strong> 10 · <strong>Grain:</strong> one row per disclosure/headline (KAP 2021-11 – 2026-11; RSS only from 2026-11-13)</li>
@@ -1742,7 +1941,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>11. KAP news signal events</h2>
+<h2>13. KAP news signal events</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/news_signal_events.parquet</code></li>
 <li><strong>Type:</strong> structured (event table) · <strong>Built in step:</strong> 10C · <strong>Grain:</strong> one row per stock, day and signal type (437)</li>
@@ -1866,7 +2065,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>12. Speech segments</h2>
+<h2>14. Speech segments</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/speech_segments.parquet</code></li>
 <li><strong>Type:</strong> unstructured text · <strong>Built in step:</strong> 10B · <strong>Grain:</strong> one row per sentence/segment (Fed 129, TCMB 234)</li>
@@ -1997,7 +2196,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>13. Speech features and claim checks</h2>
+<h2>15. Speech features and claim checks</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/speech_features.parquet</code></li>
 <li><strong>Type:</strong> structured features from unstructured text · <strong>Built in step:</strong> 10B · <strong>Grain:</strong> one row per segment</li>
@@ -2198,7 +2397,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>14. Numerical claims in speeches</h2>
+<h2>16. Numerical claims in speeches</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/speech_claims.csv</code></li>
 <li><strong>Type:</strong> structured · <strong>Built in step:</strong> 10B · <strong>Grain:</strong> one row per numerical claim (33)</li>
@@ -2280,7 +2479,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>15. Evidence bundle (one per stock and analysis day)</h2>
+<h2>17. Evidence bundle (one per stock and analysis day)</h2>
 <ul>
 <li><strong>File:</strong> <code>computed: src/harness/evidence.py run_analysis(ticker, asof)</code></li>
 <li><strong>Type:</strong> structured + text evidence · <strong>Built in step:</strong> 11 · <strong>Grain:</strong> one bundle per analysis; stored as JSON in <code>analyses</code></li>
@@ -3062,7 +3261,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>16. Decision log: analyses</h2>
+<h2>18. Decision log: analyses</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/decision_log.sqlite (table</code>analyses<code>)</code></li>
 <li><strong>Type:</strong> structured (JSON fields) · <strong>Built in step:</strong> 11, 13 · <strong>Grain:</strong> one row per analysis</li>
@@ -3228,7 +3427,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>17. Decision log: human reviews</h2>
+<h2>19. Decision log: human reviews</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/decision_log.sqlite (table</code>human_reviews<code>)</code></li>
 <li><strong>Type:</strong> structured + text · <strong>Built in step:</strong> 11 · <strong>Grain:</strong> one row per review</li>
@@ -3296,7 +3495,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>18. Decision log: harness traces</h2>
+<h2>20. Decision log: harness traces</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/decision_log.sqlite (table</code>harness_traces<code>)</code></li>
 <li><strong>Type:</strong> structured (JSON) · <strong>Built in step:</strong> 13 · <strong>Grain:</strong> one row per harness run</li>
@@ -3350,7 +3549,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>19. Harness experiment results</h2>
+<h2>21. Harness experiment results</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/experiments/raw.jsonl</code></li>
 <li><strong>Type:</strong> structured + text · <strong>Built in step:</strong> 14 · <strong>Grain:</strong> one row per case × version (A–E) × run</li>
@@ -4655,8 +4854,8 @@ fundamental and risk-gate evidence, never alone.</p></section><section class="re
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_events.parquet</code></td>
-<td style="text-align: left;">215 kB</td>
-<td style="text-align: left;">25cfb998894d</td>
+<td style="text-align: left;">218 kB</td>
+<td style="text-align: left;">1b0b994a4a23</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/backtest_strategies.csv</code></td>
@@ -6609,8 +6808,8 @@ cached price data.</p>
 <tbody>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_events.parquet</code></td>
-<td style="text-align: left;">215 kB</td>
-<td style="text-align: left;">25cfb998894d</td>
+<td style="text-align: left;">218 kB</td>
+<td style="text-align: left;">1b0b994a4a23</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_by_tercile.csv</code></td>
@@ -7612,10 +7811,10 @@ need a pre-registered test on new quarters first.</p>
 <ul>
 <li><strong>No expectations data.</strong> There is no analyst consensus, so "surprise" is approximated by the change vs the
   same quarter last year and by the price trend.</li>
-<li><strong>EBITDA, leverage, liquidity and cash flow not analysed yet.</strong> The event table carries them (EBITDA, operating
-  cash flow and net debt checked against published company figures), but their price reactions are not yet tested
-  in this report. Valuation (P/E, P/B, EV/EBITDA) needs daily market capitalisation and is not covered yet. An earlier
-  version of this report wrongly said these lines were missing from the data.</li>
+<li><strong>EBITDA, leverage, liquidity, cash flow and valuation not analysed yet.</strong> The event table carries the
+  statement ratios (EBITDA, operating cash flow and net debt checked against published company figures) and
+  <code>reports/valuation_daily.parquet</code> carries daily P/E, P/B and EV/EBITDA, but their price reactions are not yet
+  tested in this report. An earlier version of this report wrongly said these lines were missing from the data.</li>
 <li><strong>Low power.</strong> 13 quarters (12 for days 1–20) is a small number of independent observations; 2022Q4 – 2024Q1
   cannot be ranked.</li>
 <li><strong>Latest versions only.</strong> Fintables carries later corrections back into earlier periods. We found one small case

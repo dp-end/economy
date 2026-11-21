@@ -82,7 +82,7 @@ Two questions run through the project:
   - The official text of the TCMB briefing of 12 Nov 2026.
   - Numerical claims in speeches are checked against the data tools. Only verified claims can become evidence.
 
-The **data dictionary** (Report 0) documents 432 fields in 19 datasets with units and point-in-time rules. A test
+The **data dictionary** (Report 0) documents 453 fields in 21 datasets with units and point-in-time rules. A test
 fails if any field is undocumented. Two layers enforce the point-in-time rules:
 
 - **construction:** every feature uses only past closes; forward returns are used only when their window closed
@@ -277,8 +277,8 @@ reviewer.
 - **Data gaps.**
   - Around the inflation-accounting switch (2022Q4 – 2024Q1) earnings cannot be ranked: the restated figures were
     published a year later.
-  - EBITDA, leverage, liquidity and cash-flow ratios are computed and checked against published figures, but their
-    price reactions are not yet tested; valuation ratios (P/E, P/B, EV/EBITDA) are not computed yet.
+  - EBITDA, leverage, liquidity, cash-flow and daily valuation ratios are computed (statement items checked against
+    published figures), but their price reactions are not yet tested.
   - Fintables keeps only the latest version of each figure, so later corrections are carried back into earlier
     periods (one small case found).
   - RSS has no history.
@@ -318,7 +318,7 @@ reviewer.
 git clone https://github.com/dp-end/economy.git && cd economy
 python3.12 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
 unzip economy_data_2026-11-06.zip          # data cache, delivered separately
-pytest -q                                  # 204 tests, offline
+pytest -q                                  # 209 tests, offline
 python -m src.reports.build_reports        # Reports 0-6 and this report (no API key)
 python -m src.reports.pdf                  # research_reports.pdf
 python -m src.reports.pdf --final          # final_report.pdf

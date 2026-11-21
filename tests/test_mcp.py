@@ -80,5 +80,6 @@ def test_tools_do_not_leak_future():
     out = json.loads(text)
     assert out["period_end"].startswith("2026-06-30")                            # 2026/9 henüz açıklanmadı
     assert out["unit_flow"] == "TL@2026-06" and out["unit_stock"] == "TL@2026-06"  # o gün görünen son raporun parası
+    assert out["valuation"]["date"][:10] <= "2026-10-27" and out["valuation"]["pe"] > 0  # o günün değerlemesi
     err, text = call("get_news_events", dict(ticker="TURSG", start="2026-10-01", asof="2026-10-20"))
     assert all(e["event_day"][:10] <= "2026-10-20" for e in json.loads(text)["events"])

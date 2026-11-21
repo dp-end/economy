@@ -10,29 +10,31 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage points; `[TRY]` Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.
 
-**19 datasets, 432 fields.**
+**21 datasets, 453 fields.**
 
 | # | dataset | kind | step | columns |
 |---:|:---|:---|:---|---:|
 | 1 | Study universe and sector map | structured | 1 | 5 |
 | 2 | Daily prices | structured | 2 | 6 |
-| 3 | Quarterly fundamentals (Fintables) | structured | 2, 7 | 13 |
-| 4 | Technical, support/resistance and relative features | structured | 3, 5 | 46 |
-| 5 | Macro panel | structured | 8 | 12 |
-| 6 | KAP publication dates of financial statements | structured | 7B | 9 |
-| 7 | Technical reversal events | structured (event table) | 4 | 15 |
-| 8 | Sector laggard / leader events | structured (event table) | 5 | 17 |
-| 9 | Earnings disclosure events | structured (event table) | 7C | 61 |
-| 10 | News archive (KAP + RSS) | unstructured text + structured tags | 10 | 12 |
-| 11 | KAP news signal events | structured (event table) | 10C | 15 |
-| 12 | Speech segments | unstructured text | 10B | 16 |
-| 13 | Speech features and claim checks | structured features from unstructured text | 10B | 26 |
-| 14 | Numerical claims in speeches | structured | 10B | 9 |
-| 15 | Evidence bundle (one per stock and analysis day) | structured + text evidence | 11 | 109 |
-| 16 | Decision log: analyses | structured (JSON fields) | 11, 13 | 21 |
-| 17 | Decision log: human reviews | structured + text | 11 | 7 |
-| 18 | Decision log: harness traces | structured (JSON) | 13 | 5 |
-| 19 | Harness experiment results | structured + text | 14 | 28 |
+| 3 | Daily market capitalisation | structured | 1d (review of 22 Nov) | 6 |
+| 4 | Daily valuation ratios | structured (derived) | 1d (review of 22 Nov) | 14 |
+| 5 | Quarterly fundamentals (Fintables) | structured | 2, 7 | 13 |
+| 6 | Technical, support/resistance and relative features | structured | 3, 5 | 46 |
+| 7 | Macro panel | structured | 8 | 12 |
+| 8 | KAP publication dates of financial statements | structured | 7B | 9 |
+| 9 | Technical reversal events | structured (event table) | 4 | 15 |
+| 10 | Sector laggard / leader events | structured (event table) | 5 | 17 |
+| 11 | Earnings disclosure events | structured (event table) | 7C | 62 |
+| 12 | News archive (KAP + RSS) | unstructured text + structured tags | 10 | 12 |
+| 13 | KAP news signal events | structured (event table) | 10C | 15 |
+| 14 | Speech segments | unstructured text | 10B | 16 |
+| 15 | Speech features and claim checks | structured features from unstructured text | 10B | 26 |
+| 16 | Numerical claims in speeches | structured | 10B | 9 |
+| 17 | Evidence bundle (one per stock and analysis day) | structured + text evidence | 11 | 109 |
+| 18 | Decision log: analyses | structured (JSON fields) | 11, 13 | 21 |
+| 19 | Decision log: human reviews | structured + text | 11 | 7 |
+| 20 | Decision log: harness traces | structured (JSON) | 13 | 5 |
+| 21 | Harness experiment results | structured + text | 14 | 28 |
 
 ## 1. Study universe and sector map
 
@@ -63,7 +65,45 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `Volume` | traded quantity = TRY turnover / average price [shares] | float | 100% | 7.11e+06 – 6.366e+08 |
 | `Turnover_TL` | traded value [TRY] | float | 100% | 2.089e+08 – 3.441e+10 |
 
-## 3. Quarterly fundamentals (Fintables)
+## 3. Daily market capitalisation
+
+- **File:** `data/isyatirim_mcap/<TICKER>.parquet (example: ASELS)`
+- **Type:** structured · **Built in step:** 1d (review of 22 Nov) · **Grain:** one row per stock and trading day, 2021-11-01 – 2026-11-06
+- **Point-in-time rule:** known at that day's close. Downloaded on 22 Nov 2026 from the same İş Yatırım endpoint as the prices; `PD` = unadjusted close × paid-in capital. On three days İş Yatırım updated the capital one day before the price split (TURSG 2025-06-03, 2026-06-12; BIMAS 2026-05-13); `market_cap()` aligns them
+
+| column | description | type | filled | range / example |
+|:---|:---|:---|:---|:---|
+| `date` | trading day | datetime | 100% | 2021-11-01 – 2026-11-06 |
+| `PD` | market capitalisation as published by İş Yatırım [TRY] | float | 100% | 3.703e+10 – 1.979e+12 |
+| `HG_KAPANIS` | unadjusted close [TRY] | float | 100% | 16.24 – 434 |
+| `SERMAYE` | paid-in capital = number of shares (1 TRY nominal) | float | 100% | 2.28e+09 – 4.56e+09 |
+| `HAO_PD` | market capitalisation of the free float [TRY] | float | 100% | 9.546e+09 – 5.102e+11 |
+| `HGDG_KAPANIS` | adjusted close, same series as `prices.Close` [TRY] | float | 100% | 7.966 – 434 |
+
+## 4. Daily valuation ratios
+
+- **File:** `reports/valuation_daily.parquet`
+- **Type:** structured (derived) · **Built in step:** 1d (review of 22 Nov) · **Grain:** one row per stock and trading day from the first KAP statement (2022Q1) on
+- **Point-in-time rule:** market cap at that close; statement values of the latest report public that day; inflation-accounting figures moved to the money of the latest CPI published that day; net debt not moved (a TRY debt does not grow with inflation)
+
+| column | description | type | filled | range / example |
+|:---|:---|:---|:---|:---|
+| `date` | trading day | datetime | 100% | 2022-04-25 – 2026-11-06 |
+| `ticker` | stock code | text | 100% | AKBNK |
+| `market_cap` | aligned market capitalisation [TRY] | float | 100% | 4.622e+09 – 1.979e+12 |
+| `report_period` | quarter of the latest public statement | datetime | 100% | 2022-03-31 – 2026-09-30 |
+| `report_event_day` | its KAP event day | datetime | 100% | 2022-04-25 – 2026-11-06 |
+| `cpi_month` | latest CPI month published by that day (empty for nominal figures) | datetime | 46% | 2024-01-01 – 2026-10-01 |
+| `factor_flow` | CPI factor applied to net income and EBITDA (1 for nominal figures) | float | 100% | 1 – 1.247 |
+| `factor_stock` | CPI factor applied to equity and minority interests | float | 100% | 1 – 1.247 |
+| `pe` | P/E = market cap / last-12-month net income in that day's money; empty if net income ≤ 0 | float | 75% | 1.157 – 659.3 |
+| `pb` | P/B = market cap / parent equity in that day's money; empty if equity ≤ 0 | float | 100% | 0.2398 – 32.1 |
+| `ev` | enterprise value = market cap + net debt + minority interests [TRY]; industrial companies only | float | 87% | 2.862e+09 – 2.003e+12 |
+| `ev_ebitda` | EV / last-12-month EBITDA in that day's money; empty if EBITDA ≤ 0 | float | 70% | 0.5118 – 612.3 |
+| `pe_reported` | P/E with net income in the money of its report (as on data screens), for comparison | float | 75% | 1.157 – 659.3 |
+| `val_dropped` | ratios left empty and why: `anlamsiz` denominator ≤ 0, `rapor_degeri_yok` statement value not known on its event day, `sanayi_disi_ya_da_rapor_degeri_yok` no EBITDA/net debt | text | 100% | ev_ebitda:sanayi_disi_ya_da_rapor_degeri… |
+
+## 5. Quarterly fundamentals (Fintables)
 
 - **File:** `data/fintables/*.xlsx → load_all() (example: TUPRS)`
 - **Type:** structured · **Built in step:** 2, 7 · **Grain:** one row per stock and quarter, 2022Q1 – 2026Q3 (2022Q4 missing for 24 of 30 stocks)
@@ -85,7 +125,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `net_margin` | net income / revenue [fraction]; non-financials only | float | 98% | -0.1337 – 0.1969 |
 | `loss` | True if net income < 0 | bool | 100% | 14% True |
 
-## 4. Technical, support/resistance and relative features
+## 6. Technical, support/resistance and relative features
 
 - **File:** `computed: full_features(ticker) (example: ASELS; price columns as above)`
 - **Type:** structured · **Built in step:** 3, 5 · **Grain:** one row per stock and trading day
@@ -140,7 +180,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `rel_xu_20` | stock 20-day return − XU100 20-day return [fraction] | float | 98% | -0.238 – 0.4664 |
 | `sector_lag_20` | stock 20-day return − median 20-day return of its peers (itself excluded); negative = behind its sector [fraction] | float | 98% | -0.3177 – 0.5222 |
 
-## 5. Macro panel
+## 7. Macro panel
 
 - **File:** `reports/macro_panel.csv`
 - **Type:** structured · **Built in step:** 8 · **Grain:** one row per BIST trading day
@@ -161,7 +201,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `real_rate` | policy_rate − cpi_yoy [pt] | float | 100% | -76.51 – 10.95 |
 | `rate_change` | change of policy_rate vs the previous trading day [pt] | float | 100% | -3 – 7.5 |
 
-## 6. KAP publication dates of financial statements
+## 8. KAP publication dates of financial statements
 
 - **File:** `reports/kap_disclosure_dates.csv`
 - **Type:** structured · **Built in step:** 7B · **Grain:** one row per stock and quarter (545)
@@ -179,7 +219,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `lag_days` | calendar days from quarter end to publication | int | 100% | 15 – 134 |
 | `after_deadline` | True if published after the legal deadline (15% of filings) | bool | 100% | 15% True |
 
-## 7. Technical reversal events
+## 9. Technical reversal events
 
 - **File:** `reports/technical_events.parquet`
 - **Type:** structured (event table) · **Built in step:** 4 · **Grain:** one row per event; repeats of the same event within 5 days dropped
@@ -203,7 +243,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `fwd_10` | stock return over the next 10 trading days (close to close) [fraction] | float | 99% | -0.6059 – 1.132 |
 | `exc_10` | `fwd_10` minus XU100 return over the same days [fraction] | float | 99% | -0.5525 – 1.078 |
 
-## 8. Sector laggard / leader events
+## 10. Sector laggard / leader events
 
 - **File:** `reports/sector_events.parquet`
 - **Type:** structured (event table) · **Built in step:** 5 · **Grain:** one row per trigger (first day the lag threshold is crossed; 10-day gap per stock)
@@ -229,7 +269,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `exc_20` | `fwd_20` minus XU100 return over the same days [fraction] | float | 99% | -0.5728 – 1.137 |
 | `gap_20` | stock's next-20-day return minus its peers' median next-20-day return [fraction] | float | 99% | -0.6496 – 1.125 |
 
-## 9. Earnings disclosure events
+## 11. Earnings disclosure events
 
 - **File:** `reports/earnings_events.parquet`
 - **Type:** structured (event table) · **Built in step:** 7C · **Grain:** one row per stock and quarter
@@ -270,6 +310,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `ocf_ttm` | operating cash flow of the last 12 months ('İşletme Faaliyetlerinden Nakit Akışları') [TRY] | float | 73% | -4.882e+10 – 1.946e+11 |
 | `fcf_ttm` | free cash flow of the last 12 months = operating cash flow − purchases of fixed and intangible assets [TRY] | float | 72% | -4.988e+10 – 1.522e+11 |
 | `net_debt` | financial debt (short + long term) − cash − short-term financial investments [TRY] | float | 85% | -2.133e+11 – 6.973e+11 |
+| `minority_interest` | minority (non-controlling) interests = total equity − parent equity [TRY] | float | 85% | -1.45e+08 – 1.697e+10 |
 | `roa` | net income of the last 12 months / total assets at quarter end [fraction] | float | 85% | -0.1013 – 0.3344 |
 | `roe_ttm` | net income of the last 12 months / parent equity at quarter end [fraction] | float | 85% | -0.3621 – 1.179 |
 | `ebitda_margin_ttm` | EBITDA / revenue, last 12 months [fraction] | float | 73% | -0.06548 – 0.5659 |
@@ -299,7 +340,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `post1_20` | abnormal return vs XU100, days 1…20 [fraction] | float | 95% | -0.2585 – 0.4655 |
 | `financial` | True for AKBNK, ISMEN, TURSG (industrial ratios not used) | bool | 100% | 10% True |
 
-## 10. News archive (KAP + RSS)
+## 12. News archive (KAP + RSS)
 
 - **File:** `reports/news_events.parquet`
 - **Type:** unstructured text + structured tags · **Built in step:** 10 · **Grain:** one row per disclosure/headline (KAP 2021-11 – 2026-11; RSS only from 2026-11-13)
@@ -320,7 +361,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `url` | link to the original source | text | 100% | https://www.kap.org.tr/tr/Bildirim/97331… |
 | `fetched_at` | download time | datetime | 1% | 2026-11-18 – 2026-11-18 |
 
-## 11. KAP news signal events
+## 13. KAP news signal events
 
 - **File:** `reports/news_signal_events.parquet`
 - **Type:** structured (event table) · **Built in step:** 10C · **Grain:** one row per stock, day and signal type (437)
@@ -344,7 +385,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `post1_20` | abnormal return vs XU100, days 1…20 [fraction] | float | 97% | -0.2954 – 0.4664 |
 | `quake_window` | True if the window touches the Feb 2023 earthquake closure; such rows are excluded from statistics | bool | 100% | 3% True |
 
-## 12. Speech segments
+## 14. Speech segments
 
 - **File:** `reports/speech_segments.parquet`
 - **Type:** unstructured text · **Built in step:** 10B · **Grain:** one row per sentence/segment (Fed 129, TCMB 234)
@@ -369,7 +410,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `publish_time` | publication time of the speech (Europe/Istanbul) | datetime | 100% | 2026-10-28 – 2026-11-12 |
 | `event_day` | first BIST trading day on which the speech could matter (NaT if not set) | datetime | 36% | 2026-10-30 – 2026-10-30 |
 
-## 13. Speech features and claim checks
+## 15. Speech features and claim checks
 
 - **File:** `reports/speech_features.parquet`
 - **Type:** structured features from unstructured text · **Built in step:** 10B · **Grain:** one row per segment
@@ -404,7 +445,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `segment_type` | `dogrulanmis_olgu` verified fact / `sayisal_iddia` numerical claim / `yorum` commentary | text | 100% | dogrulanmis_olgu |
 | `in_evidence` | True only for VERIFIED claims — the only speech content allowed into committed evidence | bool | 100% | 1% True |
 
-## 14. Numerical claims in speeches
+## 16. Numerical claims in speeches
 
 - **File:** `reports/speech_claims.csv`
 - **Type:** structured · **Built in step:** 10B · **Grain:** one row per numerical claim (33)
@@ -422,7 +463,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `tool_value` | value returned by the deterministic data tool as of the speech time | text | 12% | (3.75, 4.0) |
 | `text` | **unstructured**: the sentence containing the claim | text | 100% | Good day This morning the FOMC decided t… |
 
-## 15. Evidence bundle (one per stock and analysis day)
+## 17. Evidence bundle (one per stock and analysis day)
 
 - **File:** `computed: src/harness/evidence.py run_analysis(ticker, asof)`
 - **Type:** structured + text evidence · **Built in step:** 11 · **Grain:** one bundle per analysis; stored as JSON in `analyses`
@@ -540,7 +581,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `committed[].tool` | MCP tool that produces it | text | – | – |
 | `history.tech:<event>` | past direction-adjusted 5-day hit rate vs XU100 of that event type | text | – | {"n": 2846, "hit": 0.5151089248067463, "… |
 
-## 16. Decision log: analyses
+## 18. Decision log: analyses
 
 - **File:** `reports/decision_log.sqlite (table `analyses`)`
 - **Type:** structured (JSON fields) · **Built in step:** 11, 13 · **Grain:** one row per analysis
@@ -570,7 +611,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `explanation` | **unstructured**: LLM explanation | text | 100% | ASELS için "FUNDAMENTAL_IMPROVEMENT_CAND… |
 | `fingerprint` | hash of the decision-relevant fields (replay equality check) | text | 100% | 25eed7f59cb88660 |
 
-## 17. Decision log: human reviews
+## 19. Decision log: human reviews
 
 - **File:** `reports/decision_log.sqlite (table `human_reviews`)`
 - **Type:** structured + text · **Built in step:** 11 · **Grain:** one row per review
@@ -586,7 +627,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `final_action` | new label if MODIFY | text | 100% | WATCH |
 | `reason` | **unstructured**: mandatory free-text reason | text | 100% | Bilanço güçlü ama strateji al-tut u geçe… |
 
-## 18. Decision log: harness traces
+## 20. Decision log: harness traces
 
 - **File:** `reports/decision_log.sqlite (table `harness_traces`)`
 - **Type:** structured (JSON) · **Built in step:** 13 · **Grain:** one row per harness run
@@ -600,7 +641,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `summary` | JSON: tool calls, LLM calls, numbers checked, unsupported numbers | text | 100% | {"hallucination_rate": 0.196, "invalid_t… |
 | `trace` | JSON: states visited, every tool call and LLM call with validation result | text | 100% | {"asof": "2026-11-06", "invalid_tool_cal… |
 
-## 19. Harness experiment results
+## 21. Harness experiment results
 
 - **File:** `reports/experiments/raw.jsonl`
 - **Type:** structured + text · **Built in step:** 14 · **Grain:** one row per case × version (A–E) × run

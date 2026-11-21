@@ -27,7 +27,7 @@ python3.12 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# 3) Data cache (delivered separately as economy_data_2026-11-06.zip, ~9 MB)
+# 3) Data cache (delivered separately as economy_data_2026-11-06.zip, ~10 MB)
 unzip /path/to/economy_data_2026-11-06.zip      # creates ./data/
 
 # 4) Check
@@ -130,6 +130,7 @@ with `python -m src.data.pack_data` (raw speech audio is excluded; transcripts a
 | 10 | `python -m src.data.rss_news` | AA / BloombergHT / TRT RSS; archive grows from the day you start |
 | 10 | `python -m src.data.news_tags` | keyword tagging → `reports/news_events.parquet` |
 | 10B | `python -m src.data.speech` then `python -m src.data.speech_features` | Fed audio + Whisper (needs ffmpeg), TCMB official text; claim verification |
+| 1d | `python -m src.data.market_cap` | İş Yatırım daily market capitalisation (150 requests); checks and aligns capital changes |
 
 Then rebuild the research outputs:
 
@@ -137,7 +138,8 @@ Then rebuild the research outputs:
 python -m src.events.technical_events      # Step 4
 python -m src.events.sector_catchup        # Step 5
 python -m src.events.calendar_patterns     # Step 6
-python -m src.events.earnings_reaction     # Step 7C
+python -m src.events.earnings_reaction     # Step 7C (point-in-time fundamentals, src/data/pit_fundamentals.py)
+python -m src.data.valuation               # daily P/E, P/B, EV/EBITDA -> reports/valuation_daily.parquet
 python -m src.events.news_reaction         # Step 10C
 python -m src.backtest.engine              # Step 9: engine checks (look-ahead test, costs)
 python -m src.backtest.strategies          # Step 9–10: strategy variants A–E vs benchmarks
@@ -159,6 +161,8 @@ another day gives a longer sample.
   money of their report.
 - **Earnings thirds:** a company's third is decided against the previous quarter's cut-offs, using only figures
   already published on its event day.
+- **Valuation:** market capitalisation at that day's close and the latest statement public that day;
+  inflation-accounting earnings, EBITDA and equity are moved to the money of the latest CPI published that day.
 - **Macro:** CPI from the 3rd of the following month; Fed decisions from the first BIST day after the
   announcement; FX and policy rate at that day's close.
 - **News and speeches:** usable from their event day. A speech published after the close is not part of that day's
@@ -186,9 +190,11 @@ No test calls a paid API or uses a key. LLM behaviour is tested with `MockLLM`.
 - **Fundamentals data:** around the inflation-accounting switch (2022Q4 – 2024Q1) earnings cannot be ranked,
   because the restated figures were published a year later. EBITDA, leverage, liquidity, cash-flow and return
   ratios are computed (`src/data/pit_fundamentals.py`; EBITDA, operating cash flow and net debt checked against
-  published company figures) but their price reactions are not yet tested in Report 4. Valuation ratios (P/E, P/B,
-  EV/EBITDA) need daily market capitalisation and are not computed yet. Fintables keeps only the latest version of
-  each figure, so later corrections are carried back into earlier periods (one small case found).
+  published company figures) and daily valuation ratios (P/E, P/B, EV/EBITDA) are computed, but their price
+  reactions are not yet tested in Report 4. P/E cannot be computed for the 24 inflation-accounting companies from
+  about May 2023 to March 2024, because the unrestated profits the market saw then are not in Fintables. Fintables
+  keeps only the latest version of each figure, so later corrections are carried back into earlier periods (one
+  small case found).
 - **News:** RSS has no history, so news statistics rely on KAP. Categories come from keyword rules.
 - **Speeches:** only two official speeches (no instructor-approved list arrived). The TCMB YouTube video required a
   bot sign-in that we did not bypass, so the official text was used instead.

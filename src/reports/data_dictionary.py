@@ -138,6 +138,34 @@ DATASETS = [
                "Low": "daily low, never above the close [TRY]", "Close": "adjusted close (İş Yatırım `HGDG_KAPANIS`) [TRY]",
                "Volume": "traded quantity = TRY turnover / average price [shares]",
                "Turnover_TL": "traded value [TRY]"}),
+    dict(key="market_cap", title="Daily market capitalisation", file="data/isyatirim_mcap/<TICKER>.parquet "
+         "(example: ASELS)", load=lambda: pd.read_parquet("data/isyatirim_mcap/ASELS.parquet").reset_index(),
+         kind="structured", step="1d (review of 22 Nov)", grain="one row per stock and trading day, 2021-11-01 – 2026-11-06",
+         pit="known at that day's close. Downloaded on 22 Nov 2026 from the same İş Yatırım endpoint as the prices; "
+             "`PD` = unadjusted close × paid-in capital. On three days İş Yatırım updated the capital one day before "
+             "the price split (TURSG 2025-06-03, 2026-06-12; BIMAS 2026-05-13); `market_cap()` aligns them",
+         cols={"date": "trading day", "PD": "market capitalisation as published by İş Yatırım [TRY]",
+               "HG_KAPANIS": "unadjusted close [TRY]", "SERMAYE": "paid-in capital = number of shares (1 TRY nominal)",
+               "HAO_PD": "market capitalisation of the free float [TRY]",
+               "HGDG_KAPANIS": "adjusted close, same series as `prices.Close` [TRY]"}),
+    dict(key="valuation", title="Daily valuation ratios", file="reports/valuation_daily.parquet",
+         load=_pq("reports/valuation_daily.parquet"), kind="structured (derived)", step="1d (review of 22 Nov)",
+         grain="one row per stock and trading day from the first KAP statement (2022Q1) on",
+         pit="market cap at that close; statement values of the latest report public that day; inflation-accounting "
+             "figures moved to the money of the latest CPI published that day; net debt not moved (a TRY debt does not "
+             "grow with inflation)",
+         cols={"date": "trading day", "ticker": "stock code", "market_cap": "aligned market capitalisation [TRY]",
+               "report_period": "quarter of the latest public statement", "report_event_day": "its KAP event day",
+               "cpi_month": "latest CPI month published by that day (empty for nominal figures)",
+               "factor_flow": "CPI factor applied to net income and EBITDA (1 for nominal figures)",
+               "factor_stock": "CPI factor applied to equity and minority interests",
+               "pe": "P/E = market cap / last-12-month net income in that day's money; empty if net income ≤ 0",
+               "pb": "P/B = market cap / parent equity in that day's money; empty if equity ≤ 0",
+               "ev": "enterprise value = market cap + net debt + minority interests [TRY]; industrial companies only",
+               "ev_ebitda": "EV / last-12-month EBITDA in that day's money; empty if EBITDA ≤ 0",
+               "pe_reported": "P/E with net income in the money of its report (as on data screens), for comparison",
+               "val_dropped": "ratios left empty and why: `anlamsiz` denominator ≤ 0, `rapor_degeri_yok` statement "
+                              "value not known on its event day, `sanayi_disi_ya_da_rapor_degeri_yok` no EBITDA/net debt"}),
     dict(key="fundamentals", title="Quarterly fundamentals (Fintables)", file="data/fintables/*.xlsx → load_all() "
          "(example: TUPRS)", load=_fund, kind="structured", step="2, 7",
          grain="one row per stock and quarter, 2022Q1 – 2026Q3 (2022Q4 missing for 24 of 30 stocks)",
@@ -254,6 +282,7 @@ DATASETS = [
                "fcf_ttm": "free cash flow of the last 12 months = operating cash flow − purchases of fixed and "
                           "intangible assets [TRY]",
                "net_debt": "financial debt (short + long term) − cash − short-term financial investments [TRY]",
+               "minority_interest": "minority (non-controlling) interests = total equity − parent equity [TRY]",
                "roa": "net income of the last 12 months / total assets at quarter end [fraction]",
                "roe_ttm": "net income of the last 12 months / parent equity at quarter end [fraction]",
                "ebitda_margin_ttm": "EBITDA / revenue, last 12 months [fraction]",

@@ -7,6 +7,7 @@ Her araç:
   - JSON'a çevrilebilir sözlük döndürür (tarihler 'YYYY-MM-DD', boş değer None).
 """
 import json
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -252,7 +253,16 @@ FUND_NOTE = ("Değerler analiz gününde bilinebilenlerdir: enflasyon muhasebesi
              "pazarlama − Ar-Ge giderleri + amortisman (şirketlerin açıkladığı tanım); net borç = finansal borç − "
              "nakit − kısa vadeli finansal yatırım; *_ttm son 12 ay; roa ve roe_ttm son 12 ay net kâr / dönem sonu "
              "varlık ve özkaynak; nakit dönüşümü = işletme nakit akışı / FAVÖK. Banka, sigorta, aracı kurum ve KCHOL "
-             "(banka konsolide eden holding) için FAVÖK, net borç, likidite ve nakit akışı hesaplanmaz.")
+             "(banka konsolide eden holding) için FAVÖK, net borç, likidite ve nakit akışı hesaplanmaz. valuation: F/K = "
+             "piyasa değeri / son 12 ay net kâr, PD/DD = piyasa değeri / ana ortaklık özkaynağı, FD/FAVÖK = (piyasa "
+             "değeri + net borç + azınlık payları) / son 12 ay FAVÖK; kâr, FAVÖK ve özkaynak analiz gününe kadar "
+             "yayınlanmış son TÜFE ile o günün parasına taşınır; pe_reported raporun parasıyla (ekranda görünen); "
+             "payda ≤ 0 ise boş.")
+
+
+@lru_cache(maxsize=1)
+def _valuation() -> pd.DataFrame:
+    return pd.read_parquet("reports/valuation_daily.parquet")
 
 
 def _visible_quarters(t: str, d: pd.Timestamp) -> pd.DataFrame:
@@ -287,6 +297,13 @@ def get_fundamental_metrics(ticker: str, period: str = None, asof: str = None) -
             "cash_conversion",
             "unit_flow", "unit_stock", "pit_dropped"]
     out = {c: r[c] for c in cols if c in r.index}
+    # Adım 1d: analiz günündeki değerleme (kâr ve özkaynak o gün yayınlanmış son TÜFE ile o günün parasına taşınmış)
+    v = _valuation()
+    v = v[(v["ticker"] == t) & (v["date"] <= d)]
+    if len(v) and not period:
+        last = v.iloc[-1]
+        out["valuation"] = {k: last[k] for k in ("date", "market_cap", "pe", "pb", "ev_ebitda", "pe_reported",
+                                                 "cpi_month", "val_dropped")}
     out.update(ticker=t, asof=str(d.date()), source="Fintables (elle indirilen Excel), yayın zamanı KAP",
                note="Banka/sigorta/aracı kurumda ciro ve brüt kâr yoktur; ortak ölçüler net kâr, özkaynak, toplam varlık. "
                     + FUND_NOTE)

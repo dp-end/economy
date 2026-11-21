@@ -91,7 +91,7 @@ ZERO_IF_ABSENT = {"opex_ga": "gross_profit", "opex_sm": "gross_profit", "opex_rd
                   "fin_debt_st": "current_liab", "fin_debt_lt": "current_liab"}
 IND_FLOWS = ["ebitda", "ocf", "capex", "fcf"]
 IND_STOCKS = ["current_assets", "inventories", "cash", "st_fin_inv", "current_liab", "fin_debt", "net_debt",
-              "total_equity"]
+              "total_equity", "minority"]
 FLOW_NAMES = list(FLOW_ITEMS) + IND_FLOWS
 STOCK_NAMES = list(STOCK_ITEMS) + IND_STOCKS
 
@@ -233,6 +233,7 @@ def read_raw(ticker: str) -> pd.DataFrame:
         res["fcf"] = res["ocf"] + res["capex"]                        # yatırım harcaması negatif yazılı
         res["fin_debt"] = res["fin_debt_st"] + res["fin_debt_lt"]
         res["net_debt"] = res["fin_debt"] - res["cash"] - res["st_fin_inv"]   # THY 2026/6: 620,4 (açıklanan 620,3)
+        res["minority"] = res["total_equity"] - res["equity"]                 # azınlık payları (firma değeri için)
     return res
 
 
@@ -376,13 +377,13 @@ LEVELS = {  # çıktı adı -> panel niceliği (TL; yayınlandığı raporun par
     "equity": "s_equity", "total_assets": "s_total_assets",
     # Adım 1c (sanayi şirketleri)
     "ebitda": "q_ebitda", "ebitda_ttm": "ttm_ebitda", "revenue_ttm": "ttm_revenue", "ocf_ttm": "ttm_ocf",
-    "fcf_ttm": "ttm_fcf", "net_debt": "s_net_debt",
+    "fcf_ttm": "ttm_fcf", "net_debt": "s_net_debt", "minority_interest": "s_minority",
 }
 
 
 FLOW_LEVELS = ("net_income", "net_income_prev", "revenue", "gross_profit", "op_income", "net_income_ttm",
                "ebitda", "ebitda_ttm", "revenue_ttm", "ocf_ttm", "fcf_ttm")
-STOCK_LEVELS = ("equity", "total_assets", "net_debt")
+STOCK_LEVELS = ("equity", "total_assets", "net_debt", "minority_interest")
 
 
 def _values(ticker: str, pan: pd.DataFrame, p, cutoff, factor: float, unit_u: str) -> dict:

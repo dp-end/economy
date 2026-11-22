@@ -235,7 +235,7 @@ DATASETS = [
          grain="one row per event; repeats of the same event within 5 days dropped",
          pit="event detected from data up to its date; forward returns are OUTCOMES, used only for research and "
              "for history whose window closed before an analysis date",
-         cols={"date": "event date", "ticker": "stock code", "event": "event type (12 types, see Report 1)",
+         cols={"date": "event date", "ticker": "stock code", "event": "event type (22 types, see Report 1; the harness uses the first 12, `HARNESS_EVENTS`)",
                "direction": "+1 bullish, −1 bearish", "regime": "`uptrend` close > SMA200, `downtrend`, `unknown`",
                "vol_confirm": "volume z-score > 1 on the event day", "quake_window": QUAKE,
                # Adım 2: olay anındaki gösterge durumları ve önceden yazılmış birleşik koşullar

@@ -33,7 +33,21 @@ EVENTS = {
     "cloud_break_down": ("Ichimoku", "price moves from inside/above the cloud to below it"),
     "resistance_break": ("Support/Resistance", "close crosses above yesterday's nearest pivot resistance"),
     "support_break": ("Support/Resistance", "close crosses below yesterday's nearest pivot support"),
+    # Adım 3 (22 Kasım 2026, getirilere bakmadan önce yazıldı)
+    "bb_mid_hold_up": ("Bollinger", "close was above the middle band (SMA20) yesterday; today's low touches it and "
+                                    "the close stays above"),
+    "bb_mid_hold_down": ("Bollinger", "mirror: from below, today's high touches the middle band, close stays below"),
+    "support_touch": ("Support/Resistance", "low comes within 1.5% of yesterday's nearest support (or below it) "
+                                            "after a close more than 1.5% above it; the close stays above the support"),
+    "resistance_touch": ("Support/Resistance", "mirror: high comes within 1.5% of resistance, close stays below it"),
+    "cloud_reject_up": ("Ichimoku", "price above the cloud on both days; today's low enters the cloud (cloud acts "
+                                    "as support)"),
+    "cloud_reject_down": ("Ichimoku", "mirror: below the cloud on both days, today's high enters the cloud"),
+    "cloud_return_from_below": ("Ichimoku", "close was below the cloud yesterday and is inside it today"),
+    "cloud_return_from_above": ("Ichimoku", "close was above the cloud yesterday and is inside it today"),
 }
+NEW_EVENTS = {"bb_mid_hold_up", "bb_mid_hold_down", "support_touch", "resistance_touch", "cloud_reject_up",
+              "cloud_reject_down", "cloud_return_from_below", "cloud_return_from_above"}
 REGIME_COLS = ["stock>SMA200", "stock≤SMA200", "XU100 up", "XU100 down", "high vol", "low vol"]
 
 
@@ -155,13 +169,45 @@ def combined_table(e: pd.DataFrame) -> pd.DataFrame:
 
 
 def test_family(m: pd.DataFrame, e: pd.DataFrame) -> tuple:
-    """Raporun tek BH ailesi: 12 olay türü (Tablo 2) + önceden yazılmış K1/K2 (Tablo 6b). Final rapor da bunu kullanır.
+    """Raporun tek BH ailesi: tüm olay türleri (Tablo 2) + önceden yazılmış K1/K2 (Tablo 6b). Final rapor da bunu kullanır.
     Döner: ('q (all tests)' eklenmiş ana tablo, birleşik koşul tablosu)."""
     ct = combined_table(e)
     q = bh(np.concatenate([m["p (by day)"].to_numpy(), ct["p (by day)"].to_numpy()]))
     m = m.drop(columns="q BH").assign(**{"q (all tests)": q[:len(m)]})
     ct["q (all tests)"] = q[len(m):]
     return m, ct
+
+
+def kama_cross_overlap() -> tuple:
+    """KAMA-fiyat kesişim günlerinin yüzde kaçı KAMA eğim dönüşüyle aynı gün (ham günler, 30 hisse). Döner: (yukarı, aşağı)."""
+    from src.data.universe import load_universe
+    from src.indicators.features import full_features
+    u = load_universe()
+    hit = {1: [0, 0], -1: [0, 0]}
+    for t in u[u["is_core"].astype(str).str.lower().isin(["true", "1", "yes"])]["ticker"]:
+        f = full_features(t)
+        c, k, s = f["Close"], f["kama"], f["kama_slope"]
+        for d in (1, -1):
+            cross = (d * c.shift(1) <= d * k.shift(1)) & (d * c > d * k)
+            turn = (d * s.shift(1) <= 0) & (d * s > 0)
+            hit[d][0] += int((cross & turn).sum())
+            hit[d][1] += int(cross.sum())
+    return hit[1][0] / hit[1][1] * 100, hit[-1][0] / hit[-1][1] * 100
+
+
+def literal_triple(e: pd.DataFrame) -> int:
+    """PDF'in harfiyen üçlüsü olay günü ölçülürse kaç olayda var: RSI ≤ 35 ve 5 günün en düşüğü (ayı: ≥ 65 ve en
+    yükseği) + o gün hacim z > 1 + KAMA yatay (|5 günlük değişim| ≤ %0,5). Yalnız sayılır."""
+    from src.indicators.features import full_features
+    n = 0
+    for t, g in e.groupby("ticker"):
+        f = full_features(t)
+        r, k5 = f["rsi_14"], (f["kama"] / f["kama"].shift(5) - 1) * 100
+        dip = ((r <= RSI_LOW) & (r == r.rolling(5).min())).reindex(g["date"]).to_numpy()
+        top = ((r >= RSI_HIGH) & (r == r.rolling(5).max())).reindex(g["date"]).to_numpy()
+        flat = (k5.abs() <= KAMA_FLAT).reindex(g["date"]).to_numpy()
+        n += int((np.where(g["direction"].to_numpy() > 0, dip, top) & g["vol_confirm"].to_numpy() & flat).sum())
+    return n
 
 
 def oos_table(e: pd.DataFrame) -> tuple:
@@ -180,7 +226,7 @@ def oos_table(e: pd.DataFrame) -> tuple:
 def fig_raw_vs_excess(m: pd.DataFrame, base: pd.Series) -> str:
     d = m.sort_values("raw 5d %")
     y = np.arange(len(d))
-    fig, ax = plt.subplots(figsize=(8, 5.6))
+    fig, ax = plt.subplots(figsize=(8, 1.2 + 0.32 * len(d)))
     style(ax, "x")
     h = 0.38
     ax.barh(y + h / 2, d["raw 5d %"], height=h - 0.04, color=C["s1"], label="raw 5-day return (direction-adjusted)")
@@ -202,7 +248,7 @@ def fig_raw_vs_excess(m: pd.DataFrame, base: pd.Series) -> str:
 def fig_regimes(mean: pd.DataFrame, n: pd.DataFrame) -> str:
     cmap = LinearSegmentedColormap.from_list("div", [C["neg"], C["mid"], C["pos"]])
     lim = np.nanmax(np.abs(mean.to_numpy()))
-    fig, ax = plt.subplots(figsize=(8, 5.6))
+    fig, ax = plt.subplots(figsize=(8, 1.2 + 0.36 * mean.shape[0]))
     ax.imshow(mean.to_numpy(), cmap=cmap, vmin=-lim, vmax=lim, aspect="auto")
     for i in range(mean.shape[0]):
         for j in range(mean.shape[1]):
@@ -230,6 +276,8 @@ def build() -> str:
     m = main_table(e, base)
     st_tab = state_table(e).loc[m.index]
     m, ct = test_family(m, e)
+    n_literal = literal_triple(e)
+    kx_up, kx_down = kama_cross_overlap()
     bt = bounce_table(e).loc[m.index]
     ht = horizon_table(e).loc[m.index]
     rm, rn = regime_table(e)
@@ -243,8 +291,10 @@ def build() -> str:
     n_family = len(m) + len(ct)
     sig = m[(m["q (all tests)"] < 0.05)]
     ct_sig = ct[ct["q (all tests)"] < 0.05]
-    defs = pd.DataFrame([(k, v[0], "bull" if k in m.index and m.loc[k, "dir"] == "bull" else "bear", v[1])
-                         for k, v in EVENTS.items()], columns=["event", "family", "dir", "definition"])
+    defs = pd.DataFrame([(k, v[0], "bull" if k in m.index and m.loc[k, "dir"] == "bull" else "bear",
+                          "22 Nov 2026 (pre-registered)" if k in NEW_EVENTS else "Step 4", v[1])
+                         for k, v in EVENTS.items()], columns=["event", "family", "dir", "added", "definition"])
+    defs = defs.set_index("event").loc[m.index].reset_index()
     regime_txt = rm.copy()
     for c in regime_txt.columns:
         regime_txt[c] = [f"{v:+.2f} ({int(k)})" if not np.isnan(v) else "–" for v, k in zip(rm[c], rn[c])]
@@ -272,6 +322,17 @@ have anyway, and does the answer survive regimes, a later sample and multiple-te
   {e['date'].min().date()} – {e['date'].max().date()}.
 - Events are detected using only today's and earlier data (`src/events/technical_events.py: detect_events`).
   If the same event repeats within {DEDUPE_GAP} trading days for a stock, only the first is kept.
+- **Two sets of events.** The first 12 types were built in Step 4. On 22 November 2026, before any of their returns
+  were computed, {len(NEW_EVENTS)} more were added for the spec's missing families (middle-band test,
+  support/resistance touch, cloud rejection and return into the cloud); only their counts were checked. Their
+  expected direction (Table 1) is the hypothesis. The harness keeps using only the first 12 (`HARNESS_EVENTS`);
+  the new types are research only until they show an effect.
+- **KAMA–price cross is the same event as the KAMA slope turn.** KAMA moves a step towards the price every day
+  (KAMA_t = KAMA_t−1 + c·(close − KAMA_t−1)), so its slope turns positive on the day the close moves above it.
+  On the 30 stocks, {kx_up:.1f}% of upward and {kx_down:.1f}% of downward crosses fall on the same day as a
+  `kama_turn_up` / `kama_turn_down`. The spec's KAMA-cross family is therefore covered by `kama_turn_*` and not
+  added again, so the same event is not tested twice. We noticed this after computing their returns, which were
+  practically identical to `kama_turn_*`; dropping them changes no result.
 - **Direction-adjusted return**: for a bullish event the forward return, for a bearish event minus the forward
   return. Positive always means "moved the way the event suggested".
 - **Raw** = stock's own forward return. **Excess** = stock return minus XU100 return over the same horizon.
@@ -369,9 +430,9 @@ image for a bearish event:
   {len(K2_APPLICABLE)} event types.
 - **Why not the spec's literal triple?** The spec's example (RSI trough + rising volume + flattening KAMA, all at
   once) occurs only a handful of times per event type (Table 6a, "all three"). With RSI judged on the event day
-  itself and KAMA required to be flat (|5-day change| ≤ {KAMA_FLAT}%), it occurred in **none** of the
-  {len(e):,} events: when RSI is at a trough the price has just fallen, so KAMA is still falling. It is reported, not
-  tested.
+  itself, volume on the event day and KAMA required to be flat (|5-day change| ≤ {KAMA_FLAT}%), it occurs in
+  **{n_literal}** of the {len(e):,} events: when RSI is at a trough the price has just fallen, so KAMA is still
+  falling. It is reported, not tested.
 - **Test.** Difference in mean direction-adjusted 5-day excess return (vs XU100) between events with and without
   the condition, standard errors clustered by day; two-sided p; one Benjamini–Hochberg family with Table 2.
 

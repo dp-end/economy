@@ -228,30 +228,30 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | column | description | type | filled | range / example |
 |:---|:---|:---|:---|:---|
 | `date` | event date | datetime | 100% | 2021-11-16 – 2026-11-06 |
-| `ticker` | stock code | text | 100% | TCELL |
-| `event` | event type (12 types, see Report 1) | text | 100% | kama_turn_down |
+| `ticker` | stock code | text | 100% | FROTO |
+| `event` | event type (22 types, see Report 1; the harness uses the first 12, `HARNESS_EVENTS`) | text | 100% | kama_turn_down |
 | `direction` | +1 bullish, −1 bearish | int | 100% | -1 – 1 |
 | `regime` | `uptrend` close > SMA200, `downtrend`, `unknown` | text | 100% | unknown |
-| `vol_confirm` | volume z-score > 1 on the event day | bool | 100% | 23% True |
+| `vol_confirm` | volume z-score > 1 on the event day | bool | 100% | 20% True |
 | `quake_window` | True if the window touches the Feb 2023 earthquake closure; such rows are excluded from statistics | bool | 100% | 2% True |
 | `rsi_state` | `dip` RSI(14) ≤ 35 on one of the last 3 days, `tepe` ≥ 65, `notr`, `bilinmiyor` | text | 100% | bilinmiyor |
 | `kama_state` | 5-day KAMA change: `yukselen` > +0.5%, `dusen` < −0.5%, `yatay` in between | text | 100% | bilinmiyor |
 | `kama_turn` | 5-day KAMA change minus the same change 5 days earlier [pt]; + = slope turning up | float | 100% | -40.21 – 56.29 |
 | `st_state` | Supertrend direction at the event: `yukari`, `asagi` | text | 100% | yukari |
 | `cloud_pos` | close vs Ichimoku cloud: `ustunde` above, `icinde` inside, `altinda` below | text | 100% | bilinmiyor |
-| `vol_recent` | volume z-score > 1 on at least one of the last 3 days | bool | 100% | 41% True |
-| `conf_rsi` | confirmation 1: RSI zone in the event's direction (bullish `dip`, bearish `tepe`) | bool | 100% | 26% True |
-| `conf_vol` | confirmation 2: same as `vol_recent` | bool | 100% | 41% True |
-| `conf_kama` | confirmation 3: KAMA turning in the event's direction (sign of `kama_turn`) | bool | 100% | 43% True |
+| `vol_recent` | volume z-score > 1 on at least one of the last 3 days | bool | 100% | 38% True |
+| `conf_rsi` | confirmation 1: RSI zone in the event's direction (bullish `dip`, bearish `tepe`) | bool | 100% | 19% True |
+| `conf_vol` | confirmation 2: same as `vol_recent` | bool | 100% | 38% True |
+| `conf_kama` | confirmation 3: KAMA turning in the event's direction (sign of `kama_turn`) | bool | 100% | 47% True |
 | `conf_score` | number of confirmations, 0–3 | int | 100% | 0 – 3 |
-| `k1_confirmed` | pre-registered K1: at least 2 confirmations | bool | 100% | 32% True |
-| `k1_all3` | all three confirmations (the spec's literal example; counted, not tested) | bool | 100% | 3% True |
-| `k2_against_trend` | pre-registered K2: Supertrend against the event and price on the opposite side of the cloud (always false for Supertrend and cloud events) | bool | 100% | 35% True |
+| `k1_confirmed` | pre-registered K1: at least 2 confirmations | bool | 100% | 29% True |
+| `k1_all3` | all three confirmations (the spec's literal example; counted, not tested) | bool | 100% | 2% True |
+| `k2_against_trend` | pre-registered K2: Supertrend against the event and price on the opposite side of the cloud (always false for Supertrend and cloud events) | bool | 100% | 31% True |
 | `fwd_1` | stock return over the next 1 trading days (close to close) [fraction] | float | 100% | -0.1 – 0.1 |
-| `exc_1` | `fwd_1` minus XU100 return over the same days [fraction] | float | 100% | -0.127 – 0.1859 |
+| `exc_1` | `fwd_1` minus XU100 return over the same days [fraction] | float | 100% | -0.1299 – 0.1859 |
 | `fwd_3` | stock return over the next 3 trading days (close to close) [fraction] | float | 100% | -0.2702 – 0.3301 |
-| `exc_3` | `fwd_3` minus XU100 return over the same days [fraction] | float | 100% | -0.2121 – 0.3142 |
-| `fwd_5` | stock return over the next 5 trading days (close to close) [fraction] | float | 100% | -0.4085 – 0.6084 |
+| `exc_3` | `fwd_3` minus XU100 return over the same days [fraction] | float | 100% | -0.2618 – 0.3142 |
+| `fwd_5` | stock return over the next 5 trading days (close to close) [fraction] | float | 100% | -0.4086 – 0.6084 |
 | `exc_5` | `fwd_5` minus XU100 return over the same days [fraction] | float | 100% | -0.361 – 0.5638 |
 | `fwd_10` | stock return over the next 10 trading days (close to close) [fraction] | float | 99% | -0.6059 – 1.132 |
 | `exc_10` | `fwd_10` minus XU100 return over the same days [fraction] | float | 99% | -0.5525 – 1.078 |

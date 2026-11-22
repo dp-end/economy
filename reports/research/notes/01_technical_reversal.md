@@ -1,26 +1,41 @@
 # Interpretation notes for Report 1 (edited by hand; the build script inserts each block by its key)
 
 <!-- summary -->
-**Short answer.** After all 12 event types, the stock did move in the "expected" direction in raw terms, but
-almost exactly as much as any random stock-day would have, because BIST 100 rose strongly in nominal TRY over
-the sample. Measured against XU100, the average 5-day effect is between −0.13% and +0.32%, no event type
-survives multiple-testing correction, and only 4 of 12 keep the same sign in the second half of the sample.
-Two bullish events (`kama_turn_up`, `resistance_break`) are the most stable, but their edge (~+0.2–0.3% in 5 days)
-is about the size of one round-trip trading cost (0.30% in our backtest).
+**Short answer.** After all 20 event types, the stock did move in the "expected" direction in raw terms, but
+about as much as any random stock-day would have, because BIST 100 rose strongly in nominal TRY over the sample.
+Measured against XU100, the average 5-day effect is between −0.40% and +0.32%, no event type survives
+multiple-testing correction, and only 8 of 20 keep the same sign in the second half of the sample. Two bullish
+events (`kama_turn_up`, `resistance_break`) are the most stable, but their edge (~+0.2–0.3% in 5 days) is about the
+size of one round-trip trading cost (0.30% in our backtest).
 
-The spec's combined conditions do not change this. Neither "confirmed" events (at least two of RSI zone, recent
-volume spike and a turning KAMA) nor events "against the trend" (below a bearish Supertrend and the cloud) behave
-reliably differently from the same event without the condition (20 pre-registered tests, none with q < 0.05).
+- **The spec's missing families** (middle-band test, support/resistance touch, cloud rejection, return into the
+  cloud), added on 22 November as eight pre-registered event types, give the same picture. The KAMA–price cross
+  turned out to be the same event as the KAMA slope turn (Section 2).
+- **The spec's combined conditions do not change this either.** Neither "confirmed" events (at least two of RSI
+  zone, recent volume spike and a turning KAMA) nor events "against the trend" (below a bearish Supertrend and the
+  cloud) behave reliably differently from the same event without the condition (32 pre-registered tests, none
+  with q < 0.05).
 
 <!-- main -->
 **Reading Table 2 and Figure 1.**
 
-- Bullish events show a raw 5-day gain of +0.95% to +1.26% and a positive outcome in 54–56% of cases. The
-  any-day baseline is +1.08% and 55.1%. So the raw "success" is mostly **market drift**, not the signal.
+- The original bullish events show a raw 5-day gain of +0.95% to +1.26% and a positive outcome in 54–56% of
+  cases. The any-day baseline is +1.08% and 55.1%. So the raw "success" is mostly **market drift**, not the signal.
 - Bearish events look like failures in raw terms (raw hit 42–49%): stocks kept rising after a "sell" signal
   simply because the whole market was rising.
-- Once XU100 is subtracted (orange bars), every event type is within ±0.35%. The lowest day-clustered p-value
-  (`cloud_break_down`, p = 0.042) becomes q = 0.51 after correction for 12 tests.
+- Once XU100 is subtracted (orange bars), every event type is within ±0.40%. The lowest day-clustered p-value
+  (`cloud_break_down`, p = 0.042) becomes q = 0.67 after correcting all 52 tests of this report.
+
+**The eight new event types (pre-registered, 22 November).**
+
+- **Middle-band test.** A bounce off the middle band is not a continuation signal. After `bb_mid_hold_up` the
+  stock gained only +0.27% in 5 days, less than a random day (+1.08%); it "continued" in 516 cases and was
+  "rejected" in 545. Against XU100 both directions are flat (+0.07%, −0.08%) and flip sign between halves.
+- **Support/resistance touch.** Both point the expected way in both halves (support +0.14%, resistance −0.16%
+  vs XU100), but by less than one trading cost and with p = 0.32 and 0.20.
+- **Cloud rejection and return.** The bearish pair has the largest new effects: `cloud_reject_down` −0.40%
+  (p = 0.090) and `cloud_return_from_above` −0.25%, both negative in both halves. With 410 and 599 events they do
+  not survive correction (q = 0.67 and 0.99). Their bullish mirrors are flat.
 - Clustering matters: `kama_turn_up` and `resistance_break` have event-level t = 2.30 and 2.53, but many of these
   events happen on the same days across stocks. Averaging per day first cuts t to 1.18 and 1.40. The plain t-test
   overstates confidence.
@@ -58,15 +73,16 @@ mean "the move continues". These differences were not tested for significance an
 work, not a rule.
 
 <!-- oos -->
-Only `kama_turn_up`, `resistance_break`, `rsi_oversold_exit` and `bb_upper_reentry` keep their sign in both
-halves. The largest first-half effect (`cloud_break_down` +1.19%) turns into −0.21%. The two halves are very
+Of the original 12, only `kama_turn_up`, `resistance_break`, `rsi_oversold_exit` and `bb_upper_reentry` keep their
+sign in both halves; of the eight new types, `support_touch`, `resistance_touch`, `cloud_reject_down` and
+`cloud_return_from_above` do. The largest first-half effect (`cloud_break_down` +1.19%) turns into −0.21%. The two halves are very
 different markets (see Türkiye context): the first is the negative-real-rate boom, the second is the tight-policy
 period with two political/financial shocks. A sign flip across them is what we would expect from a pattern that
 is regime-specific or accidental.
 
 <!-- multiple -->
-None of the 32 tests has q < 0.05. The smallest p-values belong to the combined conditions (0.011 for
-confirmed `bb_lower_reentry`), not to the plain events.
+None of the 52 tests has q < 0.05 (20 event types, 20 K1 and 12 K2 tests). The smallest p-value belongs to a
+combined condition (0.011 for confirmed `bb_lower_reentry`, q = 0.56), not to a plain event.
 
 Read as a whole, the evidence is **"no reliable reversal edge beyond the market"**. If we had picked the best
 cell in the regime table (+1.51%) and reported it alone, it would look like a strong finding. That is exactly the
@@ -117,9 +133,11 @@ fallen to `WATCH`. The conflicting-signal rule above was added so that PETKM is 
 The PETKM and KRDMD D/E experiment rows were re-run with the corrected code.
 
 <!-- limitations -->
-- **Missing event families.** The spec's middle-Bollinger-band test and support/resistance *touches* (as opposed
-  to breaks) are not stored as events. RSI local troughs/peaks are approximated by exits from the 30/70 zones, and
-  divergence is not detected.
+- **Event families.** All of the spec's families are now stored, but RSI local troughs/peaks are approximated by
+  exits from the 30/70 zones (plus the 3-day RSI zone of the event state), and the optional divergence candidates
+  are not detected. The KAMA–price cross is represented by the KAMA slope turn, which falls on the same day.
+- **New types are research only.** The harness still uses the first 12 types; the eight new ones would need an
+  effect that survives correction before they could drive an action.
 - **Combined conditions are our definition.** The spec's literal triple (RSI trough + rising volume + flattening
   KAMA at once) is too rare to test, so K1 needs two of three confirmations, each judged over the last 3 days. The
   RSI (35/65), KAMA (±0.5%) and 3-day choices were fixed from event counts before returns were computed, and not
@@ -158,12 +176,14 @@ fundamental and risk-gate evidence, never alone.
 
 - **K1 "confirmed".**
   - The closest case is `bb_lower_reentry`: +0.80% vs −0.16% without confirmation (difference +0.96 pt, p = 0.011,
-    q = 0.34). The difference has the same size in both halves (+0.87 / +0.92).
+    q = 0.56). The difference has the same size in both halves (+0.87 / +0.92).
   - It is the one cell that matches the spec's ASELS story, but it does not survive correction.
-  - For the other 11 event types the difference is between −0.66 and +0.40 pt, five of them with the wrong sign.
+  - For the other 11 original types the difference is between −0.66 and +0.40 pt, five of them with the wrong sign.
+  - For the eight new types it is between −0.47 and +0.27 pt, five of them with the wrong sign. Confirmations make
+    middle-band holds *worse* (−0.47 pt both ways).
 - **K2 "against the trend".**
   - The expectation (weaker follow-through) holds for the bearish band and RSI events, e.g. `bb_upper_reentry`
-    −0.63 pt and `rsi_overbought_exit` −1.62 pt (p = 0.045, q = 0.48).
+    −0.63 pt and `rsi_overbought_exit` −1.62 pt (p = 0.045, q = 0.67).
   - For those RSI events the comparison group is tiny (73 events), and the `bb_upper_reentry` effect appears only
     in the first half (−1.38 / +0.23).
   - For `bb_lower_reentry` the sign is the opposite of the spec's example: a bullish re-entry below a bearish
@@ -171,4 +191,4 @@ fundamental and risk-gate evidence, never alone.
     trade, not a trend trade.
 
 The ASELS example in the spec is a plausible story, and one cell (`bb_lower_reentry` with confirmations) points
-in its direction. On 30 stocks over five years it is not a finding: 20 tests, none with q < 0.05.
+in its direction. On 30 stocks over five years it is not a finding: 32 tests, none with q < 0.05.

@@ -124,7 +124,7 @@ tools; it does not invent or predict financial facts.**
 
 | research scenario (report) | key result | robustness | harness use |
 |:---|:---|:---|:---|
-| 1 Technical reversals | excess vs XU100 of 12 event types: -0.13 to +0.32% in 5 days; raw gains ≈ any-day drift (+1.08%) | no type with q < 0.05; 4/12 keep sign out of sample; combined conditions (confirmed / against the trend): 0 of 20 significant | context only |
+| 1 Technical reversals | excess vs XU100 of 20 event types: -0.40 to +0.32% in 5 days; raw gains ≈ any-day drift (+1.08%) | no type with q < 0.05; 8/20 keep sign out of sample; combined conditions (confirmed / against the trend): 0 of 32 significant | context only |
 | 2 Sector catch-up | harness rule (no shock, strong sector, recovering, not weak earnings): +0.82 pt vs peers in 10 days (baseline +0.15) | only q < 0.05 result; +0.88 / +0.72 in the two halves; ~half still lag after 20 days | `POTENTIAL_CATCH_UP_CANDIDATE` |
 | 3 Weekday & multi-day | Wednesday -0.41, Thursday +0.34 pt vs other days; big down days continue (−1.35 pt in 5 days) | Wed-buy/Thu-sell: +201% before costs, +42% at 0.15% (XU100 +647%) | not used for actions |
 | 4 Earnings reaction | top − bottom net-income third: +1.26 pt before (q = 0.15), +2.01 pt on the event day (q = 0.025); operating income +1.95, revenue +0.45; pre-registered H2 EBITDA-margin change +2.03 (q = 0.025), H1/H3/H4 not confirmed | event day +2.01 pt with previous-quarter cut-offs, +2.01 pt ranking only companies already reported; no drift after day 4 (net-margin change +5.07 pt over days 1–20 is borderline, q = 0.058) | `FUNDAMENTAL_IMPROVEMENT_CANDIDATE` |
@@ -142,8 +142,9 @@ tools; it does not invent or predict financial facts.**
 - **Robust but not tradable.** The Thursday strength, partly linked to central-bank decision days, is the most
   stable weekday effect. It is not tradable after costs.
 - **Non-findings** are reported as carefully as findings:
-  - no technical reversal type beats the index, with or without the spec's confirming indicators (20
-    pre-registered combined-condition tests, none significant);
+  - no technical reversal type beats the index, with or without the spec's confirming indicators (20 event types,
+    8 of them added and pre-registered for the spec's missing families, and 32 combined-condition tests; none
+    significant);
   - negative KAP news categories have no average effect;
   - the macro risk flag lowered strategy returns;
   - revenue growth carries no price information under high inflation;

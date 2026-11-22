@@ -42,7 +42,7 @@ TOOL_EN = {
     "get_stock_history": "daily High/Low/Close/Volume/turnover with source metadata",
     "get_index_history": "XU100 benchmark series",
     "calculate_indicators": "SMA/EMA/RSI/MACD/Bollinger/ATR/KAMA/Supertrend/Ichimoku, past data only",
-    "detect_reversal_events": "timestamped technical events; forward returns only if their window closed by `end`",
+    "detect_reversal_events": "timestamped technical events with the indicator state at the event; forward returns only if their window closed by `end`; `event_set=harness` returns the 12 types the harness uses",
     "find_support_resistance": "nearest confirmed support/resistance, touch count and age on a date",
     "rank_sector_relative_strength": "peer returns, lag vs peer median (self excluded), rank",
     "test_weekday_pattern": "weekday or streak pattern vs unconditional returns, half-sample stability, cost note",

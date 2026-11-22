@@ -23,6 +23,7 @@ from src.data.prices import get_index_history as _index, get_stock_history as _s
 from src.data.speech import SOURCES
 from src.data.speech_features import get_speech_features as _speech, load_speech_features
 from src.data.universe import load_universe
+from src.events.technical_events import HARNESS_EVENTS
 from src.events.calendar_patterns import WEEKDAYS, _data as _calendar_data, welch
 from src.harness.decision_log import dumps, load_analysis
 from src.harness.evidence import _variants, analysis_day, run_analysis
@@ -131,11 +132,17 @@ def calculate_indicators(ticker: str, start: str = None, end: str = None, indica
     return dict(meta=dict(ticker=t, indicators=list(cols)), **_rows(df))
 
 
-def detect_reversal_events(ticker: str, start: str = None, end: str = None, event: str = None) -> dict:
-    """Zaman damgalı teknik olaylar. İleri getiri yalnızca penceresi 'end' tarihine kadar kapanmışsa verilir."""
+def detect_reversal_events(ticker: str, start: str = None, end: str = None, event: str = None,
+                           event_set: str = "all") -> dict:
+    """Zaman damgalı teknik olaylar ve olay anındaki gösterge durumları. İleri getiri yalnızca penceresi 'end'
+    tarihine kadar kapanmışsa verilir. event_set='harness' yalnızca harness'ın kullandığı 12 türü döndürür."""
     t = _ticker(ticker, core_only=True)
     s, e = _range(start, end)
     te = pd.read_parquet("reports/technical_events.parquet")
+    if event_set not in ("all", "harness"):
+        raise ToolError("event_set 'all' ya da 'harness' olmalı")
+    if event_set == "harness":
+        te = te[te["event"].isin(HARNESS_EVENTS)]
     if event and event not in set(te["event"]):
         raise ToolError(f"bilinmeyen olay: '{event}'. Geçerli: {', '.join(sorted(te['event'].unique()))}")
     ev = te[(te["ticker"] == t) & te["date"].between(s, e) & ((te["event"] == event) if event else True)].copy()
@@ -149,7 +156,7 @@ def detect_reversal_events(ticker: str, start: str = None, end: str = None, even
                                        mean_exc_5=("exc_5", "mean"))
                .reset_index().to_dict("records"))
     ev["date"] = ev["date"].dt.strftime("%Y-%m-%d")
-    return dict(meta=dict(ticker=t, start=str(s.date()), end=str(e.date()),
+    return dict(meta=dict(ticker=t, start=str(s.date()), end=str(e.date()), event_set=event_set,
                           note="exc_h = h gün sonra XU100'e göre fazla getiri"),
                 events=to_json(ev.tail(MAX_ROWS).to_dict("records")), summary=to_json(summary), n_events=len(ev))
 

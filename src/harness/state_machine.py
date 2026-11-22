@@ -239,7 +239,7 @@ class Harness:
         elif state == "RUN_SECTOR_RELATIVE_ANALYSIS":
             ctx["sector"] = await T("rank_sector_relative_strength", sector=ctx["peer_group"], horizon=10, date=asof)
         elif state == "RUN_PATTERN_AND_REVERSAL_ANALYSIS":
-            ctx["reversal"] = await T("detect_reversal_events", ticker=t, start=m30, end=asof)
+            ctx["reversal"] = await T("detect_reversal_events", ticker=t, start=m30, end=asof, event_set="harness")
             ctx["weekday"] = await T("test_weekday_pattern", ticker=t, pattern="weekday", end=asof)
             data = dict(indicators_last=ctx["indicators"].get("rows", [])[-3:], support_resistance=ctx["sr"],
                         sector=ctx["sector"], reversal_summary=ctx["reversal"].get("summary"),

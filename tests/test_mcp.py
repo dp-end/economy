@@ -83,3 +83,16 @@ def test_tools_do_not_leak_future():
     assert out["valuation"]["date"][:10] <= "2026-10-27" and out["valuation"]["pe"] > 0  # o günün değerlemesi
     err, text = call("get_news_events", dict(ticker="TURSG", start="2026-10-01", asof="2026-10-20"))
     assert all(e["event_day"][:10] <= "2026-10-20" for e in json.loads(text)["events"])
+
+
+def test_reversal_event_set_filter():
+    """Adım 3: harness 'harness' kümesini ister; varsayılan tüm 22 türü ve olay anındaki durumları döndürür."""
+    from src.events.technical_events import HARNESS_EVENTS
+    args = dict(ticker="ASELS", start="2025-01-01", end="2026-06-30")
+    _, all_txt = call("detect_reversal_events", args)
+    _, h_txt = call("detect_reversal_events", dict(args, event_set="harness"))
+    a, h = json.loads(all_txt), json.loads(h_txt)
+    assert {e["event"] for e in h["events"]} <= set(HARNESS_EVENTS) and h["n_events"] < a["n_events"]
+    assert "rsi_state" in a["events"][0] and "k1_confirmed" in a["events"][0]
+    err, _ = call("detect_reversal_events", dict(args, event_set="hepsi"))
+    assert err

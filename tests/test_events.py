@@ -11,8 +11,9 @@ from src.events.technical_events import (
 
 def _frame(**over):
     n = 6
-    base = dict(Close=100.0, bb_lower=90.0, bb_upper=110.0, rsi_14=50.0, st_dir=1.0,
-                kama_slope=1.0, cloud_state=1.0, resistance=np.nan, support=np.nan)
+    base = dict(Close=100.0, High=101.0, Low=99.0, bb_lower=90.0, bb_upper=110.0, bb_mid=80.0, rsi_14=50.0,
+                st_dir=1.0, kama_slope=1.0, kama=70.0, cloud_state=1.0, cloud_top=60.0, cloud_bottom=50.0,
+                resistance=np.nan, support=np.nan)
     base.update(over)
     return pd.DataFrame(base, index=pd.date_range("2024-01-01", periods=n))
 
@@ -93,5 +94,26 @@ def test_combined_conditions_mirror():
 def test_k2_impossible_for_supertrend_and_cloud_events():
     ev = all_events()
     other = ev[~ev["event"].isin(K2_APPLICABLE)]
-    assert set(other["event"]) == {"supertrend_up", "supertrend_down", "cloud_break_up", "cloud_break_down"}
+    assert set(other["event"]) == {"supertrend_up", "supertrend_down", "cloud_break_up", "cloud_break_down",
+                                   "cloud_reject_up", "cloud_reject_down", "cloud_return_from_below",
+                                   "cloud_return_from_above"}
     assert not other["k2_against_trend"].any()
+
+
+# ---------- Adım 3: yeni olay aileleri ----------
+def test_new_event_families_detected():
+    f = _frame(Low=[99, 79, 99, 99, 99, 99])                              # 2. gün orta banda (80) değip üstte kapanıyor
+    assert detect_events(f)["bb_mid_hold_up"].tolist() == [False, True, False, False, False, False]
+    f = _frame(support=95.0, Low=[99, 96, 99, 99, 99, 99])                 # 96 ≤ 95 × 1.015, kapanış 100 > 95
+    assert detect_events(f)["support_touch"].tolist() == [False, True, False, False, False, False]
+    f = _frame(Low=[99, 59, 99, 99, 99, 99])                               # bulutun üstünde, en düşük buluta (60) giriyor
+    assert detect_events(f)["cloud_reject_up"].tolist() == [False, True, False, False, False, False]
+    f = _frame(cloud_state=[1, 1, 0, 0, 0, 0])
+    assert detect_events(f)["cloud_return_from_above"].tolist() == [False, False, True, False, False, False]
+
+
+def test_harness_sees_only_its_twelve_event_types():
+    from src.events.technical_events import HARNESS_EVENTS
+    from src.harness.evidence import _tables
+    assert len(HARNESS_EVENTS) == 12 and set(HARNESS_EVENTS) < set(DIRECTION)
+    assert set(_tables()["tech"]["event"]) == set(HARNESS_EVENTS)

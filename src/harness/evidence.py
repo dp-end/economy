@@ -20,6 +20,7 @@ from src.data.news_tags import load_news_events
 from src.data.prices import get_index_history, get_stock_history
 from src.data.universe import load_universe
 from src.events.news_reaction import NEWS_WINDOW, news_signal_events
+from src.events.technical_events import HARNESS_EVENTS
 from src.harness.quality_gate import check_data_quality
 from src.indicators.features import full_features
 
@@ -65,7 +66,8 @@ def _f(x):
 
 @lru_cache(maxsize=1)
 def _tables() -> dict:
-    return dict(tech=pd.read_parquet("reports/technical_events.parquet"),
+    te = pd.read_parquet("reports/technical_events.parquet")
+    return dict(tech=te[te["event"].isin(HARNESS_EVENTS)],                 # Adım 3: yeni türler harness dışında
                 sector=pd.read_parquet("reports/sector_events.parquet"),
                 earnings=pd.read_parquet("reports/earnings_events.parquet"),
                 news=load_news_events(), signals=news_signal_events(),

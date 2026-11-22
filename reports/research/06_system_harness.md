@@ -156,7 +156,7 @@ reaches the agent. All dates are point-in-time (see the data dictionary).
 | `get_stock_history` | ticker, start, end | daily High/Low/Close/Volume/turnover with source metadata | LOAD_MARKET_DATA |
 | `get_index_history` | index, start, end | XU100 benchmark series | LOAD_MARKET_DATA |
 | `calculate_indicators` | ticker, start, end, indicators | SMA/EMA/RSI/MACD/Bollinger/ATR/KAMA/Supertrend/Ichimoku, past data only | CALCULATE_TECHNICALS, RUN_PATTERN_AND_REVERSAL_ANALYSIS |
-| `detect_reversal_events` | ticker, start, end, event | timestamped technical events; forward returns only if their window closed by `end` | RUN_PATTERN_AND_REVERSAL_ANALYSIS |
+| `detect_reversal_events` | ticker, start, end, event, event_set | timestamped technical events with the indicator state at the event; forward returns only if their window closed by `end`; `event_set=harness` returns the 12 types the harness uses | RUN_PATTERN_AND_REVERSAL_ANALYSIS |
 | `find_support_resistance` | ticker, date, tolerance | nearest confirmed support/resistance, touch count and age on a date | CALCULATE_TECHNICALS, RUN_PATTERN_AND_REVERSAL_ANALYSIS |
 | `rank_sector_relative_strength` | sector, horizon, date | peer returns, lag vs peer median (self excluded), rank | RUN_SECTOR_RELATIVE_ANALYSIS, RUN_PATTERN_AND_REVERSAL_ANALYSIS |
 | `test_weekday_pattern` | ticker, pattern, start, end | weekday or streak pattern vs unconditional returns, half-sample stability, cost note | RUN_PATTERN_AND_REVERSAL_ANALYSIS |

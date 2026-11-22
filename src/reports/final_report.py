@@ -107,9 +107,9 @@ def research_summary() -> pd.DataFrame:
     a_d0, b_d0 = mt4.iloc[0]["event day pt"], mt4.iloc[1]["event day pt"]
     bt = pd.read_csv("reports/backtest_strategies.csv").set_index(["strateji", "donem"])["toplam_getiri"] * 100
     rows = [
-        ("1 Technical reversals", f"excess vs XU100 of 12 event types: {m1['excess 5d %'].min():+.2f} to "
+        ("1 Technical reversals", f"excess vs XU100 of {len(m1)} event types: {m1['excess 5d %'].min():+.2f} to "
          f"{m1['excess 5d %'].max():+.2f}% in 5 days; raw gains ≈ any-day drift (+{R1.baseline().iloc[0]['mean_5']:.2f}%)",
-         f"no type with q < 0.05; {int(ot1['same sign'].sum())}/12 keep sign out of sample; combined conditions "
+         f"no type with q < 0.05; {int(ot1['same sign'].sum())}/{len(ot1)} keep sign out of sample; combined conditions "
          f"(confirmed / against the trend): {int((ct1['q (all tests)'] < 0.05).sum())} of {len(ct1)} significant",
          "context only"),
         ("2 Sector catch-up", f"harness rule (no shock, strong sector, recovering, not weak earnings): "

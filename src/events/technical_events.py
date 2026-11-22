@@ -20,7 +20,17 @@ DIRECTION = {  # +1 boğa (yükseliş beklentisi), -1 ayı
     "kama_turn_up": 1, "kama_turn_down": -1,
     "cloud_break_up": 1, "cloud_break_down": -1,
     "resistance_break": 1, "support_break": -1,
-}
+    # Adım 3 (22 Kasım 2026): PDF §8'in eksik aileleri
+    "bb_mid_hold_up": 1, "bb_mid_hold_down": -1,
+    "support_touch": 1, "resistance_touch": -1,
+    "cloud_reject_up": 1, "cloud_reject_down": -1,
+    "cloud_return_from_below": 1, "cloud_return_from_above": -1,
+}   # KAMA-fiyat kesişimi eklenmedi: kama_turn_* ile aynı gün (KAMA eğimi fiyat KAMA'yı geçtiği gün döner; R1 §2)
+# Harness yalnızca bu 12 türü kullanır (Adım 3 kararı A: yeni türler önce araştırmada sınanır).
+HARNESS_EVENTS = ("bb_lower_reentry", "bb_upper_reentry", "rsi_oversold_exit", "rsi_overbought_exit",
+                  "supertrend_up", "supertrend_down", "kama_turn_up", "kama_turn_down",
+                  "cloud_break_up", "cloud_break_down", "resistance_break", "support_break")
+SR_TOUCH_TOL = 0.015  # destek/direnç kümeleme toleransıyla aynı (src/indicators/support_resistance.py)
 
 
 def detect_events(f: pd.DataFrame) -> pd.DataFrame:
@@ -28,6 +38,9 @@ def detect_events(f: pd.DataFrame) -> pd.DataFrame:
     c = f["Close"]
     rsi, d, s, cs = f["rsi_14"], f["st_dir"], f["kama_slope"], f["cloud_state"]
     res, sup = f["resistance"].shift(1), f["support"].shift(1)
+    h, l, c1 = f["High"], f["Low"], c.shift(1)
+    mid, top, bot = f["bb_mid"], f["cloud_top"], f["cloud_bottom"]
+    tol = SR_TOUCH_TOL
     ev = {
         "bb_lower_reentry": (c.shift(1) < f["bb_lower"].shift(1)) & (c >= f["bb_lower"]),
         "bb_upper_reentry": (c.shift(1) > f["bb_upper"].shift(1)) & (c <= f["bb_upper"]),
@@ -41,6 +54,18 @@ def detect_events(f: pd.DataFrame) -> pd.DataFrame:
         "cloud_break_down": (cs.shift(1) >= 0) & (cs < 0),
         "resistance_break": (c.shift(1) <= res) & (c > res),
         "support_break": (c.shift(1) >= sup) & (c < sup),
+        # orta bant testi: önceki taraftan gelip orta banda değiyor, kapanış aynı tarafta kalıyor
+        "bb_mid_hold_up": (c1 > mid.shift(1)) & (l <= mid) & (c > mid),
+        "bb_mid_hold_down": (c1 < mid.shift(1)) & (h >= mid) & (c < mid),
+        # destek/direnç teması: dünkü seviyeye %1,5 içinde yaklaşıyor ya da değiyor, kapanış kırmadan kalıyor
+        "support_touch": (c1 > sup * (1 + tol)) & (l <= sup * (1 + tol)) & (c > sup),
+        "resistance_touch": (c1 < res * (1 - tol)) & (h >= res * (1 - tol)) & (c < res),
+        # bulut reddi: bulutun bir tarafında kalıp gün içinde buluta değiyor
+        "cloud_reject_up": (cs.shift(1) > 0) & (cs > 0) & (l <= top),
+        "cloud_reject_down": (cs.shift(1) < 0) & (cs < 0) & (h >= bot),
+        # buluta geri dönüş
+        "cloud_return_from_below": (cs.shift(1) < 0) & (cs == 0),
+        "cloud_return_from_above": (cs.shift(1) > 0) & (cs == 0),
     }
     return pd.DataFrame(ev, index=f.index).fillna(False).astype(bool)
 
@@ -49,7 +74,8 @@ KAMA_FLAT = 0.5      # % (5 günlük KAMA değişimi); günleri kabaca üçe bö
 RSI_LOW, RSI_HIGH = 35, 65
 RECENT = 3           # "son 3 gün" = t-2..t
 K2_APPLICABLE = {"bb_lower_reentry", "bb_upper_reentry", "rsi_oversold_exit", "rsi_overbought_exit",
-                 "kama_turn_up", "kama_turn_down", "resistance_break", "support_break"}   # Supertrend/bulut olaylarında
+                 "kama_turn_up", "kama_turn_down", "resistance_break", "support_break",
+                 "bb_mid_hold_up", "bb_mid_hold_down", "support_touch", "resistance_touch"}   # Supertrend/bulut olaylarında
 #                                                                       K2 tanım gereği imkânsız
 
 

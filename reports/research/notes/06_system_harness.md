@@ -68,6 +68,19 @@
 5. **Memory is dated.** Episodic memory shows an agent at most three earlier cases of the same stock, and only cases
    whose analysis date is earlier than the current one.
 
+<!-- scan -->
+- **The scan answers "none" when that is the answer.** On the last data day (6 Nov 2026), during the fund-crisis
+  sell-off, no stock is a catch-up candidate. Five stocks lag a strong sector, and the table says which condition
+  stops each of them. For ECILC and EKGYO the only obstacle is a latest statement in the bottom third.
+- **On 9 Jan 2026 there are four candidates.** The three with the largest sector lag (TTKOM, PGSUS, MAVI) went
+  through the full harness with the mock model, and the scan and the three analyses were logged together (demo
+  log). `replay_scan` recomputed the same 30 rows and the same candidates.
+- **ARCLK on 9 Jan 2026** meets every catch-up condition but has bullish and bearish technical events in the same
+  three days, so the rules say `INVESTIGATE`. The scan lists it as "secondary" with that reason instead of hiding it.
+- **The scan adds no new decision rule.** Every row is exactly the rule layer's result for that stock and day (a
+  test checks this), so the scan inherits the point-in-time guarantees and the evidence of Reports 1–5.
+- **Gemini run pending.** The real-model run of a scan is part of the final experiment re-run.
+
 <!-- experiments -->
 **Status of this experiment.** It ran on 19–20 November 2026, before the point-in-time fix of 22 November (findings
 9 and 10). We recomputed the rule result for all six cases with the corrected data. The action, the secondary

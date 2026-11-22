@@ -72,6 +72,13 @@ python -m src.harness.state_machine ASELS 2026-11-06 --mock --review ACCEPT --re
 python -m src.harness.state_machine ASELS 2023-02-15 --mock --review ACCEPT --reason "earthquake"   # ANALYSIS_UNSAFE
 python -m src.harness.state_machine YOKBOYLE 2026-11-06 --mock --review ACCEPT --reason "unknown"   # HARD_BLOCK
 
+# Universe scan (spec §33): rule layer on all 30 stocks, no LLM; then the top 3 catch-up candidates
+# through the full harness with the mock LLM. Writes to reports/decision_log_demo.sqlite and reports/scans/.
+python -m src.harness.scan 2026-11-06 --demo-db                                  # no candidates that day
+python -m src.harness.scan 2026-01-09 --run --mock --review ACCEPT --reason "demo"  # 4 candidates, 3 analysed
+python -m src.harness.scan --replay <scan_id> --demo-db
+# other questions: --action TECHNICAL_REVERSAL_CANDIDATE | FUNDAMENTAL_IMPROVEMENT_CANDIDATE
+
 # Decision log, replay and episodic memory (demo database)
 python -m src.harness.decision_log
 
@@ -98,6 +105,9 @@ Put the keys in `.env` (copy `.env.example`). `.env` is git-ignored; never commi
 ```bash
 # Real harness run with Gemini; asks for a human review in the terminal; writes to reports/decision_log.sqlite
 python -m src.harness.state_machine ASELS 2026-11-06
+
+# Universe scan with Gemini for the selected candidates (one human review per candidate)
+python -m src.harness.scan 2026-01-09 --run
 
 # Harness experiments A–E (6 cases × 2 runs, ~200 Gemini calls, resumable).
 # Results are already committed in reports/experiments/ and reports/harness_experiments.csv.

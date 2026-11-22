@@ -10,7 +10,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage points; `[TRY]` Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.
 
-**21 datasets, 468 fields.**
+**23 datasets, 499 fields.**
 
 | # | dataset | kind | step | columns |
 |---:|:---|:---|:---|---:|
@@ -34,7 +34,9 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | 18 | Decision log: analyses | structured (JSON fields) | 11, 13 | 21 |
 | 19 | Decision log: human reviews | structured + text | 11 | 7 |
 | 20 | Decision log: harness traces | structured (JSON) | 13 | 5 |
-| 21 | Harness experiment results | structured + text | 14 | 28 |
+| 21 | Universe scan (spec §33) | structured | Adım 4 (22 Nov) | 17 |
+| 22 | Decision log: universe scans | structured (JSON fields) | Adım 4 (22 Nov) | 14 |
+| 23 | Harness experiment results | structured + text | 14 | 28 |
 
 ## 1. Study universe and sector map
 
@@ -656,7 +658,56 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `summary` | JSON: tool calls, LLM calls, numbers checked, unsupported numbers | text | 100% | {"hallucination_rate": 0.196, "invalid_t… |
 | `trace` | JSON: states visited, every tool call and LLM call with validation result | text | 100% | {"asof": "2026-11-06", "invalid_tool_cal… |
 
-## 21. Harness experiment results
+## 21. Universe scan (spec §33)
+
+- **File:** `reports/scans/scan_<asof>_<action>.csv`
+- **Type:** structured · **Built in step:** Adım 4 (22 Nov) · **Grain:** one row per stock of the 30-stock universe on the scan day
+- **Point-in-time rule:** each row is the rule layer (`run_analysis`) on the scan day: only data public by that day
+
+| column | description | type | filled | range / example |
+|:---|:---|:---|:---|:---|
+| `ticker` | stock code | text | 100% | AKBNK |
+| `peer_group` | sector group | text | 100% | Banking |
+| `action` | rule action on that day | text | 100% | TECHNICAL_REVERSAL_CANDIDATE |
+| `secondary` | other candidate labels, comma separated | text | 33% | TECHNICAL_REVERSAL_CANDIDATE |
+| `gate` | quality-gate status | text | 100% | PASS_WITH_WARNINGS |
+| `sector_lag_10` | 10-day return minus peer median [fraction] | float | 100% | -0.2101 – 0.1497 |
+| `sector_median_10` | peer median 10-day return [fraction] | float | 100% | -0.1077 – 0.1292 |
+| `laggard` | sector_lag_10 at or below the catch-up threshold | bool | 100% | 30% True |
+| `sector_strong` | peer median > 0 | bool | 100% | 57% True |
+| `recovering` | close above KAMA or Supertrend up | bool | 100% | 60% True |
+| `weak_earnings` | latest statement in bottom third | bool | 100% | 53% True |
+| `catch_up` | all catch-up conditions met | bool | 100% | 0% True |
+| `fundamental` | fundamental-improvement conditions met | bool | 100% | 17% True |
+| `technical` | bullish technical event without a bearish one | bool | 100% | 67% True |
+| `tech_conflict` | bullish and bearish events | bool | 100% | 13% True |
+| `shock` | large one-day move | bool | 100% | 27% True |
+| `negative_news` | negative KAP news in the window | bool | 100% | 7% True |
+
+## 22. Decision log: universe scans
+
+- **File:** `reports/decision_log.sqlite (table `scans`)`
+- **Type:** structured (JSON fields) · **Built in step:** Adım 4 (22 Nov) · **Grain:** one row per scan
+- **Point-in-time rule:** written once; `replay_scan` recomputes the scan and compares
+
+| column | description | type | filled | range / example |
+|:---|:---|:---|:---|:---|
+| `scan_id` | 12-character id | text | – | – |
+| `created_at` | time of the scan | text | – | – |
+| `asof` | scan day | text | – | – |
+| `action` | question asked (candidate label) | text | – | – |
+| `top_n` | maximum candidates sent to the full harness | text | – | – |
+| `data_versions` | JSON: hash of each input file | text | – | – |
+| `procedure_version` | hash of the workflow and rules | text | – | – |
+| `rows` | JSON: the scan table | text | – | – |
+| `candidates` | JSON: stocks whose action is the asked label | text | – | – |
+| `also_secondary` | JSON: stocks where the asked label is only secondary (blocked or lower priority) | text | – | – |
+| `near_misses` | JSON: lagging stocks in a strong sector that missed, with the failed conditions | text | – | – |
+| `selected` | JSON: candidates sent to the full harness | text | – | – |
+| `analysis_ids` | JSON: their decision-log ids (`analyses`) | text | – | – |
+| `fingerprint` | hash for replay equality | text | – | – |
+
+## 23. Harness experiment results
 
 - **File:** `reports/experiments/raw.jsonl`
 - **Type:** structured + text · **Built in step:** 14 · **Grain:** one row per case × version (A–E) × run

@@ -8,6 +8,7 @@ sözlük koddan kopamaz.
 """
 import json
 import sqlite3
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -87,6 +88,14 @@ def _sql(table):
         with sqlite3.connect("reports/decision_log.sqlite") as con:
             return pd.read_sql_query(f"SELECT * FROM {table}", con)
     return f
+
+
+def _scan_schema():
+    """`scans` tablosunun sütunları (gerçek günlükte tablo ilk taramada oluşur; şema bellekte okunur)."""
+    from src.harness.scan import SCAN_SCHEMA
+    with sqlite3.connect(":memory:") as con:
+        con.executescript(SCAN_SCHEMA)
+        return pd.read_sql_query("SELECT * FROM scans", con)
 
 
 def _raw():
@@ -459,6 +468,30 @@ DATASETS = [
          cols={"analysis_id": "analysis", "created_at": "time", "llm": "model used, e.g. `gemini:gemini-3.1-flash-lite`",
                "summary": "JSON: tool calls, LLM calls, numbers checked, unsupported numbers",
                "trace": "JSON: states visited, every tool call and LLM call with validation result"}),
+    dict(key="scan", title="Universe scan (spec §33)", file="reports/scans/scan_<asof>_<action>.csv",
+         load=lambda: pd.read_csv(sorted(Path("reports/scans").glob("scan_*.csv"))[-1]), kind="structured",
+         step="Adım 4 (22 Nov)", grain="one row per stock of the 30-stock universe on the scan day",
+         pit="each row is the rule layer (`run_analysis`) on the scan day: only data public by that day",
+         cols={"ticker": "stock code", "peer_group": "sector group", "action": "rule action on that day",
+               "secondary": "other candidate labels, comma separated", "gate": "quality-gate status",
+               "sector_lag_10": "10-day return minus peer median [fraction]",
+               "sector_median_10": "peer median 10-day return [fraction]",
+               "laggard": "sector_lag_10 at or below the catch-up threshold", "sector_strong": "peer median > 0",
+               "recovering": "close above KAMA or Supertrend up", "weak_earnings": "latest statement in bottom third",
+               "catch_up": "all catch-up conditions met", "fundamental": "fundamental-improvement conditions met",
+               "technical": "bullish technical event without a bearish one", "tech_conflict": "bullish and bearish events",
+               "shock": "large one-day move", "negative_news": "negative KAP news in the window"}),
+    dict(key="scans", title="Decision log: universe scans", file="reports/decision_log.sqlite (table `scans`)",
+         load=_scan_schema, kind="structured (JSON fields)", step="Adım 4 (22 Nov)", grain="one row per scan",
+         pit="written once; `replay_scan` recomputes the scan and compares",
+         cols={"scan_id": "12-character id", "created_at": "time of the scan", "asof": "scan day",
+               "action": "question asked (candidate label)", "top_n": "maximum candidates sent to the full harness",
+               "data_versions": "JSON: hash of each input file", "procedure_version": "hash of the workflow and rules",
+               "rows": "JSON: the scan table", "candidates": "JSON: stocks whose action is the asked label",
+               "also_secondary": "JSON: stocks where the asked label is only secondary (blocked or lower priority)",
+               "near_misses": "JSON: lagging stocks in a strong sector that missed, with the failed conditions",
+               "selected": "JSON: candidates sent to the full harness",
+               "analysis_ids": "JSON: their decision-log ids (`analyses`)", "fingerprint": "hash for replay equality"}),
     dict(key="experiments", title="Harness experiment results", file="reports/experiments/raw.jsonl",
          load=_raw, kind="structured + text", step="14", grain="one row per case × version (A–E) × run",
          pit="each run uses only data up to the case date",

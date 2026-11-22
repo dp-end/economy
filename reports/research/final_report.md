@@ -117,6 +117,10 @@ tools; it does not invent or predict financial facts.**
 - **Human and log.** The reviewer must give ACCEPT / MODIFY / REJECT with a reason. The decision log (SQLite) stores
   the full bundle, tool calls, gate, explanation, model name, data-file hashes and a procedure hash, so any decision
   can be replayed later.
+- **Universe scan (brief §33).** A question about the whole universe ("which stocks lag a strong sector but may be
+  entering a catch-up state?") runs the same rules for all 30 stocks without an LLM, names the candidates and why
+  the nearest others fail, and sends at most three candidates through the full harness. The scan is logged and can
+  be replayed (Report 6, §2.5).
 
 ## 4. Research findings
 

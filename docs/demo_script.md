@@ -38,6 +38,20 @@ python -m src.harness.state_machine YOKBOYLE 2026-11-06 --mock --review ACCEPT -
 Gösterilecekler: analiz durumları atlanıyor ama `CHECK_DATA_QUALITY → RISK_GATE → GENERATE_EXPLANATION → HUMAN_REVIEW →
 LOG_AND_CLOSE` yine çalışıyor; kapı `HARD_BLOCK`, eylem `ANALYSIS_UNSAFE`.
 
+## 2b. Evren taraması — brief §33 (≈ 60 sn)
+
+```bash
+python -m src.harness.scan 2026-11-06 --demo-db
+python -m src.harness.scan 2026-01-09 --run --mock --review ACCEPT --reason "demo"
+```
+
+Gösterilecekler: 30 hisse LLM'siz taranıyor (~25 sn). 6 Kasım'da yakalama adayı yok; geride kalan 5 hissenin her
+biri için hangi koşulda takıldığı yazıyor. 9 Ocak'ta 4 aday var; sektör gecikmesi en büyük 3'ü tam harness'tan
+geçiyor; ARCLK çelişen teknik sinyal yüzünden "ikincil" listesinde. En altta `scan_id`.
+
+Söylenecek: "Tarama yeni bir karar kuralı eklemiyor; her satır tek hisse analizinin aynısı. 'Bugün aday yok'
+da geçerli bir cevap."
+
 ## 3. MCP araçları (≈ 60 sn)
 
 ```bash
@@ -56,8 +70,9 @@ python -m src.harness.decision_log
 Gösterilecekler: 4 demo analizi yazılıyor, her biri tekrar oynatılıyor (`aynı=True`, `değişen veri=[]`), en altta
 epizodik hafıza tablosu (insan kararları ve gerekçeleri).
 
-Söylenecek: "Gerçek günlükteki iki Gemini kaydını bugünkü kodla oynattığımda eylem aynı, veri aynı ama prosedür
-değişmiş çıkıyor — replay 'veri mi değişti, yöntem mi?' sorusunu ayırıyor (Rapor 6, Tablo 13)."
+Söylenecek: "Gerçek günlükteki iki Gemini kaydını bugünkü kodla oynattığımda eylem aynı çıkıyor; replay hangi veri
+dosyalarının (22 Kasım düzeltmeleri: teknik olaylar, bilanço olayları) ve prosedürün değiştiğini ayrı ayrı gösteriyor
+— 'veri mi değişti, yöntem mi?' sorusunu ayırıyor (Rapor 6, Tablo 13)."
 
 ## 5. Geleceğe bakma testleri (≈ 30 sn)
 

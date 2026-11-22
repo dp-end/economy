@@ -13,6 +13,8 @@ tool list and the replays are recomputed when the report is built (no API key ne
 | `reports/experiments/per_case.csv` | 12 kB | 8ad9869a852a |
 | `reports/experiments/raw.jsonl` | 81 kB | 380094d87ece |
 | `reports/decision_log.sqlite` | 66 kB | 229dea2a61f3 |
+| `reports/scans/scan_2026-01-09_POTENTIAL_CATCH_UP_CANDIDATE.csv` | 5 kB | 6c820f2163be |
+| `reports/scans/scan_2026-11-06_POTENTIAL_CATCH_UP_CANDIDATE.csv` | 5 kB | f8980559053d |
 
 This report covers four deliverables of the project brief (§36): **backtesting results and benchmark comparisons**,
 **MCP tool definitions and the stateful harness implementation**, the **agent-harness experiment comparison**, and
@@ -252,6 +254,68 @@ The action itself is chosen by rules (`evidence.decide`) from the 8 allowed labe
    next to the AI result, never merged into it.
 5. **Memory is dated.** Episodic memory shows an agent at most three earlier cases of the same stock, and only cases
    whose analysis date is earlier than the current one.
+
+### 2.5 Universe scan mode (spec §33)
+
+The spec's end-to-end example asks a question about the whole universe: *"Find BIST 100 stocks that are lagging a
+strong sector but may be entering a historically favourable catch-up state."* `src/harness/scan.py` runs the rule
+layer for all 30 stocks on the scan day (no LLM), lists the stocks whose action is the asked label, explains why
+the nearest others are not candidates, and sends at most three candidates through the full harness (LLM
+explanation, human review, log). For the catch-up question the three with the largest sector lag go first; this
+order is for display and was not tested as a forecast.
+
+**Table 4b. Spec §33 steps and where the system does them**
+
+| spec step | in the system |
+|:---|:---|
+| 1 Orchestrator selects the 30-stock universe | `scan_universe` loops over the core universe |
+| 2 Market tool loads OHLCV and XU100 | `LOAD_MARKET_DATA` / evidence bundle (prices up to the scan day) |
+| 3 Data-quality check | quality gate per stock (`gate` column); full harness repeats it in `CHECK_DATA_QUALITY` |
+| 4 Sector tool ranks each stock vs peers | `sector_lag_10`, `sector_median_10` (`rank_sector_relative_strength`) |
+| 5 Technical states and reversal history | `recovering`, `technical`, `tech_conflict`; event states (Report 1) |
+| 6 Point-in-time fundamentals | `weak_earnings`, `fundamental` (statements public by the scan day) |
+| 7 Macro context | full harness `LOAD_MACRO_CONTEXT` (selected candidates) |
+| 8 News / speech events | `negative_news`; full harness `LOAD_NEWS_AND_SPEECH_CONTEXT` |
+| 9 Evidence builder | `run_analysis` per stock: observed vs committed evidence |
+| 10–11 Strategy variants and backtests | full harness `PREVIEW_STRATEGIES`, `RUN_BACKTEST` (data before the day) |
+| 12 Risk gate | gate per stock; candidates with shock / negative news become `REJECT_SIGNAL` |
+| 13 Analytical conclusion | Orchestrator explanation for each selected candidate |
+| 14 Human review | `HUMAN_REVIEW` for each selected candidate |
+| 15 Saved for replay | `scans` table (+ `analyses` of the candidates), `replay_scan` |
+
+**Table 4c. Two committed scans** (`python -m src.harness.scan <day>`)
+
+| scan day | stocks | actions | candidates | sent to full harness (max 3) |
+|:---|---:|:---|:---|:---|
+| 2026-01-09 | 30 | HOLD 10, FUNDAMENTAL_IMPROVEMENT_CANDIDATE 9, POTENTIAL_CATCH_UP_CANDIDATE 4, INVESTIGATE 4, WATCH 2, TECHNICAL_REVERSAL_CANDIDATE 1 | PGSUS, MAVI, CCOLA, TTKOM | TTKOM, PGSUS, MAVI |
+| 2026-11-06 | 30 | TECHNICAL_REVERSAL_CANDIDATE 12, INVESTIGATE 6, REJECT_SIGNAL 6, FUNDAMENTAL_IMPROVEMENT_CANDIDATE 3, HOLD 2, WATCH 1 | none | none |
+
+**Table 4d. Why the other lagging stocks are not candidates**
+
+| scan day | stock | status | why not a candidate |
+|:---|:---|:---|:---|
+| 2026-01-09 | ARCLK | secondary (INVESTIGATE) | çelişen teknik sinyal (aynı 3 günde boğa ve ayı olay) |
+| 2026-01-09 | SASA | near miss (lag -23.1%) | toparlanmıyor (KAMA altında ve Supertrend aşağı); son bilanço alt üçte birde; şok |
+| 2026-01-09 | TCELL | near miss (lag -13.0%) | son bilanço alt üçte birde |
+| 2026-01-09 | TURSG | near miss (lag -8.6%) | toparlanmıyor (KAMA altında ve Supertrend aşağı) |
+| 2026-01-09 | MPARK | near miss (lag -6.2%) | son bilanço alt üçte birde |
+| 2026-11-06 | TURSG | near miss (lag -21.0%) | toparlanmıyor (KAMA altında ve Supertrend aşağı); son bilanço alt üçte birde; şok; olumsuz KAP haberi |
+| 2026-11-06 | ARCLK | near miss (lag -11.0%) | toparlanmıyor (KAMA altında ve Supertrend aşağı); son bilanço alt üçte birde |
+| 2026-11-06 | ECILC | near miss (lag -9.8%) | son bilanço alt üçte birde |
+| 2026-11-06 | EKGYO | near miss (lag -6.5%) | son bilanço alt üçte birde |
+| 2026-11-06 | CCOLA | near miss (lag -6.5%) | toparlanmıyor (KAMA altında ve Supertrend aşağı) |
+
+- **The scan answers "none" when that is the answer.** On the last data day (6 Nov 2026), during the fund-crisis
+  sell-off, no stock is a catch-up candidate. Five stocks lag a strong sector, and the table says which condition
+  stops each of them. For ECILC and EKGYO the only obstacle is a latest statement in the bottom third.
+- **On 9 Jan 2026 there are four candidates.** The three with the largest sector lag (TTKOM, PGSUS, MAVI) went
+  through the full harness with the mock model, and the scan and the three analyses were logged together (demo
+  log). `replay_scan` recomputed the same 30 rows and the same candidates.
+- **ARCLK on 9 Jan 2026** meets every catch-up condition but has bullish and bearish technical events in the same
+  three days, so the rules say `INVESTIGATE`. The scan lists it as "secondary" with that reason instead of hiding it.
+- **The scan adds no new decision rule.** Every row is exactly the rule layer's result for that stock and day (a
+  test checks this), so the scan inherits the point-in-time guarantees and the evidence of Reports 1–5.
+- **Gemini run pending.** The real-model run of a scan is part of the final experiment re-run.
 
 ## 3. Harness experiments A–E (spec §30)
 

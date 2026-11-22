@@ -25,7 +25,25 @@ from src.reports.common import C, DISCLAIMER, load_notes, md_table, note, save_f
 
 SOURCES = ["reports/backtest_strategies.csv", "reports/backtest_cost_sensitivity.csv",
            "reports/harness_experiments.csv", "reports/experiments/per_case.csv", "reports/experiments/raw.jsonl",
-           "reports/decision_log.sqlite"]
+           "reports/decision_log.sqlite", "reports/scans/scan_2026-01-09_POTENTIAL_CATCH_UP_CANDIDATE.csv",
+           "reports/scans/scan_2026-11-06_POTENTIAL_CATCH_UP_CANDIDATE.csv"]
+SCAN_FILES = SOURCES[-2:]
+SCAN_STEPS = [  # PDF §33 adımı -> sistemdeki karşılığı
+    ("1 Orchestrator selects the 30-stock universe", "`scan_universe` loops over the core universe"),
+    ("2 Market tool loads OHLCV and XU100", "`LOAD_MARKET_DATA` / evidence bundle (prices up to the scan day)"),
+    ("3 Data-quality check", "quality gate per stock (`gate` column); full harness repeats it in `CHECK_DATA_QUALITY`"),
+    ("4 Sector tool ranks each stock vs peers", "`sector_lag_10`, `sector_median_10` (`rank_sector_relative_strength`)"),
+    ("5 Technical states and reversal history", "`recovering`, `technical`, `tech_conflict`; event states (Report 1)"),
+    ("6 Point-in-time fundamentals", "`weak_earnings`, `fundamental` (statements public by the scan day)"),
+    ("7 Macro context", "full harness `LOAD_MACRO_CONTEXT` (selected candidates)"),
+    ("8 News / speech events", "`negative_news`; full harness `LOAD_NEWS_AND_SPEECH_CONTEXT`"),
+    ("9 Evidence builder", "`run_analysis` per stock: observed vs committed evidence"),
+    ("10–11 Strategy variants and backtests", "full harness `PREVIEW_STRATEGIES`, `RUN_BACKTEST` (data before the day)"),
+    ("12 Risk gate", "gate per stock; candidates with shock / negative news become `REJECT_SIGNAL`"),
+    ("13 Analytical conclusion", "Orchestrator explanation for each selected candidate"),
+    ("14 Human review", "`HUMAN_REVIEW` for each selected candidate"),
+    ("15 Saved for replay", "`scans` table (+ `analyses` of the candidates), `replay_scan`"),
+]
 NOTES_FILE = "06_system_harness.md"
 VARIANTS = {
     "A_teknik": ("A — technical only", "Supertrend up, close > SMA50, no bearish KAMA slope or below-cloud state; "
@@ -272,6 +290,27 @@ def fig_experiments(s: pd.DataFrame) -> str:
 
 
 # ---------- rapor ----------
+def scan_tables() -> tuple:
+    """Kaydedilmiş tarama tablolarından özet ve 'neden aday değil' tablosu (yeniden hesaplamaz)."""
+    from src.harness.scan import from_csv, select
+    summ, why = [], []
+    for f in SCAN_FILES:
+        sc = from_csv(f)
+        acts = pd.Series([r["action"] for r in sc["rows"]]).value_counts()
+        summ.append({"scan day": sc["asof"], "stocks": len(sc["rows"]),
+                     "actions": ", ".join(f"{k} {v}" for k, v in acts.items()),
+                     "candidates": ", ".join(sc["candidates"]) or "none",
+                     "sent to full harness (max 3)": ", ".join(select(sc)) or "none"})
+        for x in sc["also_secondary"]:
+            why.append({"scan day": sc["asof"], "stock": x["ticker"], "status": f"secondary ({x['action']})",
+                        "why not a candidate": "; ".join(x["why"])})
+        for x in sc["near_misses"]:
+            why.append({"scan day": sc["asof"], "stock": x["ticker"],
+                        "status": f"near miss (lag {x['sector_lag_10'] * 100:+.1f}%)",
+                        "why not a candidate": "; ".join(x["why"])})
+    return pd.DataFrame(summ), pd.DataFrame(why)
+
+
 def build() -> str:
     notes = load_notes(NOTES_FILE)
     bt, bench, cost = backtest_tables()
@@ -284,6 +323,7 @@ def build() -> str:
     variants = pd.DataFrame([(k, *v) for k, v in VARIANTS.items()], columns=["variant", "name", "rule"])
     versions = pd.DataFrame([(k, v) for k, v in VERSION_EN.items()], columns=["version", "definition"])
     cases = pd.DataFrame([(t, d, CASE_EN.get(lab, lab)) for t, d, lab in CASES], columns=["ticker", "date", "what it tests"])
+    scan_sum, scan_why = scan_tables()
     mem = pd.DataFrame([("temporal", "prices, indicators, macro, statements, event histories",
                          "`data/` caches and `reports/*.parquet`; file hashes stored with every analysis"),
                         ("episodic", "past cases: state → evidence → action → backtest → human decision",
@@ -382,6 +422,29 @@ The action itself is chosen by rules (`evidence.decide`) from the 8 allowed labe
 {md_table(mem, index=False)}
 
 {note(notes, "harness")}
+
+### 2.5 Universe scan mode (spec §33)
+
+The spec's end-to-end example asks a question about the whole universe: *"Find BIST 100 stocks that are lagging a
+strong sector but may be entering a historically favourable catch-up state."* `src/harness/scan.py` runs the rule
+layer for all 30 stocks on the scan day (no LLM), lists the stocks whose action is the asked label, explains why
+the nearest others are not candidates, and sends at most three candidates through the full harness (LLM
+explanation, human review, log). For the catch-up question the three with the largest sector lag go first; this
+order is for display and was not tested as a forecast.
+
+**Table 4b. Spec §33 steps and where the system does them**
+
+{md_table(pd.DataFrame(SCAN_STEPS, columns=["spec step", "in the system"]), index=False)}
+
+**Table 4c. Two committed scans** (`python -m src.harness.scan <day>`)
+
+{md_table(scan_sum, index=False)}
+
+**Table 4d. Why the other lagging stocks are not candidates**
+
+{md_table(scan_why, index=False)}
+
+{note(notes, "scan")}
 
 ## 3. Harness experiments A–E (spec §30)
 

@@ -33,7 +33,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 (news, speeches, LLM explanations, review reasons); all other fields are structured.</p>
 <p>Units: <code>[fraction]</code> 0.05 = 5%; <code>[%]</code> already in percent; <code>[pt]</code> percentage points; <code>[TRY]</code> Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.</p>
-<p><strong>21 datasets, 468 fields.</strong></p>
+<p><strong>23 datasets, 499 fields.</strong></p>
 <table>
 <thead>
 <tr>
@@ -187,6 +187,20 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 <tr>
 <td style="text-align: right;">21</td>
+<td style="text-align: left;">Universe scan (spec §33)</td>
+<td style="text-align: left;">structured</td>
+<td style="text-align: left;">Adım 4 (22 Nov)</td>
+<td style="text-align: right;">17</td>
+</tr>
+<tr>
+<td style="text-align: right;">22</td>
+<td style="text-align: left;">Decision log: universe scans</td>
+<td style="text-align: left;">structured (JSON fields)</td>
+<td style="text-align: left;">Adım 4 (22 Nov)</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr>
+<td style="text-align: right;">23</td>
 <td style="text-align: left;">Harness experiment results</td>
 <td style="text-align: left;">structured + text</td>
 <td style="text-align: left;">14</td>
@@ -3654,7 +3668,262 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 </tr>
 </tbody>
 </table>
-<h2>21. Harness experiment results</h2>
+<h2>21. Universe scan (spec §33)</h2>
+<ul>
+<li><strong>File:</strong> <code>reports/scans/scan_&lt;asof&gt;_&lt;action&gt;.csv</code></li>
+<li><strong>Type:</strong> structured · <strong>Built in step:</strong> Adım 4 (22 Nov) · <strong>Grain:</strong> one row per stock of the 30-stock universe on the scan day</li>
+<li><strong>Point-in-time rule:</strong> each row is the rule layer (<code>run_analysis</code>) on the scan day: only data public by that day</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">column</th>
+<th style="text-align: left;">description</th>
+<th style="text-align: left;">type</th>
+<th style="text-align: left;">filled</th>
+<th style="text-align: left;">range / example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>ticker</code></td>
+<td style="text-align: left;">stock code</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">AKBNK</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>peer_group</code></td>
+<td style="text-align: left;">sector group</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">Banking</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>action</code></td>
+<td style="text-align: left;">rule action on that day</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">TECHNICAL_REVERSAL_CANDIDATE</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>secondary</code></td>
+<td style="text-align: left;">other candidate labels, comma separated</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">33%</td>
+<td style="text-align: left;">TECHNICAL_REVERSAL_CANDIDATE</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>gate</code></td>
+<td style="text-align: left;">quality-gate status</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">PASS_WITH_WARNINGS</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sector_lag_10</code></td>
+<td style="text-align: left;">10-day return minus peer median [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">-0.2101 – 0.1497</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sector_median_10</code></td>
+<td style="text-align: left;">peer median 10-day return [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">-0.1077 – 0.1292</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>laggard</code></td>
+<td style="text-align: left;">sector_lag_10 at or below the catch-up threshold</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">30% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sector_strong</code></td>
+<td style="text-align: left;">peer median &gt; 0</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">57% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>recovering</code></td>
+<td style="text-align: left;">close above KAMA or Supertrend up</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">60% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>weak_earnings</code></td>
+<td style="text-align: left;">latest statement in bottom third</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">53% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>catch_up</code></td>
+<td style="text-align: left;">all catch-up conditions met</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">0% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>fundamental</code></td>
+<td style="text-align: left;">fundamental-improvement conditions met</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">17% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>technical</code></td>
+<td style="text-align: left;">bullish technical event without a bearish one</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">67% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>tech_conflict</code></td>
+<td style="text-align: left;">bullish and bearish events</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">13% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>shock</code></td>
+<td style="text-align: left;">large one-day move</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">27% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>negative_news</code></td>
+<td style="text-align: left;">negative KAP news in the window</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">7% True</td>
+</tr>
+</tbody>
+</table>
+<h2>22. Decision log: universe scans</h2>
+<ul>
+<li><strong>File:</strong> <code>reports/decision_log.sqlite (table</code>scans<code>)</code></li>
+<li><strong>Type:</strong> structured (JSON fields) · <strong>Built in step:</strong> Adım 4 (22 Nov) · <strong>Grain:</strong> one row per scan</li>
+<li><strong>Point-in-time rule:</strong> written once; <code>replay_scan</code> recomputes the scan and compares</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">column</th>
+<th style="text-align: left;">description</th>
+<th style="text-align: left;">type</th>
+<th style="text-align: left;">filled</th>
+<th style="text-align: left;">range / example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>scan_id</code></td>
+<td style="text-align: left;">12-character id</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>created_at</code></td>
+<td style="text-align: left;">time of the scan</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>asof</code></td>
+<td style="text-align: left;">scan day</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>action</code></td>
+<td style="text-align: left;">question asked (candidate label)</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>top_n</code></td>
+<td style="text-align: left;">maximum candidates sent to the full harness</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>data_versions</code></td>
+<td style="text-align: left;">JSON: hash of each input file</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>procedure_version</code></td>
+<td style="text-align: left;">hash of the workflow and rules</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>rows</code></td>
+<td style="text-align: left;">JSON: the scan table</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>candidates</code></td>
+<td style="text-align: left;">JSON: stocks whose action is the asked label</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>also_secondary</code></td>
+<td style="text-align: left;">JSON: stocks where the asked label is only secondary (blocked or lower priority)</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>near_misses</code></td>
+<td style="text-align: left;">JSON: lagging stocks in a strong sector that missed, with the failed conditions</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>selected</code></td>
+<td style="text-align: left;">JSON: candidates sent to the full harness</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>analysis_ids</code></td>
+<td style="text-align: left;">JSON: their decision-log ids (<code>analyses</code>)</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>fingerprint</code></td>
+<td style="text-align: left;">hash for replay equality</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">–</td>
+</tr>
+</tbody>
+</table>
+<h2>23. Harness experiment results</h2>
 <ul>
 <li><strong>File:</strong> <code>reports/experiments/raw.jsonl</code></li>
 <li><strong>Type:</strong> structured + text · <strong>Built in step:</strong> 14 · <strong>Grain:</strong> one row per case × version (A–E) × run</li>
@@ -10568,6 +10837,16 @@ tool list and the replays are recomputed when the report is built (no API key ne
 <td style="text-align: left;">66 kB</td>
 <td style="text-align: left;">229dea2a61f3</td>
 </tr>
+<tr>
+<td style="text-align: left;"><code>reports/scans/scan_2026-01-09_POTENTIAL_CATCH_UP_CANDIDATE.csv</code></td>
+<td style="text-align: left;">5 kB</td>
+<td style="text-align: left;">6c820f2163be</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>reports/scans/scan_2026-11-06_POTENTIAL_CATCH_UP_CANDIDATE.csv</code></td>
+<td style="text-align: left;">5 kB</td>
+<td style="text-align: left;">f8980559053d</td>
+</tr>
 </tbody>
 </table>
 <p>This report covers four deliverables of the project brief (§36): <strong>backtesting results and benchmark comparisons</strong>,
@@ -11609,6 +11888,194 @@ interpret tool outputs:</p>
 <li><strong>Memory is dated.</strong> Episodic memory shows an agent at most three earlier cases of the same stock, and only cases
    whose analysis date is earlier than the current one.</li>
 </ol>
+<h3>2.5 Universe scan mode (spec §33)</h3>
+<p>The spec's end-to-end example asks a question about the whole universe: <em>"Find BIST 100 stocks that are lagging a
+strong sector but may be entering a historically favourable catch-up state."</em> <code>src/harness/scan.py</code> runs the rule
+layer for all 30 stocks on the scan day (no LLM), lists the stocks whose action is the asked label, explains why
+the nearest others are not candidates, and sends at most three candidates through the full harness (LLM
+explanation, human review, log). For the catch-up question the three with the largest sector lag go first; this
+order is for display and was not tested as a forecast.</p>
+<p><strong>Table 4b. Spec §33 steps and where the system does them</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">spec step</th>
+<th style="text-align: left;">in the system</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1 Orchestrator selects the 30-stock universe</td>
+<td style="text-align: left;"><code>scan_universe</code> loops over the core universe</td>
+</tr>
+<tr>
+<td style="text-align: left;">2 Market tool loads OHLCV and XU100</td>
+<td style="text-align: left;"><code>LOAD_MARKET_DATA</code> / evidence bundle (prices up to the scan day)</td>
+</tr>
+<tr>
+<td style="text-align: left;">3 Data-quality check</td>
+<td style="text-align: left;">quality gate per stock (<code>gate</code> column); full harness repeats it in <code>CHECK_DATA_QUALITY</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">4 Sector tool ranks each stock vs peers</td>
+<td style="text-align: left;"><code>sector_lag_10</code>, <code>sector_median_10</code> (<code>rank_sector_relative_strength</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;">5 Technical states and reversal history</td>
+<td style="text-align: left;"><code>recovering</code>, <code>technical</code>, <code>tech_conflict</code>; event states (Report 1)</td>
+</tr>
+<tr>
+<td style="text-align: left;">6 Point-in-time fundamentals</td>
+<td style="text-align: left;"><code>weak_earnings</code>, <code>fundamental</code> (statements public by the scan day)</td>
+</tr>
+<tr>
+<td style="text-align: left;">7 Macro context</td>
+<td style="text-align: left;">full harness <code>LOAD_MACRO_CONTEXT</code> (selected candidates)</td>
+</tr>
+<tr>
+<td style="text-align: left;">8 News / speech events</td>
+<td style="text-align: left;"><code>negative_news</code>; full harness <code>LOAD_NEWS_AND_SPEECH_CONTEXT</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">9 Evidence builder</td>
+<td style="text-align: left;"><code>run_analysis</code> per stock: observed vs committed evidence</td>
+</tr>
+<tr>
+<td style="text-align: left;">10–11 Strategy variants and backtests</td>
+<td style="text-align: left;">full harness <code>PREVIEW_STRATEGIES</code>, <code>RUN_BACKTEST</code> (data before the day)</td>
+</tr>
+<tr>
+<td style="text-align: left;">12 Risk gate</td>
+<td style="text-align: left;">gate per stock; candidates with shock / negative news become <code>REJECT_SIGNAL</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">13 Analytical conclusion</td>
+<td style="text-align: left;">Orchestrator explanation for each selected candidate</td>
+</tr>
+<tr>
+<td style="text-align: left;">14 Human review</td>
+<td style="text-align: left;"><code>HUMAN_REVIEW</code> for each selected candidate</td>
+</tr>
+<tr>
+<td style="text-align: left;">15 Saved for replay</td>
+<td style="text-align: left;"><code>scans</code> table (+ <code>analyses</code> of the candidates), <code>replay_scan</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 4c. Two committed scans</strong> (<code>python -m src.harness.scan &lt;day&gt;</code>)</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">scan day</th>
+<th style="text-align: right;">stocks</th>
+<th style="text-align: left;">actions</th>
+<th style="text-align: left;">candidates</th>
+<th style="text-align: left;">sent to full harness (max 3)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">2026-01-09</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: left;">HOLD 10, FUNDAMENTAL_IMPROVEMENT_CANDIDATE 9, POTENTIAL_CATCH_UP_CANDIDATE 4, INVESTIGATE 4, WATCH 2, TECHNICAL_REVERSAL_CANDIDATE 1</td>
+<td style="text-align: left;">PGSUS, MAVI, CCOLA, TTKOM</td>
+<td style="text-align: left;">TTKOM, PGSUS, MAVI</td>
+</tr>
+<tr>
+<td style="text-align: left;">2026-11-06</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: left;">TECHNICAL_REVERSAL_CANDIDATE 12, INVESTIGATE 6, REJECT_SIGNAL 6, FUNDAMENTAL_IMPROVEMENT_CANDIDATE 3, HOLD 2, WATCH 1</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">none</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 4d. Why the other lagging stocks are not candidates</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">scan day</th>
+<th style="text-align: left;">stock</th>
+<th style="text-align: left;">status</th>
+<th style="text-align: left;">why not a candidate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">2026-01-09</td>
+<td style="text-align: left;">ARCLK</td>
+<td style="text-align: left;">secondary (INVESTIGATE)</td>
+<td style="text-align: left;">çelişen teknik sinyal (aynı 3 günde boğa ve ayı olay)</td>
+</tr>
+<tr>
+<td style="text-align: left;">2026-01-09</td>
+<td style="text-align: left;">SASA</td>
+<td style="text-align: left;">near miss (lag -23.1%)</td>
+<td style="text-align: left;">toparlanmıyor (KAMA altında ve Supertrend aşağı); son bilanço alt üçte birde; şok</td>
+</tr>
+<tr>
+<td style="text-align: left;">2026-01-09</td>
+<td style="text-align: left;">TCELL</td>
+<td style="text-align: left;">near miss (lag -13.0%)</td>
+<td style="text-align: left;">son bilanço alt üçte birde</td>
+</tr>
+<tr>
+<td style="text-align: left;">2026-01-09</td>
+<td style="text-align: left;">TURSG</td>
+<td style="text-align: left;">near miss (lag -8.6%)</td>
+<td style="text-align: left;">toparlanmıyor (KAMA altında ve Supertrend aşağı)</td>
+</tr>
+<tr>
+<td style="text-align: left;">2026-01-09</td>
+<td style="text-align: left;">MPARK</td>
+<td style="text-align: left;">near miss (lag -6.2%)</td>
+<td style="text-align: left;">son bilanço alt üçte birde</td>
+</tr>
+<tr>
+<td style="text-align: left;">2026-11-06</td>
+<td style="text-align: left;">TURSG</td>
+<td style="text-align: left;">near miss (lag -21.0%)</td>
+<td style="text-align: left;">toparlanmıyor (KAMA altında ve Supertrend aşağı); son bilanço alt üçte birde; şok; olumsuz KAP haberi</td>
+</tr>
+<tr>
+<td style="text-align: left;">2026-11-06</td>
+<td style="text-align: left;">ARCLK</td>
+<td style="text-align: left;">near miss (lag -11.0%)</td>
+<td style="text-align: left;">toparlanmıyor (KAMA altında ve Supertrend aşağı); son bilanço alt üçte birde</td>
+</tr>
+<tr>
+<td style="text-align: left;">2026-11-06</td>
+<td style="text-align: left;">ECILC</td>
+<td style="text-align: left;">near miss (lag -9.8%)</td>
+<td style="text-align: left;">son bilanço alt üçte birde</td>
+</tr>
+<tr>
+<td style="text-align: left;">2026-11-06</td>
+<td style="text-align: left;">EKGYO</td>
+<td style="text-align: left;">near miss (lag -6.5%)</td>
+<td style="text-align: left;">son bilanço alt üçte birde</td>
+</tr>
+<tr>
+<td style="text-align: left;">2026-11-06</td>
+<td style="text-align: left;">CCOLA</td>
+<td style="text-align: left;">near miss (lag -6.5%)</td>
+<td style="text-align: left;">toparlanmıyor (KAMA altında ve Supertrend aşağı)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>The scan answers "none" when that is the answer.</strong> On the last data day (6 Nov 2026), during the fund-crisis
+  sell-off, no stock is a catch-up candidate. Five stocks lag a strong sector, and the table says which condition
+  stops each of them. For ECILC and EKGYO the only obstacle is a latest statement in the bottom third.</li>
+<li><strong>On 9 Jan 2026 there are four candidates.</strong> The three with the largest sector lag (TTKOM, PGSUS, MAVI) went
+  through the full harness with the mock model, and the scan and the three analyses were logged together (demo
+  log). <code>replay_scan</code> recomputed the same 30 rows and the same candidates.</li>
+<li><strong>ARCLK on 9 Jan 2026</strong> meets every catch-up condition but has bullish and bearish technical events in the same
+  three days, so the rules say <code>INVESTIGATE</code>. The scan lists it as "secondary" with that reason instead of hiding it.</li>
+<li><strong>The scan adds no new decision rule.</strong> Every row is exactly the rule layer's result for that stock and day (a
+  test checks this), so the scan inherits the point-in-time guarantees and the evidence of Reports 1–5.</li>
+<li><strong>Gemini run pending.</strong> The real-model run of a scan is part of the final experiment re-run.</li>
+</ul>
 <h2>3. Harness experiments A–E (spec §30)</h2>
 <p><strong>Table 5. Versions</strong></p>
 <table>

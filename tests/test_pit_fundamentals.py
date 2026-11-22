@@ -218,6 +218,14 @@ def test_ratios_recomputed_by_hand():
     assert np.isclose(r["roe_ttm"], ttm("net_income") / x["equity"])
 
 
+def test_year_over_year_changes_for_hypotheses():
+    """Adım 1e: FAVÖK marjı değişimi ve borç azaltma, geçen yılın aynı çeyreğine göre; girdilerden biri anlamsızsa boş."""
+    r, l4 = _row("ASELS", "2026-09-30"), _row("ASELS", "2025-09-30")
+    assert np.isclose(r["ebitda_margin_chg"], r["ebitda_margin_q"] - l4["ebitda_margin_q"])
+    assert np.isclose(r["deleveraging"], l4["nd_ebitda"] - r["nd_ebitda"])     # + = borç/FAVÖK düştü
+    assert np.isnan(_row("PETKM", "2024-12-31")["deleveraging"])               # FAVÖK < 0 -> nd_ebitda anlamsız
+
+
 def test_no_industrial_ratios_for_banks_insurers_brokers_and_kchol():
     a = pf.pit_all()
     for t in ("AKBNK", "TURSG", "ISMEN", "KCHOL"):

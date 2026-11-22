@@ -92,19 +92,30 @@ def t_over_quarters(s: pd.Series) -> tuple:
     return t, 2 * stats.t.sf(abs(t), len(s) - 1), len(s)
 
 
+EXPLORATORY = "exploratory (Step 15)"
+REGISTERED = "pre-registered H1–H4 (22 Nov)"
+
+
 def metric_table(e: pd.DataFrame) -> pd.DataFrame:
+    """Ölçüt bazında üst eksi alt üçte bir. H1–H4 22 Kasım 2026'da, sonuçlara bakmadan yazıldı (Adım 1e):
+    H1 FAVÖK büyümesi, H2 FAVÖK marjı değişimi, H3 borç azaltma, H4 nakit dönüşümü; hepsinde beklenen yön üst > alt."""
     nonfin = e[~e["financial"]]
-    metrics = [("revenue YoY (non-financial)", "revenue_yoy", nonfin),
-               ("operating income YoY (non-financial)", "op_income_yoy", nonfin),
-               ("net margin change, pt (non-financial)", "margin_chg", nonfin),
-               ("ROE change, pt", "roe_chg", e)]
+    metrics = [("revenue YoY (non-financial)", "revenue_yoy", nonfin, EXPLORATORY),
+               ("operating income YoY (non-financial)", "op_income_yoy", nonfin, EXPLORATORY),
+               ("net margin change, pt (non-financial)", "margin_chg", nonfin, EXPLORATORY),
+               ("ROE change, pt", "roe_chg", e, EXPLORATORY),
+               ("H1 EBITDA YoY", "ebitda_yoy", nonfin, REGISTERED),
+               ("H2 EBITDA margin change, pt", "ebitda_margin_chg", nonfin, REGISTERED),
+               ("H3 deleveraging (fall in net debt / EBITDA)", "deleveraging", nonfin, REGISTERED),
+               ("H4 cash conversion (OCF / EBITDA)", "cash_conversion", nonfin, REGISTERED)]
     rows = []
-    for name, col, sub in metrics:
+    for name, col, sub, kind in metrics:
         sp = quarter_spread(sub, col)
         half = len(sp) // 2
         for k in ("d0", "d0_4", "post1_20"):
             t, p, nq = t_over_quarters(sp[k])
-            rows.append({"metric": name, "window": LABEL[k], "events": int(sub[col].notna().sum()), "quarters": nq,
+            rows.append({"set": kind, "metric": name, "window": LABEL[k], "events": int(sub[col].notna().sum()),
+                         "quarters": nq,
                          "top − bottom (pt)": sp[k].mean(), "first half": sp[k].iloc[:half].mean(),
                          "second half": sp[k].iloc[half:].mean(), "t": t, "p": p})
     return pd.DataFrame(rows)
@@ -131,7 +142,7 @@ def method_table(e: pd.DataFrame) -> pd.DataFrame:
 
 
 def test_family(e: pd.DataFrame, sp_tests: pd.DataFrame) -> tuple:
-    """Raporun tek BH ailesi: 6 pencere (net kâr, XU100'e göre) + 4 pencere (akranlara göre) + 12 metrik testi.
+    """Raporun tek BH ailesi: 6 pencere (net kâr, XU100'e göre) + 4 pencere (akranlara göre) + 24 metrik testi (12 keşif + 12 önceden yazılmış H1-H4).
     Final rapor da aynı fonksiyonu kullanır (iki raporun anlamlılık sonucu ayrışamaz).
     Döner: (aile tablosu, q eklenmiş metrik tablosu, akranlara göre çeyreklik fark)."""
     peer_sp = quarter_spread(e.rename(columns={f"{k}_vs_peers": f"{k}p" for k in SHOW}), "ni_yoy",
@@ -146,6 +157,30 @@ def test_family(e: pd.DataFrame, sp_tests: pd.DataFrame) -> tuple:
     fam["q (all tests)"] = bh(fam["p"])
     met["q (all tests)"] = fam.loc[fam["family"] == "metric spreads", "q (all tests)"].to_numpy()
     return fam, met, peer_sp
+
+
+def valuation_table(e: pd.DataFrame) -> pd.DataFrame:
+    """Açıklamadan önceki kapanış (gün −1) ve ertesi gün kapanışı (gün +1) F/K ve PD/DD, net kâr üçte birine göre."""
+    v = pd.read_parquet("reports/valuation_daily.parquet").set_index(["ticker", "date"])
+    idx = get_index_history("XU100").index
+    rows = []
+    for r in e.dropna(subset=["tercile"]).itertuples():
+        pos = idx.get_loc(r.event_day)
+        if pos < 1 or pos + 1 >= len(idx):
+            continue
+        b, a = (r.ticker, idx[pos - 1]), (r.ticker, idx[pos + 1])
+        if b not in v.index or a not in v.index:
+            continue
+        rows.append(dict(tercile=r.tercile, pe_b=v.loc[b, "pe"], pe_a=v.loc[a, "pe"], pb_b=v.loc[b, "pb"],
+                         pb_a=v.loc[a, "pb"]))
+    d = pd.DataFrame(rows)
+    d["pe_chg"] = (d["pe_a"] / d["pe_b"] - 1) * 100
+    d["pb_chg"] = (d["pb_a"] / d["pb_b"] - 1) * 100
+    out = d.groupby("tercile").agg(n=("pe_chg", lambda x: int(x.notna().sum())), pe_b=("pe_b", "median"),
+                                   pe_a=("pe_a", "median"), pe_chg=("pe_chg", "median"), pb_chg=("pb_chg", "median"))
+    out = out.reindex(["alt", "orta", "ust"]).rename(index=TERC)
+    return out.rename(columns={"pe_b": "P/E before", "pe_a": "P/E after", "pe_chg": "P/E change %",
+                               "pb_chg": "P/B change %"}).rename_axis("net-income third")
 
 
 def car_path(e: pd.DataFrame) -> pd.DataFrame:
@@ -237,6 +272,7 @@ def build() -> str:
                                         "q_bh": "q (6 windows)", "p_bonf": "p Bonferroni"})
     sp_q = pd.read_csv("reports/earnings_spread_by_quarter.csv", parse_dates=["period_end"]).set_index("period_end")
     fam, met, peer_sp = test_family(e, sp_tests)
+    val_tab = valuation_table(e)
     fin = by("financial", labels={True: "financial (AKBNK, ISMEN, TURSG)", False: "non-financial"})
     loss = by("loss", labels={True: "reported a loss", False: "reported a profit"})
     dirn = by("direction", order=["kâr arttı", "kâr azaldı", "zarardan kâra geçti", "kârdan zarara geçti",
@@ -375,11 +411,45 @@ hypothesis, so they are not added to the multiple-testing family.
 **Table 5. Top-minus-bottom third spread by metric (pt vs XU100, one observation per quarter).** Net income is
 in Table 2; it is not repeated here so that it is not counted twice in the multiple-testing correction.
 
-{md_table(met.set_index(["metric", "window"]), fmt={"p": "{:.4f}", "q (all tests)": "{:.3f}", "t": "{:.2f}"})}
+{md_table(met[met["set"] == EXPLORATORY].drop(columns="set").set_index(["metric", "window"]),
+          fmt={"p": "{:.4f}", "q (all tests)": "{:.3f}", "t": "{:.2f}"})}
 
 {note(notes, "metrics")}
 
-## 8. Profit direction, losses and financials
+## 8. Pre-registered hypotheses: EBITDA, leverage and cash
+
+Written on 22 November 2026, after the statement ratios were built and checked but **before any of their price
+reactions were computed**. Non-financial companies except KCHOL; thirds against the previous quarter's cut-offs;
+expected sign in every case: top third above bottom third.
+
+- **H1** EBITDA growth (year over year): operating profit before depreciation, free of financing and FX noise.
+- **H2** EBITDA-margin change vs the same quarter a year earlier: the operating counterpart of the net-margin result.
+- **H3** Deleveraging: net debt / EBITDA a year earlier minus now (positive = the balance sheet got stronger).
+- **H4** Cash conversion: operating cash flow / EBITDA over the last 12 months (do profits turn into cash?).
+
+The 12 tests share the Benjamini–Hochberg correction with the 22 earlier tests of this report.
+
+**Table 5b. Top-minus-bottom spread for H1–H4 (pt vs XU100, one observation per quarter)**
+
+{md_table(met[met["set"] == REGISTERED].drop(columns="set").set_index(["metric", "window"]),
+          fmt={"p": "{:.4f}", "q (all tests)": "{:.3f}", "t": "{:.2f}"})}
+
+{note(notes, "hypotheses")}
+
+## 9. Valuation before and after the disclosure
+
+P/E and P/B at the close before the event day and at the close of the day after it, by net-income third. P/E uses
+earnings in that day's money (inflation-accounting figures moved with the latest published CPI); the change
+therefore mixes the price reaction with the switch to the new statement. Medians; descriptive, not tested.
+
+**Table 5c. Valuation around the disclosure (medians)**
+
+{md_table(val_tab, fmt={"n": "{:,.0f}", "P/E before": "{:.1f}", "P/E after": "{:.1f}", "P/E change %": "{:+.1f}",
+                        "P/B change %": "{:+.1f}"})}
+
+{note(notes, "valuation")}
+
+## 10. Profit direction, losses and financials
 
 The "+48%" for a company whose loss shrank (PETKM, Step 14) showed that a percentage alone can mislead. Here are
 the same words the harness now uses (`profit_direction`).
@@ -394,7 +464,7 @@ the same words the harness now uses (`profit_direction`).
 
 {note(notes, "direction")}
 
-## 9. Strong fundamentals with weak technicals, and vice versa
+## 11. Strong fundamentals with weak technicals, and vice versa
 
 The technical state is measured at the close **before** the event day: is the price above its 200-day average?
 
@@ -404,7 +474,7 @@ The technical state is measured at the close **before** the event day: is the pr
 
 {note(notes, "tech")}
 
-## 10. Is there unusual activity in reporting season?
+## 12. Is there unusual activity in reporting season?
 
 Step 7 compared how often large volume spikes and large abnormal moves happen inside reporting windows vs
 outside them (share of stock-days).
@@ -415,7 +485,7 @@ outside them (share of stock-days).
 
 {note(notes, "spikes")}
 
-## 11. Multiple testing
+## 13. Multiple testing
 
 {len(fam)} tests were corrected together; **{len(survivors)}** have q < 0.05:
 
@@ -423,19 +493,19 @@ outside them (share of stock-days).
 
 {note(notes, "multiple")}
 
-## 12. Türkiye context
+## 14. Türkiye context
 
 {note(notes, "turkey")}
 
-## 13. How the harness uses these results
+## 15. How the harness uses these results
 
 {note(notes, "harness")}
 
-## 14. Limitations
+## 16. Limitations
 
 {note(notes, "limitations")}
 
-## 15. Conclusion
+## 17. Conclusion
 
 {note(notes, "conclusion")}
 """

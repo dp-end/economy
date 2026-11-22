@@ -33,7 +33,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 (news, speeches, LLM explanations, review reasons); all other fields are structured.</p>
 <p>Units: <code>[fraction]</code> 0.05 = 5%; <code>[%]</code> already in percent; <code>[pt]</code> percentage points; <code>[TRY]</code> Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.</p>
-<p><strong>21 datasets, 453 fields.</strong></p>
+<p><strong>21 datasets, 455 fields.</strong></p>
 <table>
 <thead>
 <tr>
@@ -120,7 +120,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">Earnings disclosure events</td>
 <td style="text-align: left;">structured (event table)</td>
 <td style="text-align: left;">7C</td>
-<td style="text-align: right;">62</td>
+<td style="text-align: right;">64</td>
 </tr>
 <tr>
 <td style="text-align: right;">12</td>
@@ -1709,6 +1709,20 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">70%</td>
 <td style="text-align: left;">-4.684 – 14.72</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ebitda_margin_chg</code></td>
+<td style="text-align: left;">quarterly EBITDA margin minus the same quarter a year earlier [fraction points]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">69%</td>
+<td style="text-align: left;">-1.506 – 0.957</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>deleveraging</code></td>
+<td style="text-align: left;">net debt / EBITDA a year earlier minus now (positive = leverage fell) [ratio points]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">58%</td>
+<td style="text-align: left;">-13.89 – 84.24</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>era_flow</code></td>
@@ -4854,8 +4868,8 @@ fundamental and risk-gate evidence, never alone.</p></section><section class="re
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_events.parquet</code></td>
-<td style="text-align: left;">218 kB</td>
-<td style="text-align: left;">1b0b994a4a23</td>
+<td style="text-align: left;">226 kB</td>
+<td style="text-align: left;">56cd58ba4e1f</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/backtest_strategies.csv</code></td>
@@ -6808,8 +6822,8 @@ cached price data.</p>
 <tbody>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_events.parquet</code></td>
-<td style="text-align: left;">218 kB</td>
-<td style="text-align: left;">1b0b994a4a23</td>
+<td style="text-align: left;">226 kB</td>
+<td style="text-align: left;">56cd58ba4e1f</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/earnings_by_tercile.csv</code></td>
@@ -6846,19 +6860,22 @@ The question is not "good earnings = price rises".</p>
 <p><strong>Short answer.</strong> The market reacts to quarterly results, and it reacts to <em>profitability</em>, not to sales.</p>
 <ul>
 <li><strong>Net-income ranking.</strong> Companies in the top third by year-over-year net-income change beat those in the bottom
-  third by <strong>+2.0 pt on the event day</strong> and +2.4 pt over days 0–1 (q = 0.021 and 0.029 after correcting all 22
+  third by <strong>+2.0 pt on the event day</strong> and +2.4 pt over days 0–1 (q = 0.025 and 0.036 after correcting all 34
   tests of this report). Each company's third is decided with information that was public on its own event day.</li>
-<li><strong>Which metrics matter.</strong> Operating-income growth and net-margin change separate winners from losers on the event
-  day as clearly as net income does, in both halves of the sample. Revenue growth, which in high-inflation Türkiye
-  is mostly price increases, does not.</li>
+<li><strong>Which metrics matter.</strong> Operating-income growth, net-margin change and EBITDA-margin change separate winners
+  from losers on the event day as clearly as net income does, in both halves of the sample. Revenue growth, which in
+  high-inflation Türkiye is mostly price increases, does not.</li>
+<li><strong>Pre-registered hypotheses.</strong> Of four hypotheses written before testing (EBITDA growth, EBITDA-margin change,
+  deleveraging, cash conversion), only the <strong>EBITDA-margin change</strong> is confirmed (+2.0 pt on the event day,
+  q = 0.025).</li>
 <li><strong>No reliable move before the filing.</strong> Top-third companies rise before they report, but the pre-event spread is
-  not significant after correction (q = 0.11 across all 22 tests) and its size depends on the ranking method. An earlier version of
+  not significant after correction (q = 0.15 across all 34 tests) and its size depends on the ranking method. An earlier version of
   this report found it significant; that result relied on figures that were not yet public (Section 2).</li>
 <li><strong>Drift.</strong> Net income shows no drift after the first days (days 1–20: +0.2 pt, p = 0.92). The one exception is
-  the <strong>net-margin change</strong>: +5.1 pt over days 1–20, positive in both halves (q = 0.046). It is the most interesting
-  result for future work.</li>
-<li><strong>Mostly company-specific.</strong> Against sector peers instead of XU100, the event-day and days 0–4 spreads also
-  survive correction (+1.75 and +2.22 pt).</li>
+  the <strong>net-margin change</strong>: +5.1 pt over days 1–20, positive in both halves, but just above the threshold after
+  correction (q = 0.058). It is the most interesting candidate for future work, not a finding.</li>
+<li><strong>Mostly company-specific.</strong> Against sector peers instead of XU100, the event-day spread also survives correction
+  (+1.75 pt, q = 0.039); days 0–4 (+2.22 pt) is just above the threshold (q = 0.058).</li>
 </ul>
 <h2>2. Data and point-in-time alignment</h2>
 <ul>
@@ -6890,7 +6907,7 @@ The question is not "good earnings = price rises".</p>
 <li><strong>Returns.</strong> Abnormal return = stock return − XU100 return over the window, and separately stock return − the
   equal-weight return of its sector peers. Windows are in trading days, with the event day = 0.</li>
 <li><strong>Statistics.</strong> Each quarter's top-minus-bottom spread is one observation (13 quarters with at least 15 ranked
-  events), because stocks in the same quarter are not independent. All 22 tests in this report share one
+  events), because stocks in the same quarter are not independent. All 34 tests in this report share one
   Benjamini–Hochberg correction.</li>
 </ul>
 <h2>3. Main result: reaction by net-income ranking</h2>
@@ -7200,7 +7217,7 @@ hypothesis, so they are not added to the multiple-testing family.</p>
 <td style="text-align: right;">1.13</td>
 <td style="text-align: right;">1.54</td>
 <td style="text-align: right;">0.1505</td>
-<td style="text-align: right;">0.224</td>
+<td style="text-align: right;">0.260</td>
 </tr>
 <tr>
 <td style="text-align: left;">event day</td>
@@ -7208,7 +7225,7 @@ hypothesis, so they are not added to the multiple-testing family.</p>
 <td style="text-align: right;">1.75</td>
 <td style="text-align: right;">3.23</td>
 <td style="text-align: right;">0.0072</td>
-<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.039</td>
 </tr>
 <tr>
 <td style="text-align: left;">days 0–4</td>
@@ -7216,7 +7233,7 @@ hypothesis, so they are not added to the multiple-testing family.</p>
 <td style="text-align: right;">2.22</td>
 <td style="text-align: right;">2.75</td>
 <td style="text-align: right;">0.0175</td>
-<td style="text-align: right;">0.046</td>
+<td style="text-align: right;">0.058</td>
 </tr>
 <tr>
 <td style="text-align: left;">days 1–20</td>
@@ -7228,9 +7245,9 @@ hypothesis, so they are not added to the multiple-testing family.</p>
 </tr>
 </tbody>
 </table>
-<p>Against sector peers the top-minus-bottom spread <strong>survives correction on the event day (+1.75 pt, q = 0.032) and
-over days 0–4 (+2.22 pt, q = 0.046)</strong>, and it is positive in both halves of the sample. The pre-event spread does
-not survive (+1.13 pt, q = 0.22).</p>
+<p>Against sector peers the top-minus-bottom spread <strong>survives correction on the event day (+1.75 pt, q = 0.039)</strong>;
+over days 0–4 (+2.22 pt) it is just above the threshold (q = 0.058). Both are positive in both halves of the sample.
+The pre-event spread does not survive (+1.13 pt, q = 0.26).</p>
 <p>Peers report in the same weeks, and sector-wide news (a bank-sector margin squeeze, steel prices) moves the whole
 group, so part of a "stock reaction" can be a "sector reaction". With that part removed, the reaction is still about
 90% of its size against XU100: it is mostly company-specific.</p>
@@ -7263,7 +7280,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">-0.40</td>
 <td style="text-align: right;">0.74</td>
 <td style="text-align: right;">0.4706</td>
-<td style="text-align: right;">0.609</td>
+<td style="text-align: right;">0.667</td>
 </tr>
 <tr>
 <td style="text-align: left;">revenue YoY (non-financial)</td>
@@ -7275,7 +7292,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">-0.53</td>
 <td style="text-align: right;">0.62</td>
 <td style="text-align: right;">0.5463</td>
-<td style="text-align: right;">0.665</td>
+<td style="text-align: right;">0.743</td>
 </tr>
 <tr>
 <td style="text-align: left;">revenue YoY (non-financial)</td>
@@ -7287,7 +7304,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">-0.83</td>
 <td style="text-align: right;">0.32</td>
 <td style="text-align: right;">0.7575</td>
-<td style="text-align: right;">0.833</td>
+<td style="text-align: right;">0.888</td>
 </tr>
 <tr>
 <td style="text-align: left;">operating income YoY (non-financial)</td>
@@ -7299,7 +7316,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">1.71</td>
 <td style="text-align: right;">4.43</td>
 <td style="text-align: right;">0.0008</td>
-<td style="text-align: right;">0.018</td>
+<td style="text-align: right;">0.025</td>
 </tr>
 <tr>
 <td style="text-align: left;">operating income YoY (non-financial)</td>
@@ -7311,7 +7328,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">1.60</td>
 <td style="text-align: right;">1.59</td>
 <td style="text-align: right;">0.1389</td>
-<td style="text-align: right;">0.224</td>
+<td style="text-align: right;">0.260</td>
 </tr>
 <tr>
 <td style="text-align: left;">operating income YoY (non-financial)</td>
@@ -7323,7 +7340,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">0.15</td>
 <td style="text-align: right;">-0.58</td>
 <td style="text-align: right;">0.5740</td>
-<td style="text-align: right;">0.665</td>
+<td style="text-align: right;">0.751</td>
 </tr>
 <tr>
 <td style="text-align: left;">net margin change, pt (non-financial)</td>
@@ -7335,7 +7352,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">1.42</td>
 <td style="text-align: right;">4.03</td>
 <td style="text-align: right;">0.0017</td>
-<td style="text-align: right;">0.018</td>
+<td style="text-align: right;">0.025</td>
 </tr>
 <tr>
 <td style="text-align: left;">net margin change, pt (non-financial)</td>
@@ -7347,7 +7364,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">1.95</td>
 <td style="text-align: right;">3.12</td>
 <td style="text-align: right;">0.0089</td>
-<td style="text-align: right;">0.033</td>
+<td style="text-align: right;">0.039</td>
 </tr>
 <tr>
 <td style="text-align: left;">net margin change, pt (non-financial)</td>
@@ -7359,7 +7376,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">4.56</td>
 <td style="text-align: right;">2.75</td>
 <td style="text-align: right;">0.0187</td>
-<td style="text-align: right;">0.046</td>
+<td style="text-align: right;">0.058</td>
 </tr>
 <tr>
 <td style="text-align: left;">ROE change, pt</td>
@@ -7371,7 +7388,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">1.33</td>
 <td style="text-align: right;">3.06</td>
 <td style="text-align: right;">0.0156</td>
-<td style="text-align: right;">0.046</td>
+<td style="text-align: right;">0.058</td>
 </tr>
 <tr>
 <td style="text-align: left;">ROE change, pt</td>
@@ -7383,7 +7400,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">2.58</td>
 <td style="text-align: right;">1.60</td>
 <td style="text-align: right;">0.1527</td>
-<td style="text-align: right;">0.224</td>
+<td style="text-align: right;">0.260</td>
 </tr>
 <tr>
 <td style="text-align: left;">ROE change, pt</td>
@@ -7395,7 +7412,7 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <td style="text-align: right;">3.35</td>
 <td style="text-align: right;">2.02</td>
 <td style="text-align: right;">0.0833</td>
-<td style="text-align: right;">0.153</td>
+<td style="text-align: right;">0.202</td>
 </tr>
 </tbody>
 </table>
@@ -7403,17 +7420,246 @@ in Table 2; it is not repeated here so that it is not counted twice in the multi
 <ul>
 <li><strong>Revenue YoY:</strong> event-day spread +0.45 pt (p = 0.47), and the sign flips between halves. In 2022–2024, sales
   growth of 50–100% was mostly inflation, not volume, so it carried little news.</li>
-<li><strong>Operating income YoY:</strong> +1.95 pt on the event day (q = 0.018), similar in both halves (+2.23 / +1.71).</li>
-<li><strong>Net margin change:</strong> +1.97 pt on the event day (q = 0.018), +3.57 pt over days 0–4 (q = 0.033) and
-  <strong>+5.07 pt over days 1–20</strong> (q = 0.046, +5.57 / +4.56 in the two halves). Margins show whether a company passes
-  inflation on to its prices. This is the only post-disclosure drift that survives correction. We did not plan this
-  test in advance and it is one of 22, so it is a candidate to re-test on new quarters, not a rule.</li>
-<li><strong>ROE change:</strong> +1.79 pt on the event day (q = 0.046), but only 9 quarters can be ranked. ROE needs a balance sheet
+<li><strong>Operating income YoY:</strong> +1.95 pt on the event day (q = 0.025), similar in both halves (+2.23 / +1.71).</li>
+<li><strong>Net margin change:</strong> +1.97 pt on the event day (q = 0.025), +3.57 pt over days 0–4 (q = 0.039) and
+  <strong>+5.07 pt over days 1–20</strong> (+5.57 / +4.56 in the two halves, q = 0.058). Margins show whether a company passes
+  inflation on to its prices. The 20-day drift is the strongest post-disclosure result, but it is just above the
+  threshold once the pre-registered tests of Section 8 join the family. We did not plan this test in advance, so it
+  is a candidate to re-test on new quarters, not a rule.</li>
+<li><strong>ROE change:</strong> +1.79 pt on the event day (q = 0.058), but only 9 quarters can be ranked. ROE needs a balance sheet
   and an income statement in the same unit, and for 2023 the inflation-accounting restatements exist only for the
-  income statement. The 20-day drift (+3.41 pt, q = 0.15) does not survive. The earlier version of this report
+  income statement. The 20-day drift (+3.41 pt, q = 0.20) does not survive. The earlier version of this report
   found a strong ROE drift (q = 0.003); it relied on restated figures that were not yet public.</li>
 </ul>
-<h2>8. Profit direction, losses and financials</h2>
+<h2>8. Pre-registered hypotheses: EBITDA, leverage and cash</h2>
+<p>Written on 22 November 2026, after the statement ratios were built and checked but <strong>before any of their price
+reactions were computed</strong>. Non-financial companies except KCHOL; thirds against the previous quarter's cut-offs;
+expected sign in every case: top third above bottom third.</p>
+<ul>
+<li><strong>H1</strong> EBITDA growth (year over year): operating profit before depreciation, free of financing and FX noise.</li>
+<li><strong>H2</strong> EBITDA-margin change vs the same quarter a year earlier: the operating counterpart of the net-margin result.</li>
+<li><strong>H3</strong> Deleveraging: net debt / EBITDA a year earlier minus now (positive = the balance sheet got stronger).</li>
+<li><strong>H4</strong> Cash conversion: operating cash flow / EBITDA over the last 12 months (do profits turn into cash?).</li>
+</ul>
+<p>The 12 tests share the Benjamini–Hochberg correction with the 22 earlier tests of this report.</p>
+<p><strong>Table 5b. Top-minus-bottom spread for H1–H4 (pt vs XU100, one observation per quarter)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">metric</th>
+<th style="text-align: left;">window</th>
+<th style="text-align: right;">events</th>
+<th style="text-align: right;">quarters</th>
+<th style="text-align: right;">top − bottom (pt)</th>
+<th style="text-align: right;">first half</th>
+<th style="text-align: right;">second half</th>
+<th style="text-align: right;">t</th>
+<th style="text-align: right;">p</th>
+<th style="text-align: right;">q (all tests)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">H1 EBITDA YoY</td>
+<td style="text-align: left;">event day</td>
+<td style="text-align: right;">373</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">1.12</td>
+<td style="text-align: right;">2.52</td>
+<td style="text-align: right;">-0.09</td>
+<td style="text-align: right;">1.57</td>
+<td style="text-align: right;">0.1423</td>
+<td style="text-align: right;">0.260</td>
+</tr>
+<tr>
+<td style="text-align: left;">H1 EBITDA YoY</td>
+<td style="text-align: left;">days 0–4</td>
+<td style="text-align: right;">373</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">2.12</td>
+<td style="text-align: right;">3.56</td>
+<td style="text-align: right;">0.88</td>
+<td style="text-align: right;">1.75</td>
+<td style="text-align: right;">0.1063</td>
+<td style="text-align: right;">0.241</td>
+</tr>
+<tr>
+<td style="text-align: left;">H1 EBITDA YoY</td>
+<td style="text-align: left;">days 1–20</td>
+<td style="text-align: right;">373</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">0.77</td>
+<td style="text-align: right;">2.22</td>
+<td style="text-align: right;">-0.68</td>
+<td style="text-align: right;">0.32</td>
+<td style="text-align: right;">0.7573</td>
+<td style="text-align: right;">0.888</td>
+</tr>
+<tr>
+<td style="text-align: left;">H2 EBITDA margin change, pt</td>
+<td style="text-align: left;">event day</td>
+<td style="text-align: right;">373</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">2.03</td>
+<td style="text-align: right;">3.07</td>
+<td style="text-align: right;">1.14</td>
+<td style="text-align: right;">3.72</td>
+<td style="text-align: right;">0.0029</td>
+<td style="text-align: right;">0.025</td>
+</tr>
+<tr>
+<td style="text-align: left;">H2 EBITDA margin change, pt</td>
+<td style="text-align: left;">days 0–4</td>
+<td style="text-align: right;">373</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">3.61</td>
+<td style="text-align: right;">4.56</td>
+<td style="text-align: right;">2.65</td>
+<td style="text-align: right;">3.15</td>
+<td style="text-align: right;">0.0092</td>
+<td style="text-align: right;">0.039</td>
+</tr>
+<tr>
+<td style="text-align: left;">H2 EBITDA margin change, pt</td>
+<td style="text-align: left;">days 1–20</td>
+<td style="text-align: right;">373</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">1.44</td>
+<td style="text-align: right;">3.39</td>
+<td style="text-align: right;">-0.51</td>
+<td style="text-align: right;">0.75</td>
+<td style="text-align: right;">0.4673</td>
+<td style="text-align: right;">0.667</td>
+</tr>
+<tr>
+<td style="text-align: left;">H3 deleveraging (fall in net debt / EBITDA)</td>
+<td style="text-align: left;">event day</td>
+<td style="text-align: right;">314</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1.18</td>
+<td style="text-align: right;">0.71</td>
+<td style="text-align: right;">1.56</td>
+<td style="text-align: right;">1.51</td>
+<td style="text-align: right;">0.1690</td>
+<td style="text-align: right;">0.274</td>
+</tr>
+<tr>
+<td style="text-align: left;">H3 deleveraging (fall in net debt / EBITDA)</td>
+<td style="text-align: left;">days 0–4</td>
+<td style="text-align: right;">314</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">2.52</td>
+<td style="text-align: right;">2.30</td>
+<td style="text-align: right;">2.69</td>
+<td style="text-align: right;">1.60</td>
+<td style="text-align: right;">0.1482</td>
+<td style="text-align: right;">0.260</td>
+</tr>
+<tr>
+<td style="text-align: left;">H3 deleveraging (fall in net debt / EBITDA)</td>
+<td style="text-align: left;">days 1–20</td>
+<td style="text-align: right;">314</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">0.73</td>
+<td style="text-align: right;">0.32</td>
+<td style="text-align: right;">1.05</td>
+<td style="text-align: right;">0.28</td>
+<td style="text-align: right;">0.7874</td>
+<td style="text-align: right;">0.892</td>
+</tr>
+<tr>
+<td style="text-align: left;">H4 cash conversion (OCF / EBITDA)</td>
+<td style="text-align: left;">event day</td>
+<td style="text-align: right;">382</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">-0.09</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">-0.24</td>
+<td style="text-align: right;">-0.13</td>
+<td style="text-align: right;">0.9013</td>
+<td style="text-align: right;">0.944</td>
+</tr>
+<tr>
+<td style="text-align: left;">H4 cash conversion (OCF / EBITDA)</td>
+<td style="text-align: left;">days 0–4</td>
+<td style="text-align: right;">382</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">0.58</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: right;">0.74</td>
+<td style="text-align: right;">0.53</td>
+<td style="text-align: right;">0.6026</td>
+<td style="text-align: right;">0.759</td>
+</tr>
+<tr>
+<td style="text-align: left;">H4 cash conversion (OCF / EBITDA)</td>
+<td style="text-align: left;">days 1–20</td>
+<td style="text-align: right;">382</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: right;">-0.61</td>
+<td style="text-align: right;">0.14</td>
+<td style="text-align: right;">0.8874</td>
+<td style="text-align: right;">0.944</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>H2 (EBITDA-margin change) is confirmed:</strong> +2.03 pt on the event day (q = 0.025) and +3.61 pt over days 0–4
+  (q = 0.039), positive in both halves. It matches the net-margin result, so the market reacts to operating
+  profitability, not only to the bottom line.</li>
+<li><strong>H1 (EBITDA growth), H3 (deleveraging) and H4 (cash conversion) are not confirmed.</strong> H1 and H3 point the expected
+  way (+1.1 to +2.5 pt) but do not survive correction; H3 has only 9 rankable quarters. H4 shows no effect.</li>
+<li>No hypothesis shows a reliable drift after day 4.</li>
+</ul>
+<h2>9. Valuation before and after the disclosure</h2>
+<p>P/E and P/B at the close before the event day and at the close of the day after it, by net-income third. P/E uses
+earnings in that day's money (inflation-accounting figures moved with the latest published CPI); the change
+therefore mixes the price reaction with the switch to the new statement. Medians; descriptive, not tested.</p>
+<p><strong>Table 5c. Valuation around the disclosure (medians)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">net-income third</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">P/E before</th>
+<th style="text-align: right;">P/E after</th>
+<th style="text-align: right;">P/E change %</th>
+<th style="text-align: right;">P/B change %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">bottom</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">8.5</td>
+<td style="text-align: right;">11.8</td>
+<td style="text-align: right;">+15.4</td>
+<td style="text-align: right;">-3.4</td>
+</tr>
+<tr>
+<td style="text-align: left;">middle</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">10.7</td>
+<td style="text-align: right;">10.4</td>
+<td style="text-align: right;">-4.6</td>
+<td style="text-align: right;">-4.4</td>
+</tr>
+<tr>
+<td style="text-align: left;">top</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">14.1</td>
+<td style="text-align: right;">11.5</td>
+<td style="text-align: right;">-20.1</td>
+<td style="text-align: right;">-4.9</td>
+</tr>
+</tbody>
+</table>
+<p>Top-third companies get cheaper on earnings (median P/E −20%) and bottom-third companies more expensive (+15%):
+the new statement changes the earnings denominator more than the price moves. P/B changes little (−3% to −5% in
+every third), because equity moves slowly. This is descriptive, not a tested effect.</p>
+<h2>10. Profit direction, losses and financials</h2>
 <p>The "+48%" for a company whose loss shrank (PETKM, Step 14) showed that a percentage alone can mislead. Here are
 the same words the harness now uses (<code>profit_direction</code>).</p>
 <p><strong>Table 6. By direction of quarterly net income vs the same quarter a year earlier (%)</strong></p>
@@ -7548,7 +7794,7 @@ the same words the harness now uses (<code>profit_direction</code>).</p>
 <li><strong>Financials vs others.</strong> The three financials react like the non-financials. Banks are ranked on net income and
   ROE only; revenue, operating-income and margin metrics exclude them.</li>
 </ul>
-<h2>9. Strong fundamentals with weak technicals, and vice versa</h2>
+<h2>11. Strong fundamentals with weak technicals, and vice versa</h2>
 <p>The technical state is measured at the close <strong>before</strong> the event day: is the price above its 200-day average?</p>
 <p><strong>Table 8. Net-income third × technical state (abnormal return vs XU100, %)</strong></p>
 <table>
@@ -7625,7 +7871,7 @@ the same words the harness now uses (<code>profit_direction</code>).</p>
 <p>These cells were not tested for significance and the "weak trend, strong earnings" group is small. It is an
 interpretation to check on new data. It also shows why the harness never treats strong earnings alone as
 sufficient.</p>
-<h2>10. Is there unusual activity in reporting season?</h2>
+<h2>12. Is there unusual activity in reporting season?</h2>
 <p>Step 7 compared how often large volume spikes and large abnormal moves happen inside reporting windows vs
 outside them (share of stock-days).</p>
 <p><strong>Table 9. Spikes inside vs outside reporting season</strong></p>
@@ -7674,8 +7920,8 @@ outside them (share of stock-days).</p>
 <p>Reporting season as a whole shows <strong>no more</strong> volume spikes or large abnormal moves than other weeks (ratios
 0.87–1.11). The reaction is concentrated on each company's own event day, not spread across the season. This also
 argues against widespread pre-announcement trading.</p>
-<h2>11. Multiple testing</h2>
-<p>22 tests were corrected together; <strong>9</strong> have q &lt; 0.05:</p>
+<h2>13. Multiple testing</h2>
+<p>34 tests were corrected together; <strong>8</strong> have q &lt; 0.05:</p>
 <table>
 <thead>
 <tr>
@@ -7690,73 +7936,73 @@ argues against widespread pre-announcement trading.</p>
 <td style="text-align: left;">metric spreads</td>
 <td style="text-align: left;">operating income YoY (non-financial) / event day</td>
 <td style="text-align: right;">0.00083</td>
-<td style="text-align: right;">0.018</td>
+<td style="text-align: right;">0.025</td>
 </tr>
 <tr>
 <td style="text-align: left;">metric spreads</td>
 <td style="text-align: left;">net margin change, pt (non-financial) / event day</td>
 <td style="text-align: right;">0.00168</td>
-<td style="text-align: right;">0.018</td>
+<td style="text-align: right;">0.025</td>
 </tr>
 <tr>
 <td style="text-align: left;">net income spread vs XU100</td>
 <td style="text-align: left;">event day</td>
 <td style="text-align: right;">0.00291</td>
-<td style="text-align: right;">0.021</td>
+<td style="text-align: right;">0.025</td>
+</tr>
+<tr>
+<td style="text-align: left;">metric spreads</td>
+<td style="text-align: left;">H2 EBITDA margin change, pt / event day</td>
+<td style="text-align: right;">0.00291</td>
+<td style="text-align: right;">0.025</td>
 </tr>
 <tr>
 <td style="text-align: left;">net income spread vs XU100</td>
 <td style="text-align: left;">days 0–1</td>
 <td style="text-align: right;">0.00534</td>
-<td style="text-align: right;">0.029</td>
+<td style="text-align: right;">0.036</td>
 </tr>
 <tr>
 <td style="text-align: left;">net income spread vs peers</td>
 <td style="text-align: left;">event day</td>
 <td style="text-align: right;">0.00717</td>
-<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.039</td>
 </tr>
 <tr>
 <td style="text-align: left;">metric spreads</td>
 <td style="text-align: left;">net margin change, pt (non-financial) / days 0–4</td>
 <td style="text-align: right;">0.00888</td>
-<td style="text-align: right;">0.033</td>
+<td style="text-align: right;">0.039</td>
 </tr>
 <tr>
 <td style="text-align: left;">metric spreads</td>
-<td style="text-align: left;">ROE change, pt / event day</td>
-<td style="text-align: right;">0.01561</td>
-<td style="text-align: right;">0.046</td>
-</tr>
-<tr>
-<td style="text-align: left;">net income spread vs peers</td>
-<td style="text-align: left;">days 0–4</td>
-<td style="text-align: right;">0.01751</td>
-<td style="text-align: right;">0.046</td>
-</tr>
-<tr>
-<td style="text-align: left;">metric spreads</td>
-<td style="text-align: left;">net margin change, pt (non-financial) / days 1–20</td>
-<td style="text-align: right;">0.01874</td>
-<td style="text-align: right;">0.046</td>
+<td style="text-align: left;">H2 EBITDA margin change, pt / days 0–4</td>
+<td style="text-align: right;">0.00919</td>
+<td style="text-align: right;">0.039</td>
 </tr>
 </tbody>
 </table>
 <ul>
-<li><strong>Nine of 22 tests survive.</strong><ul>
-<li>Four net-income spreads: event day and days 0–1 vs XU100; event day and days 0–4 vs peers.</li>
-<li>Four event-window spreads of other metrics: operating income and net margin on the event day, net margin over
-  days 0–4, ROE change on the event day.</li>
-<li>One drift: net margin over days 1–20.</li>
+<li><strong>One family.</strong> The 22 exploratory tests and the 12 pre-registered tests (H1–H4) are corrected together, as
+  every other report uses one family. Splitting the family after seeing the q-values would be choosing the method
+  by its result.</li>
+<li><strong>Eight of 34 tests survive.</strong><ul>
+<li>Three net-income spreads: event day and days 0–1 vs XU100; event day vs peers.</li>
+<li>Three event-window spreads of other metrics: operating income and net margin on the event day, net margin over
+  days 0–4.</li>
+<li>Two pre-registered: EBITDA-margin change on the event day and over days 0–4 (H2).</li>
 </ul>
 </li>
-<li><strong>All nine keep their sign in both halves</strong> of the sample.</li>
-<li><strong>Not surviving:</strong> the pre-event spread (q = 0.11), the 20-day net-income drift (p = 0.92), the ROE drift and
-  revenue.</li>
+<li><strong>All eight keep their sign in both halves</strong> of the sample.</li>
+<li><strong>Just above the threshold (q = 0.058):</strong> net-income spread vs peers over days 0–4, the net-margin drift over
+  days 1–20 and the ROE change on the event day. With the 22 tests alone (before H1–H4 were added) all three had
+  q = 0.046. We report them as borderline, not as findings.</li>
+<li><strong>Not surviving:</strong> the pre-event spread (q = 0.15), the 20-day net-income drift (p = 0.92), the ROE drift,
+  revenue, and H1, H3, H4.</li>
 </ul>
 <p>The pattern of survivors is economically coherent: profitability measures, around the disclosure. That makes it
 more believable than a single isolated p-value would be.</p>
-<h2>12. Türkiye context</h2>
+<h2>14. Türkiye context</h2>
 <ul>
 <li><strong>Nominal profits in 2022–2023.</strong> With annual CPI above 50–80%, the median company's net income grew 75–200%
   year over year in nominal TRY. Ranking companies against each other is essential; raw growth rates would mostly
@@ -7789,7 +8035,7 @@ more believable than a single isolated p-value would be.</p>
 <a href="https://www.alomaliye.com/2025/12/23/enflasyon-muhasebesi-uygulamasi-banka-ve-finans-sirketlerinde-kaldirildi/">Alomaliye: BDDK 2025</a>).
 From our own data: the filing delays, the unranked quarters, the median changes and the check of Fintables against
 published figures (Data Dictionary, <code>fundamentals</code>).</p>
-<h2>13. How the harness uses these results</h2>
+<h2>15. How the harness uses these results</h2>
 <p>The harness uses this scenario for <code>FUNDAMENTAL_IMPROVEMENT_CANDIDATE</code>. The rule requires:</p>
 <ul>
 <li>the latest <strong>public</strong> statement (event day ≤ analysis date) in the top net-income third, decided against the
@@ -7807,14 +8053,13 @@ of that report, the direction in words ("profit up", "loss narrowed", …), the 
 </ul>
 <p>Net-margin improvement, the one metric with a post-disclosure drift, is not used by the harness. Adding it would
 need a pre-registered test on new quarters first.</p>
-<h2>14. Limitations</h2>
+<h2>16. Limitations</h2>
 <ul>
 <li><strong>No expectations data.</strong> There is no analyst consensus, so "surprise" is approximated by the change vs the
   same quarter last year and by the price trend.</li>
-<li><strong>EBITDA, leverage, liquidity, cash flow and valuation not analysed yet.</strong> The event table carries the
-  statement ratios (EBITDA, operating cash flow and net debt checked against published company figures) and
-  <code>reports/valuation_daily.parquet</code> carries daily P/E, P/B and EV/EBITDA, but their price reactions are not yet
-  tested in this report. An earlier version of this report wrongly said these lines were missing from the data.</li>
+<li><strong>EBITDA, leverage and cash flow tested only as four hypotheses</strong> (Section 8); liquidity ratios and EV/EBITDA
+  are in the data (Data Dictionary) but not tested. Valuation (Section 9) is descriptive. H3 has only 9 rankable
+  quarters. An earlier version of this report wrongly said these lines were missing from the data.</li>
 <li><strong>Low power.</strong> 13 quarters (12 for days 1–20) is a small number of independent observations; 2022Q4 – 2024Q1
   cannot be ranked.</li>
 <li><strong>Latest versions only.</strong> Fintables carries later corrections back into earlier periods. We found one small case
@@ -7825,18 +8070,18 @@ need a pre-registered test on new quarters first.</p>
   happens on the publication day, which counts as day −1 here.</li>
 <li><strong>Small, sensitive groups.</strong> Only three financial companies. Returns are nominal TRY vs XU100 or peers.</li>
 </ul>
-<h2>15. Conclusion</h2>
+<h2>17. Conclusion</h2>
 <p>Quarterly fundamentals carry information that the market prices quickly:</p>
 <ul>
-<li>profitability changes (operating income, margins, net income) separate winners from losers on the disclosure day
-  and the day after;</li>
+<li>profitability changes (operating income, net and EBITDA margins, net income) separate winners from losers on the
+  disclosure day and the day after; the EBITDA-margin result was written down as a hypothesis before it was tested;</li>
 <li>sales growth does not;</li>
 <li>once figures are used only from the day they were public, there is no reliable move before the filing.</li>
 </ul>
 <p>"Fundamental strength ≠ guaranteed price increase": strong results in a stock that had already run up reacted
 little, and weak results in such a stock were punished most. The harness therefore uses fundamentals as <strong>dated,
 point-in-time evidence</strong> next to the technical and sector picture. Only the net-margin change shows a
-post-disclosure drift worth testing further.</p>
+post-disclosure drift worth testing further (q = 0.058, borderline).</p>
 <p>The corrections of 22 November also show why point-in-time data matter: two earlier "findings", the pre-event move
 and the ROE drift, disappeared once each figure was used only from the day it became public.</p></section><section class="report"><h1>Report 5 — Macro and Contextual Evidence Integration</h1>
 <p><em>Educational research output for CSE-481. Historical evidence only: not a forecast, not investment advice. Returns are nominal TRY.</em></p>

@@ -127,7 +127,7 @@ tools; it does not invent or predict financial facts.**
 | 1 Technical reversals | excess vs XU100 of 12 event types: -0.13 to +0.32% in 5 days; raw gains ≈ any-day drift (+1.08%) | no type with q < 0.05; 4/12 keep sign out of sample | context only |
 | 2 Sector catch-up | harness rule (no shock, strong sector, recovering, not weak earnings): +0.82 pt vs peers in 10 days (baseline +0.15) | only q < 0.05 result; +0.88 / +0.72 in the two halves; ~half still lag after 20 days | `POTENTIAL_CATCH_UP_CANDIDATE` |
 | 3 Weekday & multi-day | Wednesday -0.41, Thursday +0.34 pt vs other days; big down days continue (−1.35 pt in 5 days) | Wed-buy/Thu-sell: +201% before costs, +42% at 0.15% (XU100 +647%) | not used for actions |
-| 4 Earnings reaction | top − bottom net-income third: +1.26 pt before (q = 0.11), +2.01 pt on the event day (q = 0.021); operating income +1.95, revenue +0.45 | event day +2.01 pt with previous-quarter cut-offs, +2.01 pt ranking only companies already reported; no drift after day 4 except the net-margin change (+5.07 pt, days 1–20, q = 0.046) | `FUNDAMENTAL_IMPROVEMENT_CANDIDATE` |
+| 4 Earnings reaction | top − bottom net-income third: +1.26 pt before (q = 0.15), +2.01 pt on the event day (q = 0.025); operating income +1.95, revenue +0.45; pre-registered H2 EBITDA-margin change +2.03 (q = 0.025), H1/H3/H4 not confirmed | event day +2.01 pt with previous-quarter cut-offs, +2.01 pt ranking only companies already reported; no drift after day 4 (net-margin change +5.07 pt over days 1–20 is borderline, q = 0.058) | `FUNDAMENTAL_IMPROVEMENT_CANDIDATE` |
 | 5 Macro, news, speech | XU100 ×7.5 in TRY but ×1.4 in USD; macro risk flag lowered returns (C 213% → D 163%); only 'new contract' KAP news moves prices (+0.5 pt) | 3 of 33 speech claims verified and admitted as evidence | context, gate warnings, blockers |
 
 - **Benchmarks.** The common thread is the benchmark. In five years XU100 rose 7.5× in nominal TRY (1.4× in USD),
@@ -135,7 +135,8 @@ tools; it does not invent or predict financial facts.**
   a few tenths of a percent.
 - **Robust findings.** Few effects survive correction *and* keep their sign in the second half:
   - the harness's catch-up rule (+0.8 pt vs peers in 10 days, both halves);
-  - the earnings reaction on the disclosure day (+2.0 pt top vs bottom third, profitability rather than sales);
+  - the earnings reaction on the disclosure day (+2.0 pt top vs bottom third, profitability rather than sales),
+    including the EBITDA-margin change, which was written down as a hypothesis before it was tested;
   - the Wednesday weakness;
   - short-term continuation after big down days and over weekends.
 - **Robust but not tradable.** The Thursday strength, partly linked to central-bank decision days, is the most
@@ -348,7 +349,8 @@ reviewer.
   - Around the inflation-accounting switch (2022Q4 – 2024Q1) earnings cannot be ranked: the restated figures were
     published a year later.
   - EBITDA, leverage, liquidity, cash-flow and daily valuation ratios are computed (statement items checked against
-    published figures), but their price reactions are not yet tested.
+    published figures). Only four of them were tested (pre-registered H1–H4 in Report 4); liquidity and EV/EBITDA
+    were not.
   - Fintables keeps only the latest version of each figure, so later corrections are carried back into earlier
     periods (one small case found).
   - RSS has no history.
@@ -378,7 +380,7 @@ reviewer.
 
 **Future work.**
 
-- Test the net-margin drift (Report 4) on new quarters as a pre-registered hypothesis.
+- Test the net-margin drift (Report 4, borderline q = 0.058) and the EBITDA-margin reaction (H2) on new quarters.
 - Replace halves with rolling walk-forward tests and add a sector benchmark at portfolio level.
 - Add an evidence-id consistency check to the validator.
 - Collect a human-labelled reference set for the harness experiment.

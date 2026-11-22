@@ -362,6 +362,10 @@ def _panel(ticker: str) -> pd.DataFrame:
         _combine(df, "quick_ratio", lambda a, b, c: (a - b) / c, ["s_current_assets", "s_inventories", "s_current_liab"],
                  meaningful=lambda a, b, c: c > 0)
         _combine(df, "cash_conversion", div, ["ttm_ocf", "ttm_ebitda"], meaningful=positive_den)
+        # Adım 1e hipotezleri: değişimler geçen yılın aynı çeyreğine göre (iki değer de kendi gününde bilinebilir)
+        df = df.join(_shifted(df, "ebitda_margin_q", 4)).join(_shifted(df, "nd_ebitda", 4))
+        _combine(df, "ebitda_margin_chg", lambda a, b: a - b, ["ebitda_margin_q", "ebitda_margin_q_l4"])
+        _combine(df, "deleveraging", lambda a, b: b - a, ["nd_ebitda", "nd_ebitda_l4"])   # + = borç/FAVÖK düştü
     return df
 
 
@@ -370,7 +374,7 @@ RATIOS = ["ni_yoy", "ni_qoq", "roe_q", "leverage", "net_margin", "revenue_yoy", 
           "roe_chg",
           # Adım 1c
           "roa", "roe_ttm", "ebitda_margin_ttm", "ebitda_margin_q", "ebitda_yoy", "nd_ebitda", "debt_to_equity",
-          "current_ratio", "quick_ratio", "cash_conversion"]
+          "current_ratio", "quick_ratio", "cash_conversion", "ebitda_margin_chg", "deleveraging"]
 LEVELS = {  # çıktı adı -> panel niceliği (TL; yayınlandığı raporun parasıyla)
     "net_income": "q_net_income", "net_income_prev": "q_net_income_l4", "revenue": "q_revenue",
     "gross_profit": "q_gross_profit", "op_income": "q_op_income", "net_income_ttm": "ttm_net_income",

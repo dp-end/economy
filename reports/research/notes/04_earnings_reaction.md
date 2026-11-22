@@ -4,19 +4,22 @@
 **Short answer.** The market reacts to quarterly results, and it reacts to *profitability*, not to sales.
 
 - **Net-income ranking.** Companies in the top third by year-over-year net-income change beat those in the bottom
-  third by **+2.0 pt on the event day** and +2.4 pt over days 0–1 (q = 0.021 and 0.029 after correcting all 22
+  third by **+2.0 pt on the event day** and +2.4 pt over days 0–1 (q = 0.025 and 0.036 after correcting all 34
   tests of this report). Each company's third is decided with information that was public on its own event day.
-- **Which metrics matter.** Operating-income growth and net-margin change separate winners from losers on the event
-  day as clearly as net income does, in both halves of the sample. Revenue growth, which in high-inflation Türkiye
-  is mostly price increases, does not.
+- **Which metrics matter.** Operating-income growth, net-margin change and EBITDA-margin change separate winners
+  from losers on the event day as clearly as net income does, in both halves of the sample. Revenue growth, which in
+  high-inflation Türkiye is mostly price increases, does not.
+- **Pre-registered hypotheses.** Of four hypotheses written before testing (EBITDA growth, EBITDA-margin change,
+  deleveraging, cash conversion), only the **EBITDA-margin change** is confirmed (+2.0 pt on the event day,
+  q = 0.025).
 - **No reliable move before the filing.** Top-third companies rise before they report, but the pre-event spread is
-  not significant after correction (q = 0.11 across all 22 tests) and its size depends on the ranking method. An earlier version of
+  not significant after correction (q = 0.15 across all 34 tests) and its size depends on the ranking method. An earlier version of
   this report found it significant; that result relied on figures that were not yet public (Section 2).
 - **Drift.** Net income shows no drift after the first days (days 1–20: +0.2 pt, p = 0.92). The one exception is
-  the **net-margin change**: +5.1 pt over days 1–20, positive in both halves (q = 0.046). It is the most interesting
-  result for future work.
-- **Mostly company-specific.** Against sector peers instead of XU100, the event-day and days 0–4 spreads also
-  survive correction (+1.75 and +2.22 pt).
+  the **net-margin change**: +5.1 pt over days 1–20, positive in both halves, but just above the threshold after
+  correction (q = 0.058). It is the most interesting candidate for future work, not a finding.
+- **Mostly company-specific.** Against sector peers instead of XU100, the event-day spread also survives correction
+  (+1.75 pt, q = 0.039); days 0–4 (+2.22 pt) is just above the threshold (q = 0.058).
 
 <!-- main -->
 **Reading Table 1, Table 2 and Figure 1.**
@@ -62,9 +65,9 @@
   +2.2 pt, close to the full-sample mean. They are not steadier than the nominal quarters of 2022.
 
 <!-- peers -->
-Against sector peers the top-minus-bottom spread **survives correction on the event day (+1.75 pt, q = 0.032) and
-over days 0–4 (+2.22 pt, q = 0.046)**, and it is positive in both halves of the sample. The pre-event spread does
-not survive (+1.13 pt, q = 0.22).
+Against sector peers the top-minus-bottom spread **survives correction on the event day (+1.75 pt, q = 0.039)**;
+over days 0–4 (+2.22 pt) it is just above the threshold (q = 0.058). Both are positive in both halves of the sample.
+The pre-event spread does not survive (+1.13 pt, q = 0.26).
 
 Peers report in the same weeks, and sector-wide news (a bank-sector margin squeeze, steel prices) moves the whole
 group, so part of a "stock reaction" can be a "sector reaction". With that part removed, the reaction is still about
@@ -75,14 +78,15 @@ group, so part of a "stock reaction" can be a "sector reaction". With that part 
 
 - **Revenue YoY:** event-day spread +0.45 pt (p = 0.47), and the sign flips between halves. In 2022–2024, sales
   growth of 50–100% was mostly inflation, not volume, so it carried little news.
-- **Operating income YoY:** +1.95 pt on the event day (q = 0.018), similar in both halves (+2.23 / +1.71).
-- **Net margin change:** +1.97 pt on the event day (q = 0.018), +3.57 pt over days 0–4 (q = 0.033) and
-  **+5.07 pt over days 1–20** (q = 0.046, +5.57 / +4.56 in the two halves). Margins show whether a company passes
-  inflation on to its prices. This is the only post-disclosure drift that survives correction. We did not plan this
-  test in advance and it is one of 22, so it is a candidate to re-test on new quarters, not a rule.
-- **ROE change:** +1.79 pt on the event day (q = 0.046), but only 9 quarters can be ranked. ROE needs a balance sheet
+- **Operating income YoY:** +1.95 pt on the event day (q = 0.025), similar in both halves (+2.23 / +1.71).
+- **Net margin change:** +1.97 pt on the event day (q = 0.025), +3.57 pt over days 0–4 (q = 0.039) and
+  **+5.07 pt over days 1–20** (+5.57 / +4.56 in the two halves, q = 0.058). Margins show whether a company passes
+  inflation on to its prices. The 20-day drift is the strongest post-disclosure result, but it is just above the
+  threshold once the pre-registered tests of Section 8 join the family. We did not plan this test in advance, so it
+  is a candidate to re-test on new quarters, not a rule.
+- **ROE change:** +1.79 pt on the event day (q = 0.058), but only 9 quarters can be ranked. ROE needs a balance sheet
   and an income statement in the same unit, and for 2023 the inflation-accounting restatements exist only for the
-  income statement. The 20-day drift (+3.41 pt, q = 0.15) does not survive. The earlier version of this report
+  income statement. The 20-day drift (+3.41 pt, q = 0.20) does not survive. The earlier version of this report
   found a strong ROE drift (q = 0.003); it relied on restated figures that were not yet public.
 
 <!-- direction -->
@@ -115,14 +119,20 @@ Reporting season as a whole shows **no more** volume spikes or large abnormal mo
 argues against widespread pre-announcement trading.
 
 <!-- multiple -->
-- **Nine of 22 tests survive.**
-  - Four net-income spreads: event day and days 0–1 vs XU100; event day and days 0–4 vs peers.
-  - Four event-window spreads of other metrics: operating income and net margin on the event day, net margin over
-    days 0–4, ROE change on the event day.
-  - One drift: net margin over days 1–20.
-- **All nine keep their sign in both halves** of the sample.
-- **Not surviving:** the pre-event spread (q = 0.11), the 20-day net-income drift (p = 0.92), the ROE drift and
-  revenue.
+- **One family.** The 22 exploratory tests and the 12 pre-registered tests (H1–H4) are corrected together, as
+  every other report uses one family. Splitting the family after seeing the q-values would be choosing the method
+  by its result.
+- **Eight of 34 tests survive.**
+  - Three net-income spreads: event day and days 0–1 vs XU100; event day vs peers.
+  - Three event-window spreads of other metrics: operating income and net margin on the event day, net margin over
+    days 0–4.
+  - Two pre-registered: EBITDA-margin change on the event day and over days 0–4 (H2).
+- **All eight keep their sign in both halves** of the sample.
+- **Just above the threshold (q = 0.058):** net-income spread vs peers over days 0–4, the net-margin drift over
+  days 1–20 and the ROE change on the event day. With the 22 tests alone (before H1–H4 were added) all three had
+  q = 0.046. We report them as borderline, not as findings.
+- **Not surviving:** the pre-event spread (q = 0.15), the 20-day net-income drift (p = 0.92), the ROE drift,
+  revenue, and H1, H3, H4.
 
 The pattern of survivors is economically coherent: profitability measures, around the disclosure. That makes it
 more believable than a single isolated p-value would be.
@@ -181,10 +191,9 @@ need a pre-registered test on new quarters first.
 <!-- limitations -->
 - **No expectations data.** There is no analyst consensus, so "surprise" is approximated by the change vs the
   same quarter last year and by the price trend.
-- **EBITDA, leverage, liquidity, cash flow and valuation not analysed yet.** The event table carries the
-  statement ratios (EBITDA, operating cash flow and net debt checked against published company figures) and
-  `reports/valuation_daily.parquet` carries daily P/E, P/B and EV/EBITDA, but their price reactions are not yet
-  tested in this report. An earlier version of this report wrongly said these lines were missing from the data.
+- **EBITDA, leverage and cash flow tested only as four hypotheses** (Section 8); liquidity ratios and EV/EBITDA
+  are in the data (Data Dictionary) but not tested. Valuation (Section 9) is descriptive. H3 has only 9 rankable
+  quarters. An earlier version of this report wrongly said these lines were missing from the data.
 - **Low power.** 13 quarters (12 for days 1–20) is a small number of independent observations; 2022Q4 – 2024Q1
   cannot be ranked.
 - **Latest versions only.** Fintables carries later corrections back into earlier periods. We found one small case
@@ -198,15 +207,28 @@ need a pre-registered test on new quarters first.
 <!-- conclusion -->
 Quarterly fundamentals carry information that the market prices quickly:
 
-- profitability changes (operating income, margins, net income) separate winners from losers on the disclosure day
-  and the day after;
+- profitability changes (operating income, net and EBITDA margins, net income) separate winners from losers on the
+  disclosure day and the day after; the EBITDA-margin result was written down as a hypothesis before it was tested;
 - sales growth does not;
 - once figures are used only from the day they were public, there is no reliable move before the filing.
 
 "Fundamental strength ≠ guaranteed price increase": strong results in a stock that had already run up reacted
 little, and weak results in such a stock were punished most. The harness therefore uses fundamentals as **dated,
 point-in-time evidence** next to the technical and sector picture. Only the net-margin change shows a
-post-disclosure drift worth testing further.
+post-disclosure drift worth testing further (q = 0.058, borderline).
 
 The corrections of 22 November also show why point-in-time data matter: two earlier "findings", the pre-event move
 and the ROE drift, disappeared once each figure was used only from the day it became public.
+
+<!-- hypotheses -->
+- **H2 (EBITDA-margin change) is confirmed:** +2.03 pt on the event day (q = 0.025) and +3.61 pt over days 0–4
+  (q = 0.039), positive in both halves. It matches the net-margin result, so the market reacts to operating
+  profitability, not only to the bottom line.
+- **H1 (EBITDA growth), H3 (deleveraging) and H4 (cash conversion) are not confirmed.** H1 and H3 point the expected
+  way (+1.1 to +2.5 pt) but do not survive correction; H3 has only 9 rankable quarters. H4 shows no effect.
+- No hypothesis shows a reliable drift after day 4.
+
+<!-- valuation -->
+Top-third companies get cheaper on earnings (median P/E −20%) and bottom-third companies more expensive (+15%):
+the new statement changes the earnings denominator more than the price moves. P/B changes little (−3% to −5% in
+every third), because equity moves slowly. This is descriptive, not a tested effect.

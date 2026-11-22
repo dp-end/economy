@@ -293,6 +293,8 @@ DATASETS = [
                "current_ratio": "current assets / current liabilities [ratio]",
                "quick_ratio": "(current assets − inventories) / current liabilities [ratio]",
                "cash_conversion": "operating cash flow / EBITDA, last 12 months [ratio]; empty when EBITDA ≤ 0",
+               "ebitda_margin_chg": "quarterly EBITDA margin minus the same quarter a year earlier [fraction points]",
+               "deleveraging": "net debt / EBITDA a year earlier minus now (positive = leverage fell) [ratio points]",
                "era_flow": "income-statement version: `A` as published (nominal), `B` inflation-accounting "
                            "restatement first published a year later, `C` inflation-accounting report",
                "era_stock": "balance-sheet version, same codes as `era_flow`",

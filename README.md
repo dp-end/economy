@@ -190,8 +190,9 @@ No test calls a paid API or uses a key. LLM behaviour is tested with `MockLLM`.
 - **Fundamentals data:** around the inflation-accounting switch (2022Q4 – 2024Q1) earnings cannot be ranked,
   because the restated figures were published a year later. EBITDA, leverage, liquidity, cash-flow and return
   ratios are computed (`src/data/pit_fundamentals.py`; EBITDA, operating cash flow and net debt checked against
-  published company figures) and daily valuation ratios (P/E, P/B, EV/EBITDA) are computed, but their price
-  reactions are not yet tested in Report 4. P/E cannot be computed for the 24 inflation-accounting companies from
+  published company figures) and daily valuation ratios (P/E, P/B, EV/EBITDA) are computed. Report 4 tests four
+  of them as hypotheses written before testing (EBITDA growth, EBITDA-margin change, deleveraging, cash conversion;
+  only the margin change is confirmed); liquidity ratios and EV/EBITDA are not tested. P/E cannot be computed for the 24 inflation-accounting companies from
   about May 2023 to March 2024, because the unrestated profits the market saw then are not in Fintables. Fintables
   keeps only the latest version of each figure, so later corrections are carried back into earlier periods (one
   small case found).

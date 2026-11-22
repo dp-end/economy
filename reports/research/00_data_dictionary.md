@@ -10,7 +10,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage points; `[TRY]` Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.
 
-**21 datasets, 453 fields.**
+**21 datasets, 455 fields.**
 
 | # | dataset | kind | step | columns |
 |---:|:---|:---|:---|---:|
@@ -24,7 +24,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | 8 | KAP publication dates of financial statements | structured | 7B | 9 |
 | 9 | Technical reversal events | structured (event table) | 4 | 15 |
 | 10 | Sector laggard / leader events | structured (event table) | 5 | 17 |
-| 11 | Earnings disclosure events | structured (event table) | 7C | 62 |
+| 11 | Earnings disclosure events | structured (event table) | 7C | 64 |
 | 12 | News archive (KAP + RSS) | unstructured text + structured tags | 10 | 12 |
 | 13 | KAP news signal events | structured (event table) | 10C | 15 |
 | 14 | Speech segments | unstructured text | 10B | 16 |
@@ -321,6 +321,8 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `current_ratio` | current assets / current liabilities [ratio] | float | 85% | 0.2836 – 10.98 |
 | `quick_ratio` | (current assets − inventories) / current liabilities [ratio] | float | 85% | 0.1536 – 10.33 |
 | `cash_conversion` | operating cash flow / EBITDA, last 12 months [ratio]; empty when EBITDA ≤ 0 | float | 70% | -4.684 – 14.72 |
+| `ebitda_margin_chg` | quarterly EBITDA margin minus the same quarter a year earlier [fraction points] | float | 69% | -1.506 – 0.957 |
+| `deleveraging` | net debt / EBITDA a year earlier minus now (positive = leverage fell) [ratio points] | float | 58% | -13.89 – 84.24 |
 | `era_flow` | income-statement version: `A` as published (nominal), `B` inflation-accounting restatement first published a year later, `C` inflation-accounting report | text | 98% | A |
 | `era_stock` | balance-sheet version, same codes as `era_flow` | text | 98% | A |
 | `unit_flow` | unit of income amounts: `TL nominal`, `TL@YYYY-MM` (money of that month) or `-` if none shown | text | 98% | TL nominal |

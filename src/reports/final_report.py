@@ -122,11 +122,13 @@ def research_summary() -> pd.DataFrame:
          f"(q = {q4['5 days before']:.2f}), {sp4.loc['d0', 'ort_fark']:+.2f} pt on the event day "
          f"(q = {q4['event day']:.3f}); operating income "
          f"{met.loc[('operating income YoY (non-financial)', 'event day'), 'top − bottom (pt)']:+.2f}, revenue "
-         f"{met.loc[('revenue YoY (non-financial)', 'event day'), 'top − bottom (pt)']:+.2f}",
+         f"{met.loc[('revenue YoY (non-financial)', 'event day'), 'top − bottom (pt)']:+.2f}; pre-registered H2 "
+         f"EBITDA-margin change {met.loc[('H2 EBITDA margin change, pt', 'event day'), 'top − bottom (pt)']:+.2f} "
+         f"(q = {met.loc[('H2 EBITDA margin change, pt', 'event day'), 'q (all tests)']:.3f}), H1/H3/H4 not confirmed",
          f"event day {a_d0:+.2f} pt with previous-quarter cut-offs, {b_d0:+.2f} pt ranking only companies already "
-         f"reported; no drift after day 4 except the net-margin change "
-         f"({met.loc[('net margin change, pt (non-financial)', 'days 1–20'), 'top − bottom (pt)']:+.2f} pt, days 1–20, "
-         f"q = {met.loc[('net margin change, pt (non-financial)', 'days 1–20'), 'q (all tests)']:.3f})",
+         f"reported; no drift after day 4 (net-margin change "
+         f"{met.loc[('net margin change, pt (non-financial)', 'days 1–20'), 'top − bottom (pt)']:+.2f} pt over days 1–20 "
+         f"is borderline, q = {met.loc[('net margin change, pt (non-financial)', 'days 1–20'), 'q (all tests)']:.3f})",
          "`FUNDAMENTAL_IMPROVEMENT_CANDIDATE`"),
         ("5 Macro, news, speech", f"XU100 ×7.5 in TRY but ×1.4 in USD; macro risk flag lowered returns "
          f"(C {bt[('C_temel', 'tum')]:.0f}% → D {bt[('D_makro', 'tum')]:.0f}%); "

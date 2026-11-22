@@ -24,7 +24,7 @@ PIT_COLS = ["net_income", "net_income_prev", "ni_yoy", "ni_qoq", "loss", "net_in
             # Adım 1c: sanayi oranları (banka, sigorta, aracı kurum ve KCHOL'de boş) ve getiri oranları
             "ebitda", "ebitda_ttm", "revenue_ttm", "ocf_ttm", "fcf_ttm", "net_debt", "minority_interest", "roa", "roe_ttm",
             "ebitda_margin_ttm", "ebitda_margin_q", "ebitda_yoy", "nd_ebitda", "debt_to_equity", "current_ratio",
-            "quick_ratio", "cash_conversion",
+            "quick_ratio", "cash_conversion", "ebitda_margin_chg", "deleveraging",
             "era_flow", "era_stock", "unit_flow", "unit_stock", "pit_dropped"]
 
 

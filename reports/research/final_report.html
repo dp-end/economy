@@ -181,8 +181,8 @@ tools; it does not invent or predict financial facts.</strong></p>
 </tr>
 <tr>
 <td style="text-align: left;">4 Earnings reaction</td>
-<td style="text-align: left;">top − bottom net-income third: +1.26 pt before (q = 0.11), +2.01 pt on the event day (q = 0.021); operating income +1.95, revenue +0.45</td>
-<td style="text-align: left;">event day +2.01 pt with previous-quarter cut-offs, +2.01 pt ranking only companies already reported; no drift after day 4 except the net-margin change (+5.07 pt, days 1–20, q = 0.046)</td>
+<td style="text-align: left;">top − bottom net-income third: +1.26 pt before (q = 0.15), +2.01 pt on the event day (q = 0.025); operating income +1.95, revenue +0.45; pre-registered H2 EBITDA-margin change +2.03 (q = 0.025), H1/H3/H4 not confirmed</td>
+<td style="text-align: left;">event day +2.01 pt with previous-quarter cut-offs, +2.01 pt ranking only companies already reported; no drift after day 4 (net-margin change +5.07 pt over days 1–20 is borderline, q = 0.058)</td>
 <td style="text-align: left;"><code>FUNDAMENTAL_IMPROVEMENT_CANDIDATE</code></td>
 </tr>
 <tr>
@@ -199,7 +199,8 @@ tools; it does not invent or predict financial facts.</strong></p>
   a few tenths of a percent.</li>
 <li><strong>Robust findings.</strong> Few effects survive correction <em>and</em> keep their sign in the second half:<ul>
 <li>the harness's catch-up rule (+0.8 pt vs peers in 10 days, both halves);</li>
-<li>the earnings reaction on the disclosure day (+2.0 pt top vs bottom third, profitability rather than sales);</li>
+<li>the earnings reaction on the disclosure day (+2.0 pt top vs bottom third, profitability rather than sales),
+  including the EBITDA-margin change, which was written down as a hypothesis before it was tested;</li>
 <li>the Wednesday weakness;</li>
 <li>short-term continuation after big down days and over weekends.</li>
 </ul>
@@ -622,7 +623,8 @@ reviewer.</p>
 <li>Around the inflation-accounting switch (2022Q4 – 2024Q1) earnings cannot be ranked: the restated figures were
   published a year later.</li>
 <li>EBITDA, leverage, liquidity, cash-flow and daily valuation ratios are computed (statement items checked against
-  published figures), but their price reactions are not yet tested.</li>
+  published figures). Only four of them were tested (pre-registered H1–H4 in Report 4); liquidity and EV/EBITDA
+  were not.</li>
 <li>Fintables keeps only the latest version of each figure, so later corrections are carried back into earlier
   periods (one small case found).</li>
 <li>RSS has no history.</li>
@@ -658,7 +660,7 @@ reviewer.</p>
 </ul>
 <p><strong>Future work.</strong></p>
 <ul>
-<li>Test the net-margin drift (Report 4) on new quarters as a pre-registered hypothesis.</li>
+<li>Test the net-margin drift (Report 4, borderline q = 0.058) and the EBITDA-margin reaction (H2) on new quarters.</li>
 <li>Replace halves with rolling walk-forward tests and add a sector benchmark at portfolio level.</li>
 <li>Add an evidence-id consistency check to the validator.</li>
 <li>Collect a human-labelled reference set for the harness experiment.</li>

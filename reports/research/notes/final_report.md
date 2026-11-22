@@ -119,7 +119,8 @@ tools; it does not invent or predict financial facts.**
   a few tenths of a percent.
 - **Robust findings.** Few effects survive correction *and* keep their sign in the second half:
   - the harness's catch-up rule (+0.8 pt vs peers in 10 days, both halves);
-  - the earnings reaction on the disclosure day (+2.0 pt top vs bottom third, profitability rather than sales);
+  - the earnings reaction on the disclosure day (+2.0 pt top vs bottom third, profitability rather than sales),
+    including the EBITDA-margin change, which was written down as a hypothesis before it was tested;
   - the Wednesday weakness;
   - short-term continuation after big down days and over weekends.
 - **Robust but not tradable.** The Thursday strength, partly linked to central-bank decision days, is the most
@@ -278,7 +279,8 @@ reviewer.
   - Around the inflation-accounting switch (2022Q4 – 2024Q1) earnings cannot be ranked: the restated figures were
     published a year later.
   - EBITDA, leverage, liquidity, cash-flow and daily valuation ratios are computed (statement items checked against
-    published figures), but their price reactions are not yet tested.
+    published figures). Only four of them were tested (pre-registered H1–H4 in Report 4); liquidity and EV/EBITDA
+    were not.
   - Fintables keeps only the latest version of each figure, so later corrections are carried back into earlier
     periods (one small case found).
   - RSS has no history.
@@ -307,7 +309,7 @@ reviewer.
 
 **Future work.**
 
-- Test the net-margin drift (Report 4) on new quarters as a pre-registered hypothesis.
+- Test the net-margin drift (Report 4, borderline q = 0.058) and the EBITDA-margin reaction (H2) on new quarters.
 - Replace halves with rolling walk-forward tests and add a sector benchmark at portfolio level.
 - Add an evidence-id consistency check to the validator.
 - Collect a human-labelled reference set for the harness experiment.

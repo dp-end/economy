@@ -10,7 +10,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage points; `[TRY]` Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.
 
-**21 datasets, 455 fields.**
+**21 datasets, 468 fields.**
 
 | # | dataset | kind | step | columns |
 |---:|:---|:---|:---|---:|
@@ -22,7 +22,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | 6 | Technical, support/resistance and relative features | structured | 3, 5 | 46 |
 | 7 | Macro panel | structured | 8 | 12 |
 | 8 | KAP publication dates of financial statements | structured | 7B | 9 |
-| 9 | Technical reversal events | structured (event table) | 4 | 15 |
+| 9 | Technical reversal events | structured (event table) | 4 | 28 |
 | 10 | Sector laggard / leader events | structured (event table) | 5 | 17 |
 | 11 | Earnings disclosure events | structured (event table) | 7C | 64 |
 | 12 | News archive (KAP + RSS) | unstructured text + structured tags | 10 | 12 |
@@ -234,6 +234,19 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `regime` | `uptrend` close > SMA200, `downtrend`, `unknown` | text | 100% | unknown |
 | `vol_confirm` | volume z-score > 1 on the event day | bool | 100% | 23% True |
 | `quake_window` | True if the window touches the Feb 2023 earthquake closure; such rows are excluded from statistics | bool | 100% | 2% True |
+| `rsi_state` | `dip` RSI(14) ≤ 35 on one of the last 3 days, `tepe` ≥ 65, `notr`, `bilinmiyor` | text | 100% | bilinmiyor |
+| `kama_state` | 5-day KAMA change: `yukselen` > +0.5%, `dusen` < −0.5%, `yatay` in between | text | 100% | bilinmiyor |
+| `kama_turn` | 5-day KAMA change minus the same change 5 days earlier [pt]; + = slope turning up | float | 100% | -40.21 – 56.29 |
+| `st_state` | Supertrend direction at the event: `yukari`, `asagi` | text | 100% | yukari |
+| `cloud_pos` | close vs Ichimoku cloud: `ustunde` above, `icinde` inside, `altinda` below | text | 100% | bilinmiyor |
+| `vol_recent` | volume z-score > 1 on at least one of the last 3 days | bool | 100% | 41% True |
+| `conf_rsi` | confirmation 1: RSI zone in the event's direction (bullish `dip`, bearish `tepe`) | bool | 100% | 26% True |
+| `conf_vol` | confirmation 2: same as `vol_recent` | bool | 100% | 41% True |
+| `conf_kama` | confirmation 3: KAMA turning in the event's direction (sign of `kama_turn`) | bool | 100% | 43% True |
+| `conf_score` | number of confirmations, 0–3 | int | 100% | 0 – 3 |
+| `k1_confirmed` | pre-registered K1: at least 2 confirmations | bool | 100% | 32% True |
+| `k1_all3` | all three confirmations (the spec's literal example; counted, not tested) | bool | 100% | 3% True |
+| `k2_against_trend` | pre-registered K2: Supertrend against the event and price on the opposite side of the cloud (always false for Supertrend and cloud events) | bool | 100% | 35% True |
 | `fwd_1` | stock return over the next 1 trading days (close to close) [fraction] | float | 100% | -0.1 – 0.1 |
 | `exc_1` | `fwd_1` minus XU100 return over the same days [fraction] | float | 100% | -0.127 – 0.1859 |
 | `fwd_3` | stock return over the next 3 trading days (close to close) [fraction] | float | 100% | -0.2702 – 0.3301 |

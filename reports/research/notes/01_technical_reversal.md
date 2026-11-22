@@ -8,6 +8,10 @@ survives multiple-testing correction, and only 4 of 12 keep the same sign in the
 Two bullish events (`kama_turn_up`, `resistance_break`) are the most stable, but their edge (~+0.2–0.3% in 5 days)
 is about the size of one round-trip trading cost (0.30% in our backtest).
 
+The spec's combined conditions do not change this. Neither "confirmed" events (at least two of RSI zone, recent
+volume spike and a turning KAMA) nor events "against the trend" (below a bearish Supertrend and the cloud) behave
+reliably differently from the same event without the condition (20 pre-registered tests, none with q < 0.05).
+
 <!-- main -->
 **Reading Table 2 and Figure 1.**
 
@@ -61,6 +65,9 @@ period with two political/financial shocks. A sign flip across them is what we w
 is regime-specific or accidental.
 
 <!-- multiple -->
+None of the 32 tests has q < 0.05. The smallest p-values belong to the combined conditions (0.011 for
+confirmed `bb_lower_reentry`), not to the plain events.
+
 Read as a whole, the evidence is **"no reliable reversal edge beyond the market"**. If we had picked the best
 cell in the regime table (+1.51%) and reported it alone, it would look like a strong finding. That is exactly the
 data-snooping risk the project brief warns about.
@@ -113,6 +120,11 @@ The PETKM and KRDMD D/E experiment rows were re-run with the corrected code.
 - **Missing event families.** The spec's middle-Bollinger-band test and support/resistance *touches* (as opposed
   to breaks) are not stored as events. RSI local troughs/peaks are approximated by exits from the 30/70 zones, and
   divergence is not detected.
+- **Combined conditions are our definition.** The spec's literal triple (RSI trough + rising volume + flattening
+  KAMA at once) is too rare to test, so K1 needs two of three confirmations, each judged over the last 3 days. The
+  RSI (35/65), KAMA (±0.5%) and 3-day choices were fixed from event counts before returns were computed, and not
+  varied afterwards. For the two RSI events almost every event is "against the trend", so their K2 comparison
+  group is tiny (73 and 12 events).
 - **No maximum-excursion measure.** Reversal strength is the median return at fixed horizons, not the largest
   favourable move inside the window.
 - **Only nominal TRY returns.** High inflation inflates raw returns. The excess-vs-XU100 column is the fair
@@ -128,5 +140,35 @@ Technical reversal events are useful as **timestamped context**: they say what t
 stocks over five years, they do not give a reliable edge over simply holding the index once market drift,
 clustering, multiple testing and a later sample are taken into account. This is the "prediction ≠ profitable
 strategy" distinction in practice: an event can be right more than half the time in raw terms and still add
-nothing after the benchmark and costs. The harness therefore uses these events only together with sector,
+nothing after the benchmark and costs. Requiring confirming indicators, as the spec's ASELS example suggests,
+does not rescue them on this data. The harness therefore uses these events only together with sector,
 fundamental and risk-gate evidence, never alone.
+
+<!-- combined -->
+**Reading Table 6a.** The states show what the chart typically looks like at each event.
+
+- **Reversal events happen against the trend almost by definition.** 91% of `bb_lower_reentry` and 100% of
+  `rsi_oversold_exit` events come with a bearish Supertrend; their mirror events look the same.
+- **KAMA rarely turns at a band re-entry** (5–7%). KAMA reacts slowly, so it turns days after the band touch,
+  which is why the spec's triple occurs so rarely.
+- **The "all three" cells are too small to read** (1–102 events). Examples are +4.24% for `supertrend_up` (n = 6)
+  and +2.77% for `bb_lower_reentry` (n = 7).
+
+**Reading Table 6b: no pre-registered condition is confirmed.**
+
+- **K1 "confirmed".**
+  - The closest case is `bb_lower_reentry`: +0.80% vs −0.16% without confirmation (difference +0.96 pt, p = 0.011,
+    q = 0.34). The difference has the same size in both halves (+0.87 / +0.92).
+  - It is the one cell that matches the spec's ASELS story, but it does not survive correction.
+  - For the other 11 event types the difference is between −0.66 and +0.40 pt, five of them with the wrong sign.
+- **K2 "against the trend".**
+  - The expectation (weaker follow-through) holds for the bearish band and RSI events, e.g. `bb_upper_reentry`
+    −0.63 pt and `rsi_overbought_exit` −1.62 pt (p = 0.045, q = 0.48).
+  - For those RSI events the comparison group is tiny (73 events), and the `bb_upper_reentry` effect appears only
+    in the first half (−1.38 / +0.23).
+  - For `bb_lower_reentry` the sign is the opposite of the spec's example: a bullish re-entry below a bearish
+    Supertrend and the cloud did *better* (+0.67 pt), in both halves. Deep oversold bounces are a mean-reversion
+    trade, not a trend trade.
+
+The ASELS example in the spec is a plausible story, and one cell (`bb_lower_reentry` with confirmations) points
+in its direction. On 30 stocks over five years it is not a finding: 20 tests, none with q < 0.05.

@@ -404,8 +404,8 @@ corrections from the 22 November review, so that explanations and evidence match
 
 | analysis_id | same fingerprint | stored action | replayed action | stored gate | replayed gate | changed data files | procedure changed |
 |:---|:---|:---|:---|:---|:---|:---|:---|
-| 2f8d0f98ef03 | no | FUNDAMENTAL_IMPROVEMENT_CANDIDATE | FUNDAMENTAL_IMPROVEMENT_CANDIDATE | PASS | PASS | reports/earnings_events.parquet | yes |
-| 1065622735f2 | no | FUNDAMENTAL_IMPROVEMENT_CANDIDATE | FUNDAMENTAL_IMPROVEMENT_CANDIDATE | PASS | PASS | reports/earnings_events.parquet | yes |
+| 2f8d0f98ef03 | no | FUNDAMENTAL_IMPROVEMENT_CANDIDATE | FUNDAMENTAL_IMPROVEMENT_CANDIDATE | PASS | PASS | reports/technical_events.parquet, reports/earnings_events.parquet | yes |
+| 1065622735f2 | no | FUNDAMENTAL_IMPROVEMENT_CANDIDATE | FUNDAMENTAL_IMPROVEMENT_CANDIDATE | PASS | PASS | reports/technical_events.parquet, reports/earnings_events.parquet | yes |
 
 **What the real log contains.** Two real Gemini runs (ASELS, 2026-11-06, made on 2026-11-18 during Step 13). In
 both, the rules gave `FUNDAMENTAL_IMPROVEMENT_CANDIDATE`, and the human changed it to `WATCH`. Reason, in

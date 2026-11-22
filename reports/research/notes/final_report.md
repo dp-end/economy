@@ -126,7 +126,8 @@ tools; it does not invent or predict financial facts.**
 - **Robust but not tradable.** The Thursday strength, partly linked to central-bank decision days, is the most
   stable weekday effect. It is not tradable after costs.
 - **Non-findings** are reported as carefully as findings:
-  - no technical reversal type beats the index;
+  - no technical reversal type beats the index, with or without the spec's confirming indicators (20
+    pre-registered combined-condition tests, none significant);
   - negative KAP news categories have no average effect;
   - the macro risk flag lowered strategy returns;
   - revenue growth carries no price information under high inflation;

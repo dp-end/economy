@@ -91,6 +91,7 @@ def research_summary() -> pd.DataFrame:
     e1 = e1[~e1["quake_window"]]
     m1 = R1.main_table(e1, R1.baseline().iloc[0])
     ot1, _ = R1.oos_table(e1)
+    m1, ct1 = R1.test_family(m1, e1)
     s2 = R2.load_events()
     lad = R2.filter_ladder(s2, R2.baseline().loc["gap"])
     oos2 = R2.oos_table(s2)
@@ -108,7 +109,9 @@ def research_summary() -> pd.DataFrame:
     rows = [
         ("1 Technical reversals", f"excess vs XU100 of 12 event types: {m1['excess 5d %'].min():+.2f} to "
          f"{m1['excess 5d %'].max():+.2f}% in 5 days; raw gains ≈ any-day drift (+{R1.baseline().iloc[0]['mean_5']:.2f}%)",
-         f"no type with q < 0.05; {int(ot1['same sign'].sum())}/12 keep sign out of sample", "context only"),
+         f"no type with q < 0.05; {int(ot1['same sign'].sum())}/12 keep sign out of sample; combined conditions "
+         f"(confirmed / against the trend): {int((ct1['q (all tests)'] < 0.05).sum())} of {len(ct1)} significant",
+         "context only"),
         ("2 Sector catch-up", f"harness rule (no shock, strong sector, recovering, not weak earnings): "
          f"{lad.iloc[-1]['gap 10d']:+.2f} pt vs peers in 10 days (baseline {lad.iloc[0]['gap 10d']:+.2f})",
          f"only q < 0.05 result; {oos2.loc['harness catch-up', 'gap 10d first']:+.2f} / "

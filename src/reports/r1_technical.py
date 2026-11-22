@@ -11,7 +11,7 @@ import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
 
 from src.data.prices import get_index_history
-from src.events.technical_events import DEDUPE_GAP, HORIZONS, baseline
+from src.events.technical_events import DEDUPE_GAP, HORIZONS, K2_APPLICABLE, KAMA_FLAT, RSI_HIGH, RSI_LOW, baseline
 from src.reports.common import (C, DISCLAIMER, bh, clustered_t, load_notes, md_table, note, save_fig, stamp,
                                 style, t_test, write)
 
@@ -113,6 +113,57 @@ def volume_table(e: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows).set_index("event")
 
 
+def diff_test(x: pd.Series, flag: pd.Series, dates: pd.Series) -> float:
+    """Koşullu ve koşulsuz olayların ortalama farkı için p: x ~ 1 + flag, gün kümelemeli standart hata."""
+    import statsmodels.api as sm
+    d = pd.DataFrame({"x": x.to_numpy(), "f": flag.astype(float).to_numpy(), "g": pd.factorize(dates)[0]}).dropna()
+    if d["f"].sum() < 2 or (1 - d["f"]).sum() < 2:
+        return np.nan
+    r = sm.OLS(d["x"], sm.add_constant(d["f"])).fit(cov_type="cluster", cov_kwds={"groups": d["g"]})
+    return float(r.pvalues["f"])
+
+
+def state_table(e: pd.DataFrame) -> pd.DataFrame:
+    """Olay anındaki gösterge durumları: olayların yüzde kaçında her onay / ters trend var (betimleyici)."""
+    g = e.groupby("event")
+    return pd.DataFrame({
+        "n": g.size(),
+        "RSI zone %": g["conf_rsi"].mean() * 100, "volume z>1 %": g["conf_vol"].mean() * 100,
+        "KAMA turning %": g["conf_kama"].mean() * 100,
+        "Supertrend against %": g.apply(lambda d: ((d["st_state"] == "asagi") if d["direction"].iloc[0] > 0
+                                                   else (d["st_state"] == "yukari")).mean() * 100),
+        "cloud against %": g.apply(lambda d: ((d["cloud_pos"] == "altinda") if d["direction"].iloc[0] > 0
+                                              else (d["cloud_pos"] == "ustunde")).mean() * 100),
+        "all three (n)": g["k1_all3"].sum().astype(int),
+        "all three excess 5d %": g.apply(lambda d: d.loc[d["k1_all3"], "x_5"].mean()),
+    })
+
+
+def combined_table(e: pd.DataFrame) -> pd.DataFrame:
+    """Önceden yazılmış K1 (≥2 onay) ve K2 (trende karşı): koşullu − koşulsuz 5 günlük fazla getiri."""
+    rows = []
+    for cond, col, sign in (("K1 confirmed", "k1_confirmed", "+"), ("K2 against trend", "k2_against_trend", "−")):
+        for ev, g in e.groupby("event"):
+            if col == "k2_against_trend" and ev not in K2_APPLICABLE:
+                continue
+            on, off = g[g[col]], g[~g[col]]
+            rows.append({"condition": cond, "event": ev, "expected": sign, "n with": len(on), "n without": len(off),
+                         "excess 5d % with": on["x_5"].mean(), "excess 5d % without": off["x_5"].mean(),
+                         "difference": on["x_5"].mean() - off["x_5"].mean(),
+                         "p (by day)": diff_test(g["x_5"], g[col], g["date"])})
+    return pd.DataFrame(rows)
+
+
+def test_family(m: pd.DataFrame, e: pd.DataFrame) -> tuple:
+    """Raporun tek BH ailesi: 12 olay türü (Tablo 2) + önceden yazılmış K1/K2 (Tablo 6b). Final rapor da bunu kullanır.
+    Döner: ('q (all tests)' eklenmiş ana tablo, birleşik koşul tablosu)."""
+    ct = combined_table(e)
+    q = bh(np.concatenate([m["p (by day)"].to_numpy(), ct["p (by day)"].to_numpy()]))
+    m = m.drop(columns="q BH").assign(**{"q (all tests)": q[:len(m)]})
+    ct["q (all tests)"] = q[len(m):]
+    return m, ct
+
+
 def oos_table(e: pd.DataFrame) -> tuple:
     split = e["date"].min() + (e["date"].max() - e["date"].min()) / 2
     split = pd.Timestamp(split.date())
@@ -177,6 +228,8 @@ def build() -> str:
     e = raw_all[~raw_all["quake_window"]].copy()
     base = baseline().iloc[0]
     m = main_table(e, base)
+    st_tab = state_table(e).loc[m.index]
+    m, ct = test_family(m, e)
     bt = bounce_table(e).loc[m.index]
     ht = horizon_table(e).loc[m.index]
     rm, rn = regime_table(e)
@@ -187,7 +240,9 @@ def build() -> str:
     f1, f2 = fig_raw_vs_excess(m, base), fig_regimes(rm, rn)
 
     n_tests = len(m)
-    sig = m[(m["q BH"] < 0.05)]
+    n_family = len(m) + len(ct)
+    sig = m[(m["q (all tests)"] < 0.05)]
+    ct_sig = ct[ct["q (all tests)"] < 0.05]
     defs = pd.DataFrame([(k, v[0], "bull" if k in m.index and m.loc[k, "dir"] == "bull" else "bear", v[1])
                          for k, v in EVENTS.items()], columns=["event", "family", "dir", "definition"])
     regime_txt = rm.copy()
@@ -226,7 +281,8 @@ have anyway, and does the answer survive regimes, a later sample and multiple-te
 - Regimes: the stock above/below its own 200-day SMA; XU100 above/below its 200-day SMA; XU100 20-day volatility
   above/below its expanding median (needs 250 days, earlier rows are "unknown" and left out of those columns).
 - Statistics: t-test of the mean; because many stocks fire on the same day, a **day-clustered t** (mean per day
-  first) is reported and used for p-values; Benjamini–Hochberg q across the {n_tests} event types.
+  first) is reported and used for p-values. Benjamini–Hochberg q is computed once over all {n_family} tests of
+  this report: the {n_tests} event types (Table 2) and the pre-registered combined conditions (Table 6b).
 
 **Table 1. Event definitions**
 
@@ -239,7 +295,7 @@ Any-day baseline (all stock-days, no event): 5-day mean **{base['mean_5']:+.2f}%
 
 **Table 2. Direction-adjusted 5-day returns (%), earthquake window excluded**
 
-{md_table(m.drop(columns=["family"]), fmt={"p (by day)": "{:.3f}", "q BH": "{:.3f}", "t": "{:.2f}",
+{md_table(m.drop(columns=["family"]), fmt={"p (by day)": "{:.3f}", "q (all tests)": "{:.3f}", "t": "{:.2f}",
                                             "t (by day)": "{:.2f}"})}
 
 "raw vs any-day" = raw mean minus what the baseline drift alone gives in that direction
@@ -283,13 +339,57 @@ Reversal strength is the median direction-adjusted return (medians resist a few 
 ## 7. Combined condition: volume confirmation
 
 The spec's ASELS example asks whether events with confirming conditions behave differently than single-indicator
-events. The stored events carry one confirmation flag: 20-day volume z-score > 1 on the event day.
+events. This section uses one confirmation flag, 20-day volume z-score > 1 on the event day (not tested);
+Section 7b adds the full indicator state and the pre-registered tests.
 
 **Table 6. Excess 5-day return with and without volume confirmation (%)**
 
 {md_table(vt)}
 
 {note(notes, "volume")}
+
+## 7b. Indicator states at the event and pre-registered combined conditions
+
+The spec's event record (§8) stores the market state at the event: RSI state, Supertrend state, KAMA slope,
+Ichimoku position and volume. Every event now carries these states, measured at the event-day close with data up
+to that day only (`src/events/technical_events.py: states`).
+
+**Written on 22 November 2026, before any return of these conditions was computed** (only the counts of events
+were looked at, to make sure each condition occurs often enough to be tested). For a bullish event, with the mirror
+image for a bearish event:
+
+- **Confirmations.** (1) RSI(14) was ≤ {RSI_LOW} (bearish: ≥ {RSI_HIGH}) on at least one of the last 3 days;
+  (2) volume z-score > 1 on at least one of the last 3 days; (3) **KAMA turning**: the 5-day KAMA change is higher
+  than it was 5 days earlier (bearish: lower), i.e. the decline is flattening.
+- **K1 "confirmed"**: at least two of the three confirmations. Expected: stronger follow-through than the same
+  event without confirmation (difference > 0).
+- **K2 "against the trend"**: Supertrend points against the event and the price is on the opposite side of the
+  Ichimoku cloud (bullish event below a bearish Supertrend and below the cloud). Expected: weaker follow-through
+  (difference < 0). It cannot occur for Supertrend and cloud events themselves, so it is tested on
+  {len(K2_APPLICABLE)} event types.
+- **Why not the spec's literal triple?** The spec's example (RSI trough + rising volume + flattening KAMA, all at
+  once) occurs only a handful of times per event type (Table 6a, "all three"). With RSI judged on the event day
+  itself and KAMA required to be flat (|5-day change| ≤ {KAMA_FLAT}%), it occurred in **none** of the
+  {len(e):,} events: when RSI is at a trough the price has just fallen, so KAMA is still falling. It is reported, not
+  tested.
+- **Test.** Difference in mean direction-adjusted 5-day excess return (vs XU100) between events with and without
+  the condition, standard errors clustered by day; two-sided p; one Benjamini–Hochberg family with Table 2.
+
+**Table 6a. Indicator states at the event (% of events; descriptive)**
+
+{md_table(st_tab, fmt={"n": "{:,.0f}", "RSI zone %": "{:.0f}", "volume z>1 %": "{:.0f}", "KAMA turning %": "{:.0f}",
+                       "Supertrend against %": "{:.0f}", "cloud against %": "{:.0f}", "all three (n)": "{:,.0f}",
+                       "all three excess 5d %": "{:+.2f}"})}
+
+**Table 6b. Pre-registered combined conditions: 5-day excess return with vs without (%)**
+
+{md_table(ct.set_index(["condition", "event"]), fmt={"n with": "{:,.0f}", "n without": "{:,.0f}",
+          "excess 5d % with": "{:+.2f}", "excess 5d % without": "{:+.2f}", "difference": "{:+.2f}",
+          "p (by day)": "{:.3f}", "q (all tests)": "{:.3f}"})}
+
+Conditions with q < 0.05: **{', '.join(f"{r.condition} / {r.event}" for r in ct_sig.itertuples()) or 'none'}**.
+
+{note(notes, "combined")}
 
 ## 8. Out-of-sample check: first half vs second half
 
@@ -308,7 +408,8 @@ Same sign in both halves: **{int(ot['same sign'].sum())} of {len(ot)}** event ty
 This report alone looks at {n_tests} event types × {len(HORIZONS)} horizons × 2 return definitions
 (raw, excess) plus {len(REGIME_COLS)} regime cuts, more than 100 numbers. At a 5% level, about 1 in 20 would look
 "significant" by chance. That is why Table 2 uses day-clustered p-values and Benjamini–Hochberg q, and why a
-result is only called a finding when it also keeps its sign out of sample (Table 7).
+result is only called a finding when it also keeps its sign out of sample (Table 7). The {n_family} formal tests
+(Tables 2 and 6b) share one Benjamini–Hochberg correction.
 
 {note(notes, "multiple")}
 

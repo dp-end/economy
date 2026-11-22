@@ -33,7 +33,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 (news, speeches, LLM explanations, review reasons); all other fields are structured.</p>
 <p>Units: <code>[fraction]</code> 0.05 = 5%; <code>[%]</code> already in percent; <code>[pt]</code> percentage points; <code>[TRY]</code> Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.</p>
-<p><strong>21 datasets, 455 fields.</strong></p>
+<p><strong>21 datasets, 468 fields.</strong></p>
 <table>
 <thead>
 <tr>
@@ -106,7 +106,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">Technical reversal events</td>
 <td style="text-align: left;">structured (event table)</td>
 <td style="text-align: left;">4</td>
-<td style="text-align: right;">15</td>
+<td style="text-align: right;">28</td>
 </tr>
 <tr>
 <td style="text-align: right;">10</td>
@@ -1188,6 +1188,97 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">bool</td>
 <td style="text-align: left;">100%</td>
 <td style="text-align: left;">2% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>rsi_state</code></td>
+<td style="text-align: left;"><code>dip</code> RSI(14) ≤ 35 on one of the last 3 days, <code>tepe</code> ≥ 65, <code>notr</code>, <code>bilinmiyor</code></td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">bilinmiyor</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>kama_state</code></td>
+<td style="text-align: left;">5-day KAMA change: <code>yukselen</code> &gt; +0.5%, <code>dusen</code> &lt; −0.5%, <code>yatay</code> in between</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">bilinmiyor</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>kama_turn</code></td>
+<td style="text-align: left;">5-day KAMA change minus the same change 5 days earlier [pt]; + = slope turning up</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">-40.21 – 56.29</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>st_state</code></td>
+<td style="text-align: left;">Supertrend direction at the event: <code>yukari</code>, <code>asagi</code></td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">yukari</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>cloud_pos</code></td>
+<td style="text-align: left;">close vs Ichimoku cloud: <code>ustunde</code> above, <code>icinde</code> inside, <code>altinda</code> below</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">bilinmiyor</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>vol_recent</code></td>
+<td style="text-align: left;">volume z-score &gt; 1 on at least one of the last 3 days</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">41% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>conf_rsi</code></td>
+<td style="text-align: left;">confirmation 1: RSI zone in the event's direction (bullish <code>dip</code>, bearish <code>tepe</code>)</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">26% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>conf_vol</code></td>
+<td style="text-align: left;">confirmation 2: same as <code>vol_recent</code></td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">41% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>conf_kama</code></td>
+<td style="text-align: left;">confirmation 3: KAMA turning in the event's direction (sign of <code>kama_turn</code>)</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">43% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>conf_score</code></td>
+<td style="text-align: left;">number of confirmations, 0–3</td>
+<td style="text-align: left;">int</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">0 – 3</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>k1_confirmed</code></td>
+<td style="text-align: left;">pre-registered K1: at least 2 confirmations</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">32% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>k1_all3</code></td>
+<td style="text-align: left;">all three confirmations (the spec's literal example; counted, not tested)</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">3% True</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>k2_against_trend</code></td>
+<td style="text-align: left;">pre-registered K2: Supertrend against the event and price on the opposite side of the cloud (always false for Supertrend and cloud events)</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">35% True</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>fwd_1</code></td>
@@ -3791,8 +3882,8 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <tbody>
 <tr>
 <td style="text-align: left;"><code>reports/technical_events.parquet</code></td>
-<td style="text-align: left;">1,023 kB</td>
-<td style="text-align: left;">8f94db7524b6</td>
+<td style="text-align: left;">1,182 kB</td>
+<td style="text-align: left;">1c8c252cc17d</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/event_summary_fwd.csv</code></td>
@@ -3822,6 +3913,9 @@ the sample. Measured against XU100, the average 5-day effect is between −0.13%
 survives multiple-testing correction, and only 4 of 12 keep the same sign in the second half of the sample.
 Two bullish events (<code>kama_turn_up</code>, <code>resistance_break</code>) are the most stable, but their edge (~+0.2–0.3% in 5 days)
 is about the size of one round-trip trading cost (0.30% in our backtest).</p>
+<p>The spec's combined conditions do not change this. Neither "confirmed" events (at least two of RSI zone, recent
+volume spike and a turning KAMA) nor events "against the trend" (below a bearish Supertrend and the cloud) behave
+reliably differently from the same event without the condition (20 pre-registered tests, none with q &lt; 0.05).</p>
 <h2>2. Data and method</h2>
 <ul>
 <li>Universe: the fixed 30-stock study universe (<code>config/universe.csv</code>), daily İş Yatırım prices,
@@ -3837,7 +3931,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <li>Regimes: the stock above/below its own 200-day SMA; XU100 above/below its 200-day SMA; XU100 20-day volatility
   above/below its expanding median (needs 250 days, earlier rows are "unknown" and left out of those columns).</li>
 <li>Statistics: t-test of the mean; because many stocks fire on the same day, a <strong>day-clustered t</strong> (mean per day
-  first) is reported and used for p-values; Benjamini–Hochberg q across the 12 event types.</li>
+  first) is reported and used for p-values. Benjamini–Hochberg q is computed once over all 32 tests of
+  this report: the 12 event types (Table 2) and the pre-registered combined conditions (Table 6b).</li>
 </ul>
 <p><strong>Table 1. Event definitions</strong></p>
 <table>
@@ -3942,8 +4037,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <th style="text-align: right;">t (by day)</th>
 <th style="text-align: right;">p (by day)</th>
 <th style="text-align: right;">days</th>
-<th style="text-align: right;">q BH</th>
 <th style="text-align: right;">raw vs any-day</th>
+<th style="text-align: right;">q (all tests)</th>
 </tr>
 </thead>
 <tbody>
@@ -3959,8 +4054,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">-0.35</td>
 <td style="text-align: right;">0.726</td>
 <td style="text-align: right;">266</td>
-<td style="text-align: right;">0.958</td>
 <td style="text-align: right;">-0.13</td>
+<td style="text-align: right;">0.965</td>
 </tr>
 <tr>
 <td style="text-align: left;">bb_upper_reentry</td>
@@ -3974,8 +4069,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">-1.01</td>
 <td style="text-align: right;">0.311</td>
 <td style="text-align: right;">580</td>
-<td style="text-align: right;">0.747</td>
 <td style="text-align: right;">0.17</td>
+<td style="text-align: right;">0.830</td>
 </tr>
 <tr>
 <td style="text-align: left;">cloud_break_up</td>
@@ -3989,8 +4084,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">0.34</td>
 <td style="text-align: right;">0.737</td>
 <td style="text-align: right;">428</td>
-<td style="text-align: right;">0.958</td>
 <td style="text-align: right;">-0.02</td>
+<td style="text-align: right;">0.965</td>
 </tr>
 <tr>
 <td style="text-align: left;">cloud_break_down</td>
@@ -4004,8 +4099,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">2.04</td>
 <td style="text-align: right;">0.042</td>
 <td style="text-align: right;">372</td>
-<td style="text-align: right;">0.508</td>
 <td style="text-align: right;">0.59</td>
+<td style="text-align: right;">0.480</td>
 </tr>
 <tr>
 <td style="text-align: left;">kama_turn_up</td>
@@ -4019,8 +4114,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">1.18</td>
 <td style="text-align: right;">0.237</td>
 <td style="text-align: right;">731</td>
-<td style="text-align: right;">0.711</td>
 <td style="text-align: right;">0.17</td>
+<td style="text-align: right;">0.689</td>
 </tr>
 <tr>
 <td style="text-align: left;">kama_turn_down</td>
@@ -4034,8 +4129,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">-0.45</td>
 <td style="text-align: right;">0.649</td>
 <td style="text-align: right;">724</td>
-<td style="text-align: right;">0.958</td>
 <td style="text-align: right;">0.70</td>
+<td style="text-align: right;">0.965</td>
 </tr>
 <tr>
 <td style="text-align: left;">rsi_oversold_exit</td>
@@ -4049,8 +4144,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">0.27</td>
 <td style="text-align: right;">0.791</td>
 <td style="text-align: right;">130</td>
-<td style="text-align: right;">0.958</td>
 <td style="text-align: right;">-0.09</td>
+<td style="text-align: right;">0.965</td>
 </tr>
 <tr>
 <td style="text-align: left;">rsi_overbought_exit</td>
@@ -4064,8 +4159,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">0.12</td>
 <td style="text-align: right;">0.905</td>
 <td style="text-align: right;">415</td>
-<td style="text-align: right;">0.960</td>
 <td style="text-align: right;">0.33</td>
+<td style="text-align: right;">0.965</td>
 </tr>
 <tr>
 <td style="text-align: left;">supertrend_up</td>
@@ -4079,8 +4174,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">0.05</td>
 <td style="text-align: right;">0.960</td>
 <td style="text-align: right;">324</td>
-<td style="text-align: right;">0.960</td>
 <td style="text-align: right;">0.18</td>
+<td style="text-align: right;">0.965</td>
 </tr>
 <tr>
 <td style="text-align: left;">supertrend_down</td>
@@ -4094,8 +4189,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">0.26</td>
 <td style="text-align: right;">0.798</td>
 <td style="text-align: right;">254</td>
-<td style="text-align: right;">0.958</td>
 <td style="text-align: right;">-0.19</td>
+<td style="text-align: right;">0.965</td>
 </tr>
 <tr>
 <td style="text-align: left;">resistance_break</td>
@@ -4109,8 +4204,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">1.40</td>
 <td style="text-align: right;">0.162</td>
 <td style="text-align: right;">938</td>
-<td style="text-align: right;">0.648</td>
 <td style="text-align: right;">0.16</td>
+<td style="text-align: right;">0.576</td>
 </tr>
 <tr>
 <td style="text-align: left;">support_break</td>
@@ -4124,8 +4219,8 @@ is about the size of one round-trip trading cost (0.30% in our backtest).</p>
 <td style="text-align: right;">1.50</td>
 <td style="text-align: right;">0.135</td>
 <td style="text-align: right;">855</td>
-<td style="text-align: right;">0.648</td>
 <td style="text-align: right;">0.34</td>
+<td style="text-align: right;">0.539</td>
 </tr>
 </tbody>
 </table>
@@ -4532,7 +4627,8 @@ the opposite of the reversal the event name suggests.</p>
 </ul>
 <h2>7. Combined condition: volume confirmation</h2>
 <p>The spec's ASELS example asks whether events with confirming conditions behave differently than single-indicator
-events. The stored events carry one confirmation flag: 20-day volume z-score &gt; 1 on the event day.</p>
+events. This section uses one confirmation flag, 20-day volume z-score &gt; 1 on the event day (not tested);
+Section 7b adds the full indicator state and the pre-registered tests.</p>
 <p><strong>Table 6. Excess 5-day return with and without volume confirmation (%)</strong></p>
 <table>
 <thead>
@@ -4649,6 +4745,472 @@ events. The stored events carry one confirmation flag: 20-day volume z-score &gt
 (<code>rsi_overbought_exit</code> +0.01% → −0.38%, <code>supertrend_down</code> +0.03% → −0.27%). In other words, high volume tends to
 mean "the move continues". These differences were not tested for significance and are a hypothesis for later
 work, not a rule.</p>
+<h2>7b. Indicator states at the event and pre-registered combined conditions</h2>
+<p>The spec's event record (§8) stores the market state at the event: RSI state, Supertrend state, KAMA slope,
+Ichimoku position and volume. Every event now carries these states, measured at the event-day close with data up
+to that day only (<code>src/events/technical_events.py: states</code>).</p>
+<p><strong>Written on 22 November 2026, before any return of these conditions was computed</strong> (only the counts of events
+were looked at, to make sure each condition occurs often enough to be tested). For a bullish event, with the mirror
+image for a bearish event:</p>
+<ul>
+<li><strong>Confirmations.</strong> (1) RSI(14) was ≤ 35 (bearish: ≥ 65) on at least one of the last 3 days;
+  (2) volume z-score &gt; 1 on at least one of the last 3 days; (3) <strong>KAMA turning</strong>: the 5-day KAMA change is higher
+  than it was 5 days earlier (bearish: lower), i.e. the decline is flattening.</li>
+<li><strong>K1 "confirmed"</strong>: at least two of the three confirmations. Expected: stronger follow-through than the same
+  event without confirmation (difference &gt; 0).</li>
+<li><strong>K2 "against the trend"</strong>: Supertrend points against the event and the price is on the opposite side of the
+  Ichimoku cloud (bullish event below a bearish Supertrend and below the cloud). Expected: weaker follow-through
+  (difference &lt; 0). It cannot occur for Supertrend and cloud events themselves, so it is tested on
+  8 event types.</li>
+<li><strong>Why not the spec's literal triple?</strong> The spec's example (RSI trough + rising volume + flattening KAMA, all at
+  once) occurs only a handful of times per event type (Table 6a, "all three"). With RSI judged on the event day
+  itself and KAMA required to be flat (|5-day change| ≤ 0.5%), it occurred in <strong>none</strong> of the
+  15,058 events: when RSI is at a trough the price has just fallen, so KAMA is still falling. It is reported, not
+  tested.</li>
+<li><strong>Test.</strong> Difference in mean direction-adjusted 5-day excess return (vs XU100) between events with and without
+  the condition, standard errors clustered by day; two-sided p; one Benjamini–Hochberg family with Table 2.</li>
+</ul>
+<p><strong>Table 6a. Indicator states at the event (% of events; descriptive)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">event</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">RSI zone %</th>
+<th style="text-align: right;">volume z&gt;1 %</th>
+<th style="text-align: right;">KAMA turning %</th>
+<th style="text-align: right;">Supertrend against %</th>
+<th style="text-align: right;">cloud against %</th>
+<th style="text-align: right;">all three (n)</th>
+<th style="text-align: right;">all three excess 5d %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">bb_lower_reentry</td>
+<td style="text-align: right;">632</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">+2.77</td>
+</tr>
+<tr>
+<td style="text-align: left;">bb_upper_reentry</td>
+<td style="text-align: right;">1,187</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">+0.10</td>
+</tr>
+<tr>
+<td style="text-align: left;">cloud_break_up</td>
+<td style="text-align: right;">718</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-1.14</td>
+</tr>
+<tr>
+<td style="text-align: left;">cloud_break_down</td>
+<td style="text-align: right;">633</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">-0.10</td>
+</tr>
+<tr>
+<td style="text-align: left;">kama_turn_up</td>
+<td style="text-align: right;">1,948</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">+0.51</td>
+</tr>
+<tr>
+<td style="text-align: left;">kama_turn_down</td>
+<td style="text-align: right;">1,923</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">-1.32</td>
+</tr>
+<tr>
+<td style="text-align: left;">rsi_oversold_exit</td>
+<td style="text-align: right;">218</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">+0.66</td>
+</tr>
+<tr>
+<td style="text-align: left;">rsi_overbought_exit</td>
+<td style="text-align: right;">786</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">-0.59</td>
+</tr>
+<tr>
+<td style="text-align: left;">supertrend_up</td>
+<td style="text-align: right;">521</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">+4.24</td>
+</tr>
+<tr>
+<td style="text-align: left;">supertrend_down</td>
+<td style="text-align: right;">539</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">+0.50</td>
+</tr>
+<tr>
+<td style="text-align: left;">resistance_break</td>
+<td style="text-align: right;">3,104</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">+1.50</td>
+</tr>
+<tr>
+<td style="text-align: left;">support_break</td>
+<td style="text-align: right;">2,849</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">-0.26</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 6b. Pre-registered combined conditions: 5-day excess return with vs without (%)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">condition</th>
+<th style="text-align: left;">event</th>
+<th style="text-align: left;">expected</th>
+<th style="text-align: right;">n with</th>
+<th style="text-align: right;">n without</th>
+<th style="text-align: right;">excess 5d % with</th>
+<th style="text-align: right;">excess 5d % without</th>
+<th style="text-align: right;">difference</th>
+<th style="text-align: right;">p (by day)</th>
+<th style="text-align: right;">q (all tests)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">bb_lower_reentry</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">165</td>
+<td style="text-align: right;">467</td>
+<td style="text-align: right;">+0.80</td>
+<td style="text-align: right;">-0.16</td>
+<td style="text-align: right;">+0.96</td>
+<td style="text-align: right;">0.011</td>
+<td style="text-align: right;">0.342</td>
+</tr>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">bb_upper_reentry</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">582</td>
+<td style="text-align: right;">605</td>
+<td style="text-align: right;">-0.05</td>
+<td style="text-align: right;">-0.20</td>
+<td style="text-align: right;">+0.15</td>
+<td style="text-align: right;">0.671</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">cloud_break_down</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">119</td>
+<td style="text-align: right;">514</td>
+<td style="text-align: right;">+0.20</td>
+<td style="text-align: right;">+0.26</td>
+<td style="text-align: right;">-0.06</td>
+<td style="text-align: right;">0.921</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">cloud_break_up</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">242</td>
+<td style="text-align: right;">476</td>
+<td style="text-align: right;">-0.42</td>
+<td style="text-align: right;">+0.24</td>
+<td style="text-align: right;">-0.66</td>
+<td style="text-align: right;">0.088</td>
+<td style="text-align: right;">0.480</td>
+</tr>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">kama_turn_down</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">561</td>
+<td style="text-align: right;">1,362</td>
+<td style="text-align: right;">-0.06</td>
+<td style="text-align: right;">-0.07</td>
+<td style="text-align: right;">+0.01</td>
+<td style="text-align: right;">0.965</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">kama_turn_up</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">431</td>
+<td style="text-align: right;">1,517</td>
+<td style="text-align: right;">+0.29</td>
+<td style="text-align: right;">+0.25</td>
+<td style="text-align: right;">+0.04</td>
+<td style="text-align: right;">0.899</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">resistance_break</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">882</td>
+<td style="text-align: right;">2,222</td>
+<td style="text-align: right;">+0.36</td>
+<td style="text-align: right;">+0.17</td>
+<td style="text-align: right;">+0.18</td>
+<td style="text-align: right;">0.369</td>
+<td style="text-align: right;">0.908</td>
+</tr>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">rsi_overbought_exit</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">549</td>
+<td style="text-align: right;">237</td>
+<td style="text-align: right;">-0.07</td>
+<td style="text-align: right;">-0.02</td>
+<td style="text-align: right;">-0.05</td>
+<td style="text-align: right;">0.895</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">rsi_oversold_exit</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">132</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">+0.48</td>
+<td style="text-align: right;">+0.08</td>
+<td style="text-align: right;">+0.40</td>
+<td style="text-align: right;">0.563</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">supertrend_down</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">179</td>
+<td style="text-align: right;">360</td>
+<td style="text-align: right;">-0.41</td>
+<td style="text-align: right;">+0.15</td>
+<td style="text-align: right;">-0.56</td>
+<td style="text-align: right;">0.228</td>
+<td style="text-align: right;">0.689</td>
+</tr>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">supertrend_up</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">328</td>
+<td style="text-align: right;">193</td>
+<td style="text-align: right;">+0.05</td>
+<td style="text-align: right;">+0.09</td>
+<td style="text-align: right;">-0.03</td>
+<td style="text-align: right;">0.946</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+<tr>
+<td style="text-align: left;">K1 confirmed</td>
+<td style="text-align: left;">support_break</td>
+<td style="text-align: left;">+</td>
+<td style="text-align: right;">679</td>
+<td style="text-align: right;">2,170</td>
+<td style="text-align: right;">+0.05</td>
+<td style="text-align: right;">-0.12</td>
+<td style="text-align: right;">+0.18</td>
+<td style="text-align: right;">0.493</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+<tr>
+<td style="text-align: left;">K2 against trend</td>
+<td style="text-align: left;">bb_lower_reentry</td>
+<td style="text-align: left;">−</td>
+<td style="text-align: right;">379</td>
+<td style="text-align: right;">253</td>
+<td style="text-align: right;">+0.35</td>
+<td style="text-align: right;">-0.32</td>
+<td style="text-align: right;">+0.67</td>
+<td style="text-align: right;">0.116</td>
+<td style="text-align: right;">0.530</td>
+</tr>
+<tr>
+<td style="text-align: left;">K2 against trend</td>
+<td style="text-align: left;">bb_upper_reentry</td>
+<td style="text-align: left;">−</td>
+<td style="text-align: right;">909</td>
+<td style="text-align: right;">278</td>
+<td style="text-align: right;">-0.28</td>
+<td style="text-align: right;">+0.36</td>
+<td style="text-align: right;">-0.63</td>
+<td style="text-align: right;">0.090</td>
+<td style="text-align: right;">0.480</td>
+</tr>
+<tr>
+<td style="text-align: left;">K2 against trend</td>
+<td style="text-align: left;">kama_turn_down</td>
+<td style="text-align: left;">−</td>
+<td style="text-align: right;">818</td>
+<td style="text-align: right;">1,105</td>
+<td style="text-align: right;">-0.12</td>
+<td style="text-align: right;">-0.03</td>
+<td style="text-align: right;">-0.09</td>
+<td style="text-align: right;">0.692</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+<tr>
+<td style="text-align: left;">K2 against trend</td>
+<td style="text-align: left;">kama_turn_up</td>
+<td style="text-align: left;">−</td>
+<td style="text-align: right;">507</td>
+<td style="text-align: right;">1,441</td>
+<td style="text-align: right;">+0.27</td>
+<td style="text-align: right;">+0.26</td>
+<td style="text-align: right;">+0.02</td>
+<td style="text-align: right;">0.950</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+<tr>
+<td style="text-align: left;">K2 against trend</td>
+<td style="text-align: left;">resistance_break</td>
+<td style="text-align: left;">−</td>
+<td style="text-align: right;">857</td>
+<td style="text-align: right;">2,247</td>
+<td style="text-align: right;">+0.30</td>
+<td style="text-align: right;">+0.20</td>
+<td style="text-align: right;">+0.10</td>
+<td style="text-align: right;">0.616</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+<tr>
+<td style="text-align: left;">K2 against trend</td>
+<td style="text-align: left;">rsi_overbought_exit</td>
+<td style="text-align: left;">−</td>
+<td style="text-align: right;">713</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">-0.20</td>
+<td style="text-align: right;">+1.42</td>
+<td style="text-align: right;">-1.62</td>
+<td style="text-align: right;">0.045</td>
+<td style="text-align: right;">0.480</td>
+</tr>
+<tr>
+<td style="text-align: left;">K2 against trend</td>
+<td style="text-align: left;">rsi_oversold_exit</td>
+<td style="text-align: left;">−</td>
+<td style="text-align: right;">206</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">+0.21</td>
+<td style="text-align: right;">+2.12</td>
+<td style="text-align: right;">-1.91</td>
+<td style="text-align: right;">0.084</td>
+<td style="text-align: right;">0.480</td>
+</tr>
+<tr>
+<td style="text-align: left;">K2 against trend</td>
+<td style="text-align: left;">support_break</td>
+<td style="text-align: left;">−</td>
+<td style="text-align: right;">968</td>
+<td style="text-align: right;">1,881</td>
+<td style="text-align: right;">-0.10</td>
+<td style="text-align: right;">-0.07</td>
+<td style="text-align: right;">-0.03</td>
+<td style="text-align: right;">0.872</td>
+<td style="text-align: right;">0.965</td>
+</tr>
+</tbody>
+</table>
+<p>Conditions with q &lt; 0.05: <strong>none</strong>.</p>
+<p><strong>Reading Table 6a.</strong> The states show what the chart typically looks like at each event.</p>
+<ul>
+<li><strong>Reversal events happen against the trend almost by definition.</strong> 91% of <code>bb_lower_reentry</code> and 100% of
+  <code>rsi_oversold_exit</code> events come with a bearish Supertrend; their mirror events look the same.</li>
+<li><strong>KAMA rarely turns at a band re-entry</strong> (5–7%). KAMA reacts slowly, so it turns days after the band touch,
+  which is why the spec's triple occurs so rarely.</li>
+<li><strong>The "all three" cells are too small to read</strong> (1–102 events). Examples are +4.24% for <code>supertrend_up</code> (n = 6)
+  and +2.77% for <code>bb_lower_reentry</code> (n = 7).</li>
+</ul>
+<p><strong>Reading Table 6b: no pre-registered condition is confirmed.</strong></p>
+<ul>
+<li><strong>K1 "confirmed".</strong><ul>
+<li>The closest case is <code>bb_lower_reentry</code>: +0.80% vs −0.16% without confirmation (difference +0.96 pt, p = 0.011,
+  q = 0.34). The difference has the same size in both halves (+0.87 / +0.92).</li>
+<li>It is the one cell that matches the spec's ASELS story, but it does not survive correction.</li>
+<li>For the other 11 event types the difference is between −0.66 and +0.40 pt, five of them with the wrong sign.</li>
+</ul>
+</li>
+<li><strong>K2 "against the trend".</strong><ul>
+<li>The expectation (weaker follow-through) holds for the bearish band and RSI events, e.g. <code>bb_upper_reentry</code>
+  −0.63 pt and <code>rsi_overbought_exit</code> −1.62 pt (p = 0.045, q = 0.48).</li>
+<li>For those RSI events the comparison group is tiny (73 events), and the <code>bb_upper_reentry</code> effect appears only
+  in the first half (−1.38 / +0.23).</li>
+<li>For <code>bb_lower_reentry</code> the sign is the opposite of the spec's example: a bullish re-entry below a bearish
+  Supertrend and the cloud did <em>better</em> (+0.67 pt), in both halves. Deep oversold bounces are a mean-reversion
+  trade, not a trend trade.</li>
+</ul>
+</li>
+</ul>
+<p>The ASELS example in the spec is a plausible story, and one cell (<code>bb_lower_reentry</code> with confirmations) points
+in its direction. On 30 stocks over five years it is not a finding: 20 tests, none with q &lt; 0.05.</p>
 <h2>8. Out-of-sample check: first half vs second half</h2>
 <p>The sample is split at <strong>2024-05-12</strong>. A pattern worth trusting should keep at least its sign.</p>
 <p><strong>Table 7. Mean 5-day excess return (%) in each half</strong></p>
@@ -4772,7 +5334,10 @@ is regime-specific or accidental.</p>
 <p>This report alone looks at 12 event types × 4 horizons × 2 return definitions
 (raw, excess) plus 6 regime cuts, more than 100 numbers. At a 5% level, about 1 in 20 would look
 "significant" by chance. That is why Table 2 uses day-clustered p-values and Benjamini–Hochberg q, and why a
-result is only called a finding when it also keeps its sign out of sample (Table 7).</p>
+result is only called a finding when it also keeps its sign out of sample (Table 7). The 32 formal tests
+(Tables 2 and 6b) share one Benjamini–Hochberg correction.</p>
+<p>None of the 32 tests has q &lt; 0.05. The smallest p-values belong to the combined conditions (0.011 for
+confirmed <code>bb_lower_reentry</code>), not to the plain events.</p>
 <p>Read as a whole, the evidence is <strong>"no reliable reversal edge beyond the market"</strong>. If we had picked the best
 cell in the regime table (+1.51%) and reported it alone, it would look like a strong finding. That is exactly the
 data-snooping risk the project brief warns about.</p>
@@ -4823,6 +5388,11 @@ The PETKM and KRDMD D/E experiment rows were re-run with the corrected code.</p>
 <li><strong>Missing event families.</strong> The spec's middle-Bollinger-band test and support/resistance <em>touches</em> (as opposed
   to breaks) are not stored as events. RSI local troughs/peaks are approximated by exits from the 30/70 zones, and
   divergence is not detected.</li>
+<li><strong>Combined conditions are our definition.</strong> The spec's literal triple (RSI trough + rising volume + flattening
+  KAMA at once) is too rare to test, so K1 needs two of three confirmations, each judged over the last 3 days. The
+  RSI (35/65), KAMA (±0.5%) and 3-day choices were fixed from event counts before returns were computed, and not
+  varied afterwards. For the two RSI events almost every event is "against the trend", so their K2 comparison
+  group is tiny (73 and 12 events).</li>
 <li><strong>No maximum-excursion measure.</strong> Reversal strength is the median return at fixed horizons, not the largest
   favourable move inside the window.</li>
 <li><strong>Only nominal TRY returns.</strong> High inflation inflates raw returns. The excess-vs-XU100 column is the fair
@@ -4838,7 +5408,8 @@ The PETKM and KRDMD D/E experiment rows were re-run with the corrected code.</p>
 stocks over five years, they do not give a reliable edge over simply holding the index once market drift,
 clustering, multiple testing and a later sample are taken into account. This is the "prediction ≠ profitable
 strategy" distinction in practice: an event can be right more than half the time in raw terms and still add
-nothing after the benchmark and costs. The harness therefore uses these events only together with sector,
+nothing after the benchmark and costs. Requiring confirming indicators, as the spec's ASELS example suggests,
+does not rescue them on this data. The harness therefore uses these events only together with sector,
 fundamental and risk-gate evidence, never alone.</p></section><section class="report"><h1>Report 2 — Sector Laggards and Catch-Up</h1>
 <p><em>Educational research output for CSE-481. Historical evidence only: not a forecast, not investment advice. Returns are nominal TRY.</em></p>
 <p>Generated by <code>python -m src.reports.build_reports --only 2</code> from committed outputs (no analysis is re-run).</p>
@@ -10812,7 +11383,7 @@ corrections from the 22 November review, so that explanations and evidence match
 <td style="text-align: left;">FUNDAMENTAL_IMPROVEMENT_CANDIDATE</td>
 <td style="text-align: left;">PASS</td>
 <td style="text-align: left;">PASS</td>
-<td style="text-align: left;">reports/earnings_events.parquet</td>
+<td style="text-align: left;">reports/technical_events.parquet, reports/earnings_events.parquet</td>
 <td style="text-align: left;">yes</td>
 </tr>
 <tr>
@@ -10822,7 +11393,7 @@ corrections from the 22 November review, so that explanations and evidence match
 <td style="text-align: left;">FUNDAMENTAL_IMPROVEMENT_CANDIDATE</td>
 <td style="text-align: left;">PASS</td>
 <td style="text-align: left;">PASS</td>
-<td style="text-align: left;">reports/earnings_events.parquet</td>
+<td style="text-align: left;">reports/technical_events.parquet, reports/earnings_events.parquet</td>
 <td style="text-align: left;">yes</td>
 </tr>
 </tbody>

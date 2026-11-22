@@ -45,6 +45,51 @@ def detect_events(f: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(ev, index=f.index).fillna(False).astype(bool)
 
 
+KAMA_FLAT = 0.5      # % (5 günlük KAMA değişimi); günleri kabaca üçe böler, getiriye bakılarak seçilmedi
+RSI_LOW, RSI_HIGH = 35, 65
+RECENT = 3           # "son 3 gün" = t-2..t
+K2_APPLICABLE = {"bb_lower_reentry", "bb_upper_reentry", "rsi_oversold_exit", "rsi_overbought_exit",
+                 "kama_turn_up", "kama_turn_down", "resistance_break", "support_break"}   # Supertrend/bulut olaylarında
+#                                                                       K2 tanım gereği imkânsız
+
+
+def states(f: pd.DataFrame) -> pd.DataFrame:
+    """Olay günü kapanışındaki gösterge durumları (PDF §8 örnek olay kaydı). Yalnızca o güne kadarki veri.
+    rsi_state: son 3 günde RSI ≤ 35 'dip', ≥ 65 'tepe', yoksa 'notr' (dönüş günü RSI çoktan yükselmeye başlamış olur).
+    kama_state: 5 günlük KAMA değişimi > +0.5% 'yukselen', < −0.5% 'dusen', arası 'yatay'.
+    kama_turn: 5 günlük KAMA değişimi eksi 5 gün önceki 5 günlük değişim (+ = eğim yukarı dönüyor)."""
+    rsi = f["rsi_14"]
+    rsi_min, rsi_max = rsi.rolling(RECENT).min(), rsi.rolling(RECENT).max()
+    rsi_state = np.select([rsi_min <= RSI_LOW, rsi_max >= RSI_HIGH], ["dip", "tepe"], "notr")
+    kama5 = (f["kama"] / f["kama"].shift(5) - 1) * 100
+    kama_state = np.select([kama5 > KAMA_FLAT, kama5 < -KAMA_FLAT, kama5.notna()], ["yukselen", "dusen", "yatay"],
+                           "bilinmiyor")
+    st_state = np.select([f["st_dir"] > 0, f["st_dir"] < 0], ["yukari", "asagi"], "bilinmiyor")
+    cloud_pos = np.select([f["cloud_state"] > 0, f["cloud_state"] < 0, f["cloud_state"] == 0],
+                          ["ustunde", "altinda", "icinde"], "bilinmiyor")
+    out = pd.DataFrame({"rsi_state": rsi_state, "kama_state": kama_state, "kama_turn": kama5 - kama5.shift(5),
+                        "st_state": st_state, "cloud_pos": cloud_pos,
+                        "vol_recent": f["vol_z_20"].rolling(RECENT).max() > 1}, index=f.index)
+    out.loc[rsi_min.isna(), "rsi_state"] = "bilinmiyor"
+    return out
+
+
+def combined(direction: int, st: pd.DataFrame) -> pd.DataFrame:
+    """Önceden yazılmış birleşik koşullar (Adım 2, 22 Kasım 2026, getirilere bakmadan; PDF §13 ASELS örneği).
+    Onaylar (ayı olayında aynası): RSI son 3 günde dip (tepe); hacim son 3 günde z > 1; KAMA eğimi olay yönüne dönüyor.
+    K1 destekli = en az 2 onay; k1_all3 = üçü birden (PDF'in harfiyen koşulu, yalnız sayılır).
+    K2 trende karşı = Supertrend olayın tersi yönde ve fiyat bulutun olaya ters tarafında."""
+    bull = direction > 0
+    c_rsi = st["rsi_state"] == ("dip" if bull else "tepe")
+    c_vol = st["vol_recent"]
+    c_kama = (st["kama_turn"] > 0) if bull else (st["kama_turn"] < 0)
+    score = c_rsi.astype(int) + c_vol.astype(int) + c_kama.astype(int)
+    k2 = ((st["st_state"] == "asagi") & (st["cloud_pos"] == "altinda")) if bull else \
+        ((st["st_state"] == "yukari") & (st["cloud_pos"] == "ustunde"))
+    return pd.DataFrame({"conf_rsi": c_rsi, "conf_vol": c_vol, "conf_kama": c_kama, "conf_score": score,
+                         "k1_confirmed": score >= 2, "k1_all3": score == 3, "k2_against_trend": k2}, index=st.index)
+
+
 def dedupe(mask: pd.Series, gap: int = DEDUPE_GAP) -> pd.Series:
     """Son tutulan olaydan en fazla `gap` gün sonra gelen olayları at."""
     keep = np.zeros(len(mask), dtype=bool)
@@ -78,6 +123,7 @@ def event_table(ticker: str, xu: pd.Series = None) -> pd.DataFrame:
     c = f["Close"]
     ev = detect_events(f)
     reg, q, vc = regime(f), quake_flags(f.index), f["vol_z_20"] > 1
+    stt = states(f)
     fwd = {h: c.shift(-h) / c - 1 for h in HORIZONS}
     exc = {h: fwd[h] - (xu.shift(-h) / xu - 1) for h in HORIZONS}
 
@@ -93,6 +139,7 @@ def event_table(ticker: str, xu: pd.Series = None) -> pd.DataFrame:
             "vol_confirm": vc.loc[idx].to_numpy(),
             "quake_window": q.loc[idx].to_numpy(),
         }, index=idx)
+        p = p.join(stt.loc[idx]).join(combined(DIRECTION[name], stt.loc[idx]))
         for h in HORIZONS:
             p[f"fwd_{h}"] = fwd[h].loc[idx].to_numpy()
             p[f"exc_{h}"] = exc[h].loc[idx].to_numpy()

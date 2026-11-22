@@ -33,7 +33,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 (news, speeches, LLM explanations, review reasons); all other fields are structured.</p>
 <p>Units: <code>[fraction]</code> 0.05 = 5%; <code>[%]</code> already in percent; <code>[pt]</code> percentage points; <code>[TRY]</code> Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.</p>
-<p><strong>23 datasets, 499 fields.</strong></p>
+<p><strong>23 datasets, 502 fields.</strong></p>
 <table>
 <thead>
 <tr>
@@ -162,7 +162,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">Evidence bundle (one per stock and analysis day)</td>
 <td style="text-align: left;">structured + text evidence</td>
 <td style="text-align: left;">11</td>
-<td style="text-align: right;">109</td>
+<td style="text-align: right;">112</td>
 </tr>
 <tr>
 <td style="text-align: right;">18</td>
@@ -2831,6 +2831,27 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">text</td>
 <td style="text-align: left;">–</td>
 <td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>backtest.sektor_kiyas</code></td>
+<td style="text-align: left;">sector-neutral benchmark: the strategy's daily sector weights, equal weight inside each sector [fraction]</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">2.116</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>backtest.sektor_fark</code></td>
+<td style="text-align: left;">strategy minus sector-neutral benchmark (= stock picking inside sectors)</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">0.01135</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>backtest.islem_kazanma</code></td>
+<td style="text-align: left;">share of closed trades (entry to exit, after costs) with a positive return</td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">0.4912</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>observed.price.date</code></td>
@@ -6503,8 +6524,8 @@ fundamental and risk-gate evidence, never alone.</p></section><section class="re
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/backtest_strategies.csv</code></td>
-<td style="text-align: left;">6 kB</td>
-<td style="text-align: left;">5266ca6a8032</td>
+<td style="text-align: left;">9 kB</td>
+<td style="text-align: left;">5526e7fba350</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/backtest_cost_sensitivity.csv</code></td>
@@ -9757,8 +9778,8 @@ and the ROE drift, disappeared once each figure was used only from the day it be
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/backtest_strategies.csv</code></td>
-<td style="text-align: left;">6 kB</td>
-<td style="text-align: left;">5266ca6a8032</td>
+<td style="text-align: left;">9 kB</td>
+<td style="text-align: left;">5526e7fba350</td>
 </tr>
 </tbody>
 </table>
@@ -10809,13 +10830,33 @@ tool list and the replays are recomputed when the report is built (no API key ne
 <tbody>
 <tr>
 <td style="text-align: left;"><code>reports/backtest_strategies.csv</code></td>
-<td style="text-align: left;">6 kB</td>
-<td style="text-align: left;">5266ca6a8032</td>
+<td style="text-align: left;">9 kB</td>
+<td style="text-align: left;">5526e7fba350</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/backtest_cost_sensitivity.csv</code></td>
 <td style="text-align: left;">1 kB</td>
 <td style="text-align: left;">5adf4069e31b</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>reports/backtest_trades.csv</code></td>
+<td style="text-align: left;">479 kB</td>
+<td style="text-align: left;">237ce044ab64</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>reports/backtest_rolling.csv</code></td>
+<td style="text-align: left;">10 kB</td>
+<td style="text-align: left;">8360a5b56f32</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>reports/backtest_walkforward.csv</code></td>
+<td style="text-align: left;">1 kB</td>
+<td style="text-align: left;">fd0f30561d7f</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>reports/backtest_walkforward_summary.csv</code></td>
+<td style="text-align: left;">1 kB</td>
+<td style="text-align: left;">987d006b1e3a</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/harness_experiments.csv</code></td>
@@ -11368,6 +11409,490 @@ are indicator warm-up and are not evaluated.</p>
 </tr>
 </tbody>
 </table>
+<p><strong>Table 3b. Sector-neutral benchmark and trade-level results.</strong> The sector-neutral benchmark holds, every day, the
+same sector weights as the strategy but every stock of each sector in equal weight (sector members outside the
+30-stock universe included), at no cost. The difference is what the strategy gained or lost by <strong>picking stocks
+inside sectors</strong>. A trade is one continuous holding of a stock, entry to exit, after one-way costs on both sides;
+trades still open at the end of a period are left out.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">strategy</th>
+<th style="text-align: left;">period</th>
+<th style="text-align: right;">total %</th>
+<th style="text-align: right;">sector-neutral %</th>
+<th style="text-align: right;">vs sector-neutral pt</th>
+<th style="text-align: right;">closed trades</th>
+<th style="text-align: right;">winning trades %</th>
+<th style="text-align: right;">median trade %</th>
+<th style="text-align: right;">trades beating XU100 %</th>
+<th style="text-align: right;">avg days held</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">A_teknik</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">181</td>
+<td style="text-align: right;">175</td>
+<td style="text-align: right;">+6</td>
+<td style="text-align: right;">594</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">-1.16</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">12.6</td>
+</tr>
+<tr>
+<td style="text-align: left;">A_teknik</td>
+<td style="text-align: left;">first half</td>
+<td style="text-align: right;">176</td>
+<td style="text-align: right;">154</td>
+<td style="text-align: right;">+22</td>
+<td style="text-align: right;">299</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">-0.30</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">12.9</td>
+</tr>
+<tr>
+<td style="text-align: left;">A_teknik</td>
+<td style="text-align: left;">second half</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">-7</td>
+<td style="text-align: right;">295</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">-1.91</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">12.2</td>
+</tr>
+<tr>
+<td style="text-align: left;">B_sektor</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">188</td>
+<td style="text-align: right;">212</td>
+<td style="text-align: right;">-24</td>
+<td style="text-align: right;">688</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">-0.30</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">10.6</td>
+</tr>
+<tr>
+<td style="text-align: left;">B_sektor</td>
+<td style="text-align: left;">first half</td>
+<td style="text-align: right;">164</td>
+<td style="text-align: right;">176</td>
+<td style="text-align: right;">-11</td>
+<td style="text-align: right;">367</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">+0.71</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">10.1</td>
+</tr>
+<tr>
+<td style="text-align: left;">B_sektor</td>
+<td style="text-align: left;">second half</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">-4</td>
+<td style="text-align: right;">321</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">-1.74</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">11.0</td>
+</tr>
+<tr>
+<td style="text-align: left;">C_temel</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">213</td>
+<td style="text-align: right;">212</td>
+<td style="text-align: right;">+1</td>
+<td style="text-align: right;">627</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">-0.15</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">11.1</td>
+</tr>
+<tr>
+<td style="text-align: left;">C_temel</td>
+<td style="text-align: left;">first half</td>
+<td style="text-align: right;">175</td>
+<td style="text-align: right;">180</td>
+<td style="text-align: right;">-5</td>
+<td style="text-align: right;">353</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">+1.23</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">10.4</td>
+</tr>
+<tr>
+<td style="text-align: left;">C_temel</td>
+<td style="text-align: left;">second half</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">+2</td>
+<td style="text-align: right;">274</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">-1.86</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">12.0</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">163</td>
+<td style="text-align: right;">154</td>
+<td style="text-align: right;">+9</td>
+<td style="text-align: right;">627</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">-0.15</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">11.1</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro</td>
+<td style="text-align: left;">first half</td>
+<td style="text-align: right;">145</td>
+<td style="text-align: right;">144</td>
+<td style="text-align: right;">+1</td>
+<td style="text-align: right;">353</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">+1.23</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">10.4</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro</td>
+<td style="text-align: left;">second half</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">+3</td>
+<td style="text-align: right;">274</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">-1.86</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">12.0</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_oynaklik</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">164</td>
+<td style="text-align: right;">154</td>
+<td style="text-align: right;">+11</td>
+<td style="text-align: right;">627</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">-0.15</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">11.1</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_oynaklik</td>
+<td style="text-align: left;">first half</td>
+<td style="text-align: right;">148</td>
+<td style="text-align: right;">146</td>
+<td style="text-align: right;">+2</td>
+<td style="text-align: right;">353</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">+1.23</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">10.4</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_oynaklik</td>
+<td style="text-align: left;">second half</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">+4</td>
+<td style="text-align: right;">274</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">-1.86</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">12.0</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_faiz</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">+13</td>
+<td style="text-align: right;">627</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">-0.15</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">11.1</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_faiz</td>
+<td style="text-align: left;">first half</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">89</td>
+<td style="text-align: right;">+6</td>
+<td style="text-align: right;">353</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">+1.23</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">10.4</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_faiz</td>
+<td style="text-align: left;">second half</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">+3</td>
+<td style="text-align: right;">274</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">-1.86</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">12.0</td>
+</tr>
+<tr>
+<td style="text-align: left;">E_haber</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">176</td>
+<td style="text-align: right;">169</td>
+<td style="text-align: right;">+6</td>
+<td style="text-align: right;">611</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">-0.11</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">11.2</td>
+</tr>
+<tr>
+<td style="text-align: left;">E_haber</td>
+<td style="text-align: left;">first half</td>
+<td style="text-align: right;">145</td>
+<td style="text-align: right;">143</td>
+<td style="text-align: right;">+2</td>
+<td style="text-align: right;">339</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">+1.33</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">10.8</td>
+</tr>
+<tr>
+<td style="text-align: left;">E_haber</td>
+<td style="text-align: left;">second half</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">+1</td>
+<td style="text-align: right;">272</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">-1.67</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">11.7</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 3c. Rolling ~6-month windows (126 trading days, not overlapping)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">strategy</th>
+<th style="text-align: right;">windows beating XU100 (of 8)</th>
+<th style="text-align: right;">beating equal weight (of 8)</th>
+<th style="text-align: right;">beating sector-neutral (of 8)</th>
+<th style="text-align: right;">worst window vs XU100 pt</th>
+<th style="text-align: right;">best window vs XU100 pt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">A_teknik</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">-21</td>
+<td style="text-align: right;">+20</td>
+</tr>
+<tr>
+<td style="text-align: left;">B_sektor</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">-18</td>
+<td style="text-align: right;">+19</td>
+</tr>
+<tr>
+<td style="text-align: left;">C_temel</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">-20</td>
+<td style="text-align: right;">+22</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">-35</td>
+<td style="text-align: right;">+23</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_faiz</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">-40</td>
+<td style="text-align: right;">+18</td>
+</tr>
+<tr>
+<td style="text-align: left;">D_makro_oynaklik</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">-34</td>
+<td style="text-align: right;">+23</td>
+</tr>
+<tr>
+<td style="text-align: left;">E_haber</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">-35</td>
+<td style="text-align: right;">+22</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 3d. Walk-forward selection.</strong> At the start of each ~6-month test window the variant with the highest
+Sharpe ratio over the previous 252 trading days (after costs, data before the window only) is chosen and held for
+the window. The windows are joined into one out-of-sample run with switching costs.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">test window</th>
+<th style="text-align: left;">chosen (best Sharpe, previous 12 months)</th>
+<th style="text-align: right;">training Sharpe</th>
+<th style="text-align: right;">chosen return %</th>
+<th style="text-align: right;">XU100 %</th>
+<th style="text-align: left;">best in hindsight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">2023-11-01 – 2024-05-02</td>
+<td style="text-align: left;">C_temel</td>
+<td style="text-align: right;">2.48</td>
+<td style="text-align: right;">+34</td>
+<td style="text-align: right;">+36</td>
+<td style="text-align: left;">D_makro_oynaklik</td>
+</tr>
+<tr>
+<td style="text-align: left;">2024-05-03 – 2024-11-04</td>
+<td style="text-align: left;">D_makro_faiz</td>
+<td style="text-align: right;">2.83</td>
+<td style="text-align: right;">+3</td>
+<td style="text-align: right;">-15</td>
+<td style="text-align: left;">D_makro</td>
+</tr>
+<tr>
+<td style="text-align: left;">2024-11-05 – 2025-05-06</td>
+<td style="text-align: left;">D_makro_oynaklik</td>
+<td style="text-align: right;">2.07</td>
+<td style="text-align: right;">-2</td>
+<td style="text-align: right;">+5</td>
+<td style="text-align: left;">C_temel</td>
+</tr>
+<tr>
+<td style="text-align: left;">2025-05-07 – 2025-11-05</td>
+<td style="text-align: left;">C_temel</td>
+<td style="text-align: right;">0.66</td>
+<td style="text-align: right;">+6</td>
+<td style="text-align: right;">+20</td>
+<td style="text-align: left;">C_temel</td>
+</tr>
+<tr>
+<td style="text-align: left;">2025-11-06 – 2026-05-06</td>
+<td style="text-align: left;">C_temel</td>
+<td style="text-align: right;">0.59</td>
+<td style="text-align: right;">+16</td>
+<td style="text-align: right;">+36</td>
+<td style="text-align: left;">B_sektor</td>
+</tr>
+<tr>
+<td style="text-align: left;">2026-05-07 – 2026-11-06</td>
+<td style="text-align: left;">E_haber</td>
+<td style="text-align: right;">1.38</td>
+<td style="text-align: right;">-10</td>
+<td style="text-align: right;">-23</td>
+<td style="text-align: left;">D_makro_oynaklik</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 3e. The same out-of-sample period (2023-11-01 – 2026-11-06)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">method</th>
+<th style="text-align: right;">total %</th>
+<th style="text-align: right;">Sharpe</th>
+<th style="text-align: right;">max DD %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">walk-forward selection</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">0.89</td>
+<td style="text-align: right;">-20</td>
+</tr>
+<tr>
+<td style="text-align: left;">always A_teknik</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">0.60</td>
+<td style="text-align: right;">-23</td>
+</tr>
+<tr>
+<td style="text-align: left;">always B_sektor</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: right;">-24</td>
+</tr>
+<tr>
+<td style="text-align: left;">always C_temel</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">0.97</td>
+<td style="text-align: right;">-21</td>
+</tr>
+<tr>
+<td style="text-align: left;">always D_makro</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: right;">-19</td>
+</tr>
+<tr>
+<td style="text-align: left;">always D_makro_oynaklik</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">0.91</td>
+<td style="text-align: right;">-19</td>
+</tr>
+<tr>
+<td style="text-align: left;">always D_makro_faiz</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">0.62</td>
+<td style="text-align: right;">-19</td>
+</tr>
+<tr>
+<td style="text-align: left;">always E_haber</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">0.97</td>
+<td style="text-align: right;">-17</td>
+</tr>
+<tr>
+<td style="text-align: left;">XU100</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">0.70</td>
+<td style="text-align: right;">-29</td>
+</tr>
+<tr>
+<td style="text-align: left;">equal-weight buy &amp; hold</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">0.98</td>
+<td style="text-align: right;">-29</td>
+</tr>
+</tbody>
+</table>
 <p><strong>Table 4. Look-ahead self-test of the engine.</strong> A deliberately impossible signal (it holds today's winners)
 is run once without the one-day shift and once with it.</p>
 <table>
@@ -11429,12 +11954,40 @@ is run once without the one-day shift and once with it.</p>
   short-term continuation found in Report 3, but the daily turnover makes it worthless after costs.</li>
 </ul>
 </li>
+<li><strong>Picking stocks inside sectors adds little (Table 3b).</strong><ul>
+<li>Against the sector-neutral benchmark (same sector weights, all sector members in equal weight), most variants
+  are within ±13 pt over four years.</li>
+<li>The sector catch-up variant B is <strong>24 pt behind</strong> it. Its laggards did not beat their own sectors over the
+  holding period; whatever B earned came from the sectors it was in, not from the laggard choice. This fits
+  Report 2: the harness rule's +0.8 pt edge is a 10-day effect, smaller than one round trip of costs, and B
+  holds a stock for about 11 days.</li>
+</ul>
+</li>
+<li><strong>Trades: fewer than half win (Table 3b).</strong><ul>
+<li>44–49% of closed trades are positive after costs and the median trade loses 0.1–1.2%; only 39–47% beat XU100
+  over the same days. The total return comes from a minority of large winners and from being invested in a
+  rising market.</li>
+<li>In the second half the winning share falls to 39–43%.</li>
+<li>C, D and its two variants share the same trades: the macro filter only halves position sizes, which a trade's
+  return does not see.</li>
+</ul>
+</li>
+<li><strong>Rolling windows (Table 3c).</strong> Each variant beat XU100 in 3–4 of the eight ~6-month windows and equal-weight
+  buy-and-hold in only 2. The gap to XU100 swings from about −40 to +23 pt between windows.</li>
+<li><strong>Walk-forward selection does not help (Tables 3d, 3e).</strong><ul>
+<li>Choosing, every six months, the variant with the best Sharpe over the past year earned +52% over the
+  three-year out-of-sample period, the same as XU100 (+53%) and below always holding C (+63%) or equal-weight
+  buy-and-hold (+88%).</li>
+<li>The past year's winner was the best variant of the next window only once in six. In May 2024 the rule picked
+  the rate-filter variant, the weakest over the full period.</li>
+<li>Its advantage over XU100 is a smaller drawdown (−20% vs −29%), not a higher return.</li>
+</ul>
+</li>
 <li><strong>Spec checklist (§18).</strong><ul>
-<li>Done: signal shifting, publication dates, buy-and-hold and XU100 benchmarks, return / Sharpe / drawdown /
-  win rate / benchmark difference, costs, signal counts (no variant had fewer than 30 entries), and
-  in-sample/out-of-sample halves.</li>
-<li>Not done: a rolling walk-forward or a separate validation period (only halves), and a sector benchmark at
-  portfolio level. The optional ML layer (§19) was not built.</li>
+<li>Done: signal shifting, publication dates, buy-and-hold, XU100 and sector-neutral benchmarks, return / Sharpe /
+  drawdown / win rate (days and trades) / benchmark difference, costs, signal counts (no variant had fewer than
+  30 entries), in-sample/out-of-sample halves, rolling windows and a walk-forward selection test.</li>
+<li>Not done: the optional ML layer (§19).</li>
 </ul>
 </li>
 </ul>

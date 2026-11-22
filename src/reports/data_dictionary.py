@@ -441,6 +441,10 @@ DATASETS = [
                "backtest.xu100": "XU100 return [fraction]", "backtest.xu100_fark": "difference to XU100",
                "backtest.sharpe": "annualised Sharpe", "backtest.max_dusus": "maximum drawdown [fraction]",
                "backtest.islem_sayisi": "number of position entries", "backtest.uyari": "`az sinyal` if < 30 trades",
+               "backtest.sektor_kiyas": "sector-neutral benchmark: the strategy's daily sector weights, equal weight "
+                                        "inside each sector [fraction]",
+               "backtest.sektor_fark": "strategy minus sector-neutral benchmark (= stock picking inside sectors)",
+               "backtest.islem_kazanma": "share of closed trades (entry to exit, after costs) with a positive return",
                "action": "rule-chosen label from the 8 allowed actions", "secondary": "other candidate labels that also held",
                "warning": "fixed disclaimer", "committed[].id": "evidence id E1, E2, …",
                "committed[].text": "**text generated from numbers by code** (not by the LLM)",

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from src.backtest.engine import (COST_ONE_WAY, benchmarks, calculate_performance, load_returns,
-                                 run_backtest, split_halves)
+                                 run_backtest, sector_neutral, split_halves, trade_log)
 from src.data.fundamentals import load_all
 from src.data.macro import macro_panel
 from src.data.prices import get_index_history
@@ -20,6 +20,8 @@ TREND_SMA = 200            # piyasa trend filtresi: XU100 200 günlük ortalamas
 FX_WINDOW, FX_LOOKBACK, FX_PCT = 20, 250, 0.90   # kur: 20 günlük artış, kendi son 250 gününün %90'lık diliminde mi
 RATE_LOOKBACK = 126        # faiz döngüsü: politika faizi ~6 ay öncesinden yüksek mi
 COSTS = (0.0, COST_ONE_WAY, 2 * COST_ONE_WAY)
+WINDOW = 126              # Adım 5: kayan pencere ve walk-forward test penceresi (~6 ay)
+TRAIN = 252               # walk-forward seçim penceresi (~12 ay, test penceresinden hemen önce)
 POS_NEWS_BONUS = 0.5      # E: son 10 günde olumlu KAP haberi olan hisse sıralamada bu kadar öne alınır (sonuçtan önce sabitlendi)
 
 
@@ -117,13 +119,81 @@ def evaluate(weights: dict = None, cost: float = COST_ONE_WAY) -> pd.DataFrame:
     bm = benchmarks(ret)
     rows = []
     for name, w in (weights or generate_strategy_variants()).items():
-        bt = run_backtest(w.reindex(ret.index), ret, cost=cost)
+        w = w.reindex(ret.index)
+        bt = run_backtest(w, ret, cost=cost)
+        sec = sector_neutral(w, ret)
         first, second = split_halves(bt)
         for part, x in (("tum", bt), ("ilk_yari", first), ("ikinci_yari", second)):
-            r = calculate_performance(x, bm["esit_agirlik"])
+            tr = trade_log(w.loc[x.index], ret.loc[x.index], cost=cost)       # pencere içindeki işlemler
+            r = calculate_performance(x, bm["esit_agirlik"], sec, tr)
             r["xu100_fark"] = r["toplam_getiri"] - float((1 + bm["xu100"].reindex(x.index).fillna(0)).prod() - 1)
             rows.append({"strateji": name, "donem": part, **r})
     return pd.DataFrame(rows).set_index(["strateji", "donem"])
+
+
+def windows(index: pd.DatetimeIndex, size: int = WINDOW) -> list:
+    """Değerlendirme dönemini art arda, çakışmayan pencerelere böler (son kısa parça atılır)."""
+    return [index[i:i + size] for i in range(0, len(index) - size + 1, size)]
+
+
+def rolling_table(weights: dict = None, cost: float = COST_ONE_WAY) -> pd.DataFrame:
+    """Her strateji x her ~6 aylık pencere: getiri ve XU100, eşit ağırlık, sektör nötr kıyasa göre fark."""
+    ret = load_returns().iloc[WARMUP:]
+    bm = benchmarks(ret)
+    rows = []
+    for name, w in (weights or generate_strategy_variants()).items():
+        w = w.reindex(ret.index)
+        net = run_backtest(w, ret, cost=cost)["net"]
+        sec = sector_neutral(w, ret)
+        for k, ix in enumerate(windows(ret.index)):
+            tot = lambda x: float((1 + x.loc[ix].fillna(0)).prod() - 1)
+            rows.append(dict(strateji=name, pencere=k + 1, bas=ix[0].date(), bit=ix[-1].date(), getiri=tot(net),
+                             xu100=tot(bm["xu100"]), esit_agirlik=tot(bm["esit_agirlik"]), sektor_notr=tot(sec)))
+    d = pd.DataFrame(rows)
+    for b in ("xu100", "esit_agirlik", "sektor_notr"):
+        d[f"fark_{b}"] = d["getiri"] - d[b]
+    return d
+
+
+def walk_forward(weights: dict = None, cost: float = COST_ONE_WAY, train: int = TRAIN) -> tuple:
+    """Kayan seçim (Adım 5): her test penceresinin başında, hemen önceki `train` günde net Sharpe'ı en yüksek
+    strateji seçilir ve pencere boyunca onunla gidilir. Seçim yalnızca pencere başından önceki getirileri kullanır.
+    Birleşik ağırlıklarla tek backtest (geçiş maliyetleri dahil). Döner: (pencere tablosu, özet tablo)."""
+    weights = weights or generate_strategy_variants()
+    ret = load_returns().iloc[WARMUP:]
+    bm = benchmarks(ret)
+    nets = {n: run_backtest(w.reindex(ret.index), ret, cost=cost)["net"] for n, w in weights.items()}
+    wins = windows(ret.index)
+    first = next(i for i, ix in enumerate(wins) if ret.index.get_loc(ix[0]) >= train)
+    stitched = pd.DataFrame(0.0, index=ret.index, columns=ret.columns)
+    rows = []
+    for k in range(first, len(wins)):
+        ix = wins[k]
+        pos = ret.index.get_loc(ix[0])
+        past = ret.index[pos - train:pos]                                   # pencere başından ÖNCEKİ günler
+        sh = {n: x.loc[past].mean() / x.loc[past].std(ddof=1) * np.sqrt(252) for n, x in nets.items()}
+        pick = max(sh, key=sh.get)
+        stitched.loc[ix] = weights[pick].reindex(ix).fillna(0.0)
+        rows.append(dict(pencere=k + 1, bas=ix[0].date(), bit=ix[-1].date(), secilen=pick,
+                         egitim_sharpe=sh[pick], secilen_getiri=float((1 + nets[pick].loc[ix]).prod() - 1),
+                         en_iyi_sonradan=max(nets, key=lambda n: (1 + nets[n].loc[ix]).prod()),
+                         xu100=float((1 + bm["xu100"].loc[ix].fillna(0)).prod() - 1)))
+    test_ix = ret.index[ret.index.get_loc(wins[first][0]):ret.index.get_loc(wins[-1][-1]) + 1]
+    # pencere başında hedef ağırlık değişir; ilk günün getirisi bir önceki günün kararıyla alınır (kaydırma)
+    bt = run_backtest(stitched.loc[test_ix], ret.loc[test_ix], cost=cost)
+    tot = lambda x: float((1 + x.reindex(test_ix).fillna(0)).prod() - 1)
+    summ = [dict(yontem="walk-forward secim", toplam_getiri=tot(bt["net"]),
+                 sharpe=float(bt["net"].mean() / bt["net"].std(ddof=1) * np.sqrt(252)),
+                 max_dusus=float(((1 + bt["net"]).cumprod() / (1 + bt["net"]).cumprod().cummax() - 1).min()))]
+    for n, x in nets.items():
+        xs = x.reindex(test_ix)
+        summ.append(dict(yontem=f"sabit {n}", toplam_getiri=tot(xs), sharpe=float(xs.mean() / xs.std(ddof=1) * np.sqrt(252)),
+                         max_dusus=float(((1 + xs).cumprod() / (1 + xs).cumprod().cummax() - 1).min())))
+    for b in ("xu100", "esit_agirlik"):
+        xs = bm[b].reindex(test_ix).fillna(0)
+        summ.append(dict(yontem=f"kiyas {b}", toplam_getiri=tot(xs), sharpe=float(xs.mean() / xs.std(ddof=1) * np.sqrt(252)),
+                         max_dusus=float(((1 + xs).cumprod() / (1 + xs).cumprod().cummax() - 1).min())))
+    return pd.DataFrame(rows), pd.DataFrame(summ)
 
 
 if __name__ == "__main__":
@@ -136,6 +206,15 @@ if __name__ == "__main__":
         print(f"kıyas {part:12s} XU100 %{tot['xu100'] * 100:,.0f}   eşit ağırlık %{tot['esit_agirlik'] * 100:,.0f}")
     res = evaluate()
     res.to_csv("reports/backtest_strategies.csv")
+    variants = generate_strategy_variants()
+    ret_e = load_returns().iloc[WARMUP:]
+    pd.concat([trade_log(w.reindex(ret_e.index), ret_e).assign(strateji=n) for n, w in variants.items()]) \
+        .to_csv("reports/backtest_trades.csv", index=False)
+    rolling_table(variants).to_csv("reports/backtest_rolling.csv", index=False)
+    wf, wf_sum = walk_forward(variants)
+    wf.to_csv("reports/backtest_walkforward.csv", index=False)
+    wf_sum.to_csv("reports/backtest_walkforward_summary.csv", index=False)
+    print("\nWalk-forward seçim:\n" + wf.round(3).to_string() + "\n" + wf_sum.round(3).to_string())
     cols = ["toplam_getiri", "sharpe", "max_dusus", "piyasada_gun", "islem_sayisi", "toplam_maliyet", "fark", "bilgi_orani", "xu100_fark"]
     print("\nStratejiler (maliyet tek yön %0,15; 'fark' = eşit ağırlıklı al-tut kıyasına göre toplam getiri farkı):")
     print(res[cols].astype(float).round(2).to_string())

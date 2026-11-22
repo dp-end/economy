@@ -23,7 +23,9 @@ from src.harness.state_machine import AGENT_AT, MANDATORY, SAFE_PATH, STATE_TOOL
 from src.mcp_server.server import build_server
 from src.reports.common import C, DISCLAIMER, load_notes, md_table, note, save_fig, stamp, style, write
 
-SOURCES = ["reports/backtest_strategies.csv", "reports/backtest_cost_sensitivity.csv",
+SOURCES = ["reports/backtest_strategies.csv", "reports/backtest_cost_sensitivity.csv", "reports/backtest_trades.csv",
+           "reports/backtest_rolling.csv", "reports/backtest_walkforward.csv",
+           "reports/backtest_walkforward_summary.csv",
            "reports/harness_experiments.csv", "reports/experiments/per_case.csv", "reports/experiments/raw.jsonl",
            "reports/decision_log.sqlite", "reports/scans/scan_2026-01-09_POTENTIAL_CATCH_UP_CANDIDATE.csv",
            "reports/scans/scan_2026-11-06_POTENTIAL_CATCH_UP_CANDIDATE.csv"]
@@ -114,6 +116,36 @@ def backtest_tables() -> tuple:
     cost = pd.read_csv("reports/backtest_cost_sensitivity.csv").set_index("strateji") * 100
     cost.columns = [f"one-way cost {float(c.split('_')[1]) * 100:.2f}%" for c in cost.columns]
     return t.set_index(["strategy", "period"]), bench, cost.rename_axis("strategy")
+
+
+def backtest_extra() -> tuple:
+    """Adım 5: sektör nötr kıyas + işlem bazında sonuçlar, kayan pencereler, walk-forward seçim."""
+    b = pd.read_csv("reports/backtest_strategies.csv")
+    per = {"tum": "full", "ilk_yari": "first half", "ikinci_yari": "second half"}
+    sec = pd.DataFrame({"strategy": b["strateji"], "period": b["donem"].map(per),
+                        "total %": b["toplam_getiri"] * 100, "sector-neutral %": b["sektor_kiyas_getiri"] * 100,
+                        "vs sector-neutral pt": b["sektor_farki"] * 100, "closed trades": b["islem_kapanan"],
+                        "winning trades %": b["islem_kazanma_orani"] * 100,
+                        "median trade %": b["islem_ortanca_getiri"] * 100,
+                        "trades beating XU100 %": b["islem_xu100_gecme_orani"] * 100,
+                        "avg days held": b["islem_ort_gun"]}).set_index(["strategy", "period"])
+    r = pd.read_csv("reports/backtest_rolling.csv")
+    n = r["pencere"].nunique()
+    roll = r.groupby("strateji").agg(**{f"windows beating XU100 (of {n})": ("fark_xu100", lambda x: int((x > 0).sum())),
+                                       f"beating equal weight (of {n})": ("fark_esit_agirlik", lambda x: int((x > 0).sum())),
+                                       f"beating sector-neutral (of {n})": ("fark_sektor_notr", lambda x: int((x > 0).sum())),
+                                       "worst window vs XU100 pt": ("fark_xu100", lambda x: x.min() * 100),
+                                       "best window vs XU100 pt": ("fark_xu100", lambda x: x.max() * 100)})
+    wf = pd.read_csv("reports/backtest_walkforward.csv")
+    wf = pd.DataFrame({"test window": wf["bas"] + " – " + wf["bit"], "chosen (best Sharpe, previous 12 months)": wf["secilen"],
+                       "training Sharpe": wf["egitim_sharpe"], "chosen return %": wf["secilen_getiri"] * 100,
+                       "XU100 %": wf["xu100"] * 100, "best in hindsight": wf["en_iyi_sonradan"]})
+    ws = pd.read_csv("reports/backtest_walkforward_summary.csv")
+    ws = pd.DataFrame({"method": ws["yontem"].str.replace("walk-forward secim", "walk-forward selection")
+                       .str.replace("sabit ", "always ").str.replace("kiyas esit_agirlik", "equal-weight buy & hold")
+                       .str.replace("kiyas xu100", "XU100"),
+                       "total %": ws["toplam_getiri"] * 100, "Sharpe": ws["sharpe"], "max DD %": ws["max_dusus"] * 100})
+    return sec, roll.rename_axis("strategy"), wf, ws
 
 
 def lookahead_check() -> pd.DataFrame:
@@ -314,6 +346,7 @@ def scan_tables() -> tuple:
 def build() -> str:
     notes = load_notes(NOTES_FILE)
     bt, bench, cost = backtest_tables()
+    bsec, broll, bwf, bws = backtest_extra()
     la = lookahead_check()
     eq = equity_curves()
     tools, states, gate = tool_table(), state_table(), gate_table()
@@ -377,6 +410,30 @@ are indicator warm-up and are not evaluated.
 **Table 3. Cost sensitivity (total return %, full period)**
 
 {md_table(cost, default="{:.0f}")}
+
+**Table 3b. Sector-neutral benchmark and trade-level results.** The sector-neutral benchmark holds, every day, the
+same sector weights as the strategy but every stock of each sector in equal weight (sector members outside the
+30-stock universe included), at no cost. The difference is what the strategy gained or lost by **picking stocks
+inside sectors**. A trade is one continuous holding of a stock, entry to exit, after one-way costs on both sides;
+trades still open at the end of a period are left out.
+
+{md_table(bsec, fmt={"total %": "{:.0f}", "sector-neutral %": "{:.0f}", "vs sector-neutral pt": "{:+.0f}",
+                     "closed trades": "{:,.0f}", "winning trades %": "{:.0f}", "median trade %": "{:+.2f}",
+                     "trades beating XU100 %": "{:.0f}", "avg days held": "{:.1f}"})}
+
+**Table 3c. Rolling ~6-month windows (126 trading days, not overlapping)**
+
+{md_table(broll, fmt={"worst window vs XU100 pt": "{:+.0f}", "best window vs XU100 pt": "{:+.0f}"})}
+
+**Table 3d. Walk-forward selection.** At the start of each ~6-month test window the variant with the highest
+Sharpe ratio over the previous 252 trading days (after costs, data before the window only) is chosen and held for
+the window. The windows are joined into one out-of-sample run with switching costs.
+
+{md_table(bwf, index=False, fmt={"training Sharpe": "{:.2f}", "chosen return %": "{:+.0f}", "XU100 %": "{:+.0f}"})}
+
+**Table 3e. The same out-of-sample period ({bwf["test window"].iloc[0][:10]} – {bwf["test window"].iloc[-1][-10:]})**
+
+{md_table(bws, index=False, fmt={"total %": "{:.0f}", "Sharpe": "{:.2f}", "max DD %": "{:.0f}"})}
 
 **Table 4. Look-ahead self-test of the engine.** A deliberately impossible signal (it holds today's winners)
 is run once without the one-day shift and once with it.

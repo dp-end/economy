@@ -154,6 +154,12 @@ tools; it does not invent or predict financial facts.**
 - **Full period.** No variant beat equal-weight buy-and-hold (342%). The macro and news layers (D, E) reduced
   returns with almost no drawdown benefit.
 - **Costs.** Raising the one-way cost from 0.15% to 0.30% removes 28–54 pt.
+- **Inside sectors and per trade.** Against a sector-neutral benchmark (same sector weights, all sector members in
+  equal weight) the variants are within ±13 pt, except the sector catch-up variant B, 24 pt behind. Only 44–49% of
+  closed trades win after costs.
+- **Walk-forward.** Picking every six months the variant with the best Sharpe over the past year earned +52% over
+  the three out-of-sample years, the same as XU100 (+53%) and below always holding C (+63%); the past year's winner
+  was the next window's best only once in six.
 - **The engine passes a deliberate look-ahead test:** a signal that "knows" today's return earns an absurd
   5 × 10¹¹ % without the one-day shift and +11% with it.
 
@@ -294,7 +300,8 @@ reviewer.
   - The TCMB video required a bot sign-in that we did not bypass.
 - **Method.**
   - Event thresholds were fixed once and not optimised, so other choices may change single numbers.
-  - Out-of-sample means halves, not rolling walk-forward.
+  - Out-of-sample checks are halves, eight ~6-month windows and one walk-forward selection test; the variants
+    themselves were designed once, not re-fitted per window.
   - Costs are a fixed 0.15% one way, with no market-impact model and 0% interest on cash.
   - Keyword rules for news and speech stance are coarse.
 - **Experiment.**
@@ -316,7 +323,6 @@ reviewer.
 **Future work.**
 
 - Test the net-margin drift (Report 4, borderline q = 0.058) and the EBITDA-margin reaction (H2) on new quarters.
-- Replace halves with rolling walk-forward tests and add a sector benchmark at portfolio level.
 - Add an evidence-id consistency check to the validator.
 - Collect a human-labelled reference set for the harness experiment.
 - Extend the speech layer with an instructor-approved source list and a speech-day event study.

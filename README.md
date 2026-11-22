@@ -44,7 +44,7 @@ config/universe.csv        30 study stocks + 4 extra peers, sector and peer-grou
 src/data/                  data loaders with on-disk caches: prices, fundamentals, KAP dates, macro, news, speech
 src/indicators/            technical indicators, support/resistance, sector-relative features
 src/events/                event studies: technical reversals, sector catch-up, calendar, earnings, news
-src/backtest/              backtest engine (signal shift, costs, benchmarks) and strategy variants A–E
+src/backtest/              backtest engine (signal shift, costs, XU100 / equal-weight / sector-neutral benchmarks, trade log), strategy variants A–E, rolling windows, walk-forward
 src/mcp_server/            MCP server with 15 deterministic tools + stdio client demo
 src/harness/               evidence bundle, quality gate, decision log + replay, state machine, experiments
 src/agents/                Gemini client (OpenAI-compatible endpoint), prompts, numerical validator, mock LLM
@@ -152,7 +152,7 @@ python -m src.events.earnings_reaction     # Step 7C (point-in-time fundamentals
 python -m src.data.valuation               # daily P/E, P/B, EV/EBITDA -> reports/valuation_daily.parquet
 python -m src.events.news_reaction         # Step 10C
 python -m src.backtest.engine              # Step 9: engine checks (look-ahead test, costs)
-python -m src.backtest.strategies          # Step 9–10: strategy variants A–E vs benchmarks
+python -m src.backtest.strategies          # Step 9–10: variants A–E vs benchmarks, trades, rolling windows, walk-forward
 python -m src.reports.build_reports && python -m src.reports.pdf
 ```
 

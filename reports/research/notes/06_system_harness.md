@@ -42,12 +42,34 @@
   - The shift is what prevents look-ahead, and a test (`tests/test_strategies.py`) enforces it.
   - Without costs, the shifted signal earns +1,075%. Yesterday's winners kept winning the next day, the same
     short-term continuation found in Report 3, but the daily turnover makes it worthless after costs.
+- **Picking stocks inside sectors adds little (Table 3b).**
+  - Against the sector-neutral benchmark (same sector weights, all sector members in equal weight), most variants
+    are within ±13 pt over four years.
+  - The sector catch-up variant B is **24 pt behind** it. Its laggards did not beat their own sectors over the
+    holding period; whatever B earned came from the sectors it was in, not from the laggard choice. This fits
+    Report 2: the harness rule's +0.8 pt edge is a 10-day effect, smaller than one round trip of costs, and B
+    holds a stock for about 11 days.
+- **Trades: fewer than half win (Table 3b).**
+  - 44–49% of closed trades are positive after costs and the median trade loses 0.1–1.2%; only 39–47% beat XU100
+    over the same days. The total return comes from a minority of large winners and from being invested in a
+    rising market.
+  - In the second half the winning share falls to 39–43%.
+  - C, D and its two variants share the same trades: the macro filter only halves position sizes, which a trade's
+    return does not see.
+- **Rolling windows (Table 3c).** Each variant beat XU100 in 3–4 of the eight ~6-month windows and equal-weight
+  buy-and-hold in only 2. The gap to XU100 swings from about −40 to +23 pt between windows.
+- **Walk-forward selection does not help (Tables 3d, 3e).**
+  - Choosing, every six months, the variant with the best Sharpe over the past year earned +52% over the
+    three-year out-of-sample period, the same as XU100 (+53%) and below always holding C (+63%) or equal-weight
+    buy-and-hold (+88%).
+  - The past year's winner was the best variant of the next window only once in six. In May 2024 the rule picked
+    the rate-filter variant, the weakest over the full period.
+  - Its advantage over XU100 is a smaller drawdown (−20% vs −29%), not a higher return.
 - **Spec checklist (§18).**
-  - Done: signal shifting, publication dates, buy-and-hold and XU100 benchmarks, return / Sharpe / drawdown /
-    win rate / benchmark difference, costs, signal counts (no variant had fewer than 30 entries), and
-    in-sample/out-of-sample halves.
-  - Not done: a rolling walk-forward or a separate validation period (only halves), and a sector benchmark at
-    portfolio level. The optional ML layer (§19) was not built.
+  - Done: signal shifting, publication dates, buy-and-hold, XU100 and sector-neutral benchmarks, return / Sharpe /
+    drawdown / win rate (days and trades) / benchmark difference, costs, signal counts (no variant had fewer than
+    30 entries), in-sample/out-of-sample halves, rolling windows and a walk-forward selection test.
+  - Not done: the optional ML layer (§19).
 
 <!-- harness -->
 **Design choices, and why.**

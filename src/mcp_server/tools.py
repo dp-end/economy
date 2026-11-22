@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from mcp.server.mcpserver.exceptions import ToolError
 
-from src.backtest.engine import COST_ONE_WAY, benchmarks, calculate_performance, load_returns
+from src.backtest.engine import COST_ONE_WAY, benchmarks, calculate_performance, load_returns, sector_neutral, trade_log
 from src.backtest.engine import run_backtest as _engine_backtest
 from src.backtest.strategies import WARMUP
 from src.data.pit_fundamentals import pit_asof
@@ -386,19 +386,24 @@ def run_backtest(strategy: str, start: str = None, end: str = None, cost: float 
     ret = load_returns().iloc[WARMUP:].loc[s:e]
     if len(ret) < 20:
         raise ToolError(f"backtest için en az 20 işlem günü gerekli (ısınma sonrası ilk gün {load_returns().index[WARMUP].date()})")
-    bt = _engine_backtest(variants[strategy].reindex(ret.index), ret, cost=float(cost))
+    w = variants[strategy].reindex(ret.index)
+    bt = _engine_backtest(w, ret, cost=float(cost))
     bm = benchmarks(ret)
-    perf = calculate_performance(bt, bm["esit_agirlik"])
+    trades = trade_log(w, ret, cost=float(cost))
+    perf = calculate_performance(bt, bm["esit_agirlik"], sector_neutral(w, ret), trades)
     perf["xu100_getiri"] = float((1 + bm["xu100"].fillna(0)).prod() - 1)
     perf["xu100_farki"] = perf["toplam_getiri"] - perf["xu100_getiri"]          # model hesaplamasın, araç hesaplar
     perf["esit_agirlik_getiri"], perf["esit_agirlik_farki"] = perf.pop("kiyas_getiri"), perf.pop("fark")
-    w = variants[strategy].reindex(ret.index)
     last = w.iloc[-1]
+    recent = trades.tail(10).assign(entry=lambda d: d["entry"].dt.strftime("%Y-%m-%d"),
+                                    exit=lambda d: d["exit"].dt.strftime("%Y-%m-%d"))
     return to_json(dict(strategy=strategy, start=str(ret.index[0].date()), end=str(ret.index[-1].date()),
                         cost_one_way=float(cost), performance=perf,
-                        last_positions=last[last > 0].round(4).to_dict(),
+                        last_positions=last[last > 0].round(4).to_dict(), recent_trades=recent.to_dict("records"),
                         note="Sinyal t kapanışında, işlem t+1 getirisine uygulanır; universe 30 çekirdek hisse. "
-                             "Getiriler oran (2.41 = %241). esit_agirlik = 30 hissenin eşit ağırlıklı al-tut kıyası."))
+                             "Getiriler oran (2.41 = %241). esit_agirlik = 30 hissenin eşit ağırlıklı al-tut kıyası. "
+                             "sektor_kiyas = stratejinin sektör ağırlıklarıyla, sektör içinde eşit ağırlıklı kıyas "
+                             "(fark = sektör içi hisse seçimi). islem_* = kapanmış işlemler (giriş-çıkış, maliyet dahil)."))
 
 
 def check_data_quality(ticker: str, asof: str = None) -> dict:

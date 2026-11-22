@@ -10,7 +10,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage points; `[TRY]` Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.
 
-**23 datasets, 499 fields.**
+**23 datasets, 502 fields.**
 
 | # | dataset | kind | step | columns |
 |---:|:---|:---|:---|---:|
@@ -30,7 +30,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | 14 | Speech segments | unstructured text | 10B | 16 |
 | 15 | Speech features and claim checks | structured features from unstructured text | 10B | 26 |
 | 16 | Numerical claims in speeches | structured | 10B | 9 |
-| 17 | Evidence bundle (one per stock and analysis day) | structured + text evidence | 11 | 109 |
+| 17 | Evidence bundle (one per stock and analysis day) | structured + text evidence | 11 | 112 |
 | 18 | Decision log: analyses | structured (JSON fields) | 11, 13 | 21 |
 | 19 | Decision log: human reviews | structured + text | 11 | 7 |
 | 20 | Decision log: harness traces | structured (JSON) | 13 | 5 |
@@ -519,6 +519,9 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `backtest.max_dusus` | maximum drawdown [fraction] | float | – | -0.207 |
 | `backtest.islem_sayisi` | number of position entries | int | – | 627 |
 | `backtest.uyari` | `az sinyal` if < 30 trades | text | – |  |
+| `backtest.sektor_kiyas` | sector-neutral benchmark: the strategy's daily sector weights, equal weight inside each sector [fraction] | float | – | 2.116 |
+| `backtest.sektor_fark` | strategy minus sector-neutral benchmark (= stock picking inside sectors) | float | – | 0.01135 |
+| `backtest.islem_kazanma` | share of closed trades (entry to exit, after costs) with a positive return | float | – | 0.4912 |
 | `observed.price.date` | last price date used | datetime | – | 2026-11-06 |
 | `observed.price.close` | close [TRY] | float | – | 331.8 |
 | `observed.price.ret_5d` | 5-day return [fraction] | float | – | -0.04395 |

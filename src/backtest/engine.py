@@ -35,13 +35,68 @@ def run_backtest(weights: pd.DataFrame, returns: pd.DataFrame, cost: float = COS
     return out
 
 
+def sector_returns(index: pd.DatetimeIndex) -> tuple:
+    """Akran grubu başına eşit ağırlıklı günlük getiri (evrendeki tüm hisseler, çekirdek dışı akranlar dahil;
+    bankacılıkta tek çekirdek hisse olduğu için). Döner: (grup x tarih getirileri, hisse -> grup)."""
+    from src.data.universe import load_universe
+    u = load_universe()
+    grp = u.set_index("ticker")["peer_group"]
+    r = pd.DataFrame({t: get_stock_history(t)["Close"] for t in grp.index}).pct_change().reindex(index)
+    return r.T.groupby(grp).mean().T, grp
+
+
+def sector_neutral(weights: pd.DataFrame, returns: pd.DataFrame, shift: int = 1) -> pd.Series:
+    """Sektör nötr kıyas (Adım 5): her gün stratejinin sektör ağırlıklarını aynen alır, ama her sektörün içinde
+    o sektörün tüm hisselerini eşit ağırlıkla tutar. Strateji ile farkı = sektör İÇİ hisse seçimi. Maliyetsiz."""
+    w = weights.reindex(index=returns.index, columns=returns.columns).fillna(0.0)
+    held = w.shift(shift).fillna(0.0)
+    sec_ret, grp = sector_returns(returns.index)
+    sec_w = held.T.groupby(grp.reindex(held.columns)).sum().T
+    return (sec_w * sec_ret[sec_w.columns].fillna(0.0)).sum(axis=1)
+
+
+def trade_log(weights: pd.DataFrame, returns: pd.DataFrame, cost: float = COST_ONE_WAY, shift: int = 1) -> pd.DataFrame:
+    """İşlem günlüğü (Adım 5): bir hissenin kesintisiz taşındığı her dönem bir işlem. Getiri = taşınan günlerin
+    birleşik getirisi, giriş ve çıkışta tek yön maliyet; işlem içi ağırlık değişimleri (makro yarılama) yok sayılır.
+    Veri sonunda hâlâ açık olan pozisyon 'acik' işaretlenir."""
+    w = weights.reindex(index=returns.index, columns=returns.columns).fillna(0.0)
+    held = w.shift(shift).fillna(0.0) > 0
+    xu = get_index_history("XU100")["Close"].pct_change().reindex(returns.index).fillna(0.0)
+    rows = []
+    for t in held.columns:
+        h = held[t].to_numpy()
+        if not h.any():
+            continue
+        start = np.flatnonzero(h & ~np.r_[False, h[:-1]])
+        end = np.flatnonzero(h & ~np.r_[h[1:], False])
+        r = returns[t].fillna(0.0).to_numpy()
+        for a, b in zip(start, end):
+            gross = float(np.prod(1 + r[a:b + 1]) - 1)
+            rows.append(dict(ticker=t, entry=returns.index[a], exit=returns.index[b], days=int(b - a + 1),
+                             gross=gross, net=(1 + gross) * (1 - cost) ** 2 - 1,
+                             xu100=float(np.prod(1 + xu.iloc[a:b + 1]) - 1), open=bool(b == len(h) - 1)))
+    return pd.DataFrame(rows, columns=["ticker", "entry", "exit", "days", "gross", "net", "xu100", "open"])
+
+
+def trade_stats(trades: pd.DataFrame) -> dict:
+    """Kapanmış işlemlerden: sayı, kazanma oranı, ortalama/ortanca net getiri, XU100'ü geçme oranı, ortalama süre."""
+    c = trades[~trades["open"]]
+    if c.empty:
+        return dict(islem_kapanan=0)
+    return dict(islem_kapanan=len(c), islem_kazanma_orani=float((c["net"] > 0).mean()),
+                islem_ort_getiri=float(c["net"].mean()), islem_ortanca_getiri=float(c["net"].median()),
+                islem_xu100_gecme_orani=float((c["net"] > c["xu100"]).mean()), islem_ort_gun=float(c["days"].mean()))
+
+
 def max_drawdown(ret: pd.Series) -> float:
     eq = (1 + ret.fillna(0)).cumprod()
     return float((eq / eq.cummax() - 1).min())
 
 
-def calculate_performance(bt: pd.DataFrame, bench: pd.Series = None) -> dict:
-    """Net getiriden özet ölçüler. bench verilirse aynı günlerdeki kıyas getirisine göre fark."""
+def calculate_performance(bt: pd.DataFrame, bench: pd.Series = None, sector: pd.Series = None,
+                          trades: pd.DataFrame = None) -> dict:
+    """Net getiriden özet ölçüler. bench verilirse aynı günlerdeki kıyas getirisine göre fark; sector verilirse
+    sektör nötr kıyasa göre fark; trades verilirse işlem bazında istatistikler (Adım 5)."""
     net = bt["net"].fillna(0)
     years = len(net) / DAYS
     total = float((1 + net).prod() - 1)
@@ -64,6 +119,11 @@ def calculate_performance(bt: pd.DataFrame, bench: pd.Series = None) -> dict:
         res["kiyas_getiri"] = float((1 + b).prod() - 1)
         res["fark"] = total - res["kiyas_getiri"]
         res["bilgi_orani"] = float(diff.mean() / diff.std(ddof=1) * np.sqrt(DAYS)) if diff.std(ddof=1) > 0 else np.nan
+    if sector is not None:
+        res["sektor_kiyas_getiri"] = float((1 + sector.reindex(net.index).fillna(0)).prod() - 1)
+        res["sektor_farki"] = total - res["sektor_kiyas_getiri"]
+    if trades is not None:
+        res.update(trade_stats(trades))
     res["uyari"] = "az sinyal" if res["islem_sayisi"] < MIN_TRADES else ""
     return res
 

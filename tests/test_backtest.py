@@ -61,3 +61,49 @@ def test_real_data_lookahead_and_costs():
     hold = pd.DataFrame(1 / 30, index=ret.index, columns=ret.columns)
     bh = run_backtest(hold, ret)
     assert np.isclose(bh["turnover"].sum(), 1.0) and bh["entries"].sum() == 30   # al-tut maliyeti bir kez öder
+
+
+# ---------- Adım 5: sektör nötr kıyas, işlem günlüğü, walk-forward ----------
+def test_sector_neutral_equals_strategy_when_holding_the_whole_sector():
+    """Tüm üyeleri çekirdek olan bir sektörü eşit ağırlıkla tutan strateji = sektör nötr kıyas (sektör içi seçim yok)."""
+    from src.backtest.engine import sector_neutral
+    from src.data.universe import load_universe
+    u = load_universe()
+    members = u[u["peer_group"] == "Metals & Mining"]["ticker"].tolist()
+    assert len(members) == 3 and u.set_index("ticker").loc[members, "is_core"].all()
+    ret = load_returns().iloc[-300:]
+    w = pd.DataFrame(0.0, index=ret.index, columns=ret.columns)
+    w[members] = 1 / 3
+    bt = run_backtest(w, ret, cost=0.0)
+    assert np.allclose(sector_neutral(w, ret).iloc[2:], bt["gross"].iloc[2:])
+
+
+def test_trade_log_by_hand():
+    from src.backtest.engine import trade_log, trade_stats
+    idx = pd.bdate_range("2025-01-06", periods=8)
+    ret = pd.DataFrame({"AAA": [0, 0.10, -0.05, 0.02, 0, 0, 0.03, 0], "BBB": 0.0}, index=idx)
+    w = pd.DataFrame(0.0, index=idx, columns=ret.columns)
+    w.loc[idx[0]:idx[2], "AAA"] = 0.5                     # karar 0-2. gün kapanışı -> taşınan 1-3. gün
+    w.loc[idx[5]:idx[6], "AAA"] = 0.5                     # taşınan 6-7. gün; veri sonunda açık
+    tr = trade_log(w, ret, cost=0.01)
+    assert len(tr) == 2 and tr["days"].tolist() == [3, 2] and tr["open"].tolist() == [False, True]
+    g = 1.10 * 0.95 * 1.02 - 1
+    assert np.isclose(tr.loc[0, "gross"], g) and np.isclose(tr.loc[0, "net"], (1 + g) * 0.99 ** 2 - 1)
+    st = trade_stats(tr)
+    assert st["islem_kapanan"] == 1 and st["islem_kazanma_orani"] == 1.0
+
+
+def test_walk_forward_selects_with_past_data_only():
+    from src.backtest.strategies import TRAIN, WARMUP, generate_strategy_variants, walk_forward
+    v = generate_strategy_variants()
+    sub = {k: v[k] for k in ("A_teknik", "C_temel")}
+    wf, summ = walk_forward(sub)
+    ret = load_returns().iloc[WARMUP:]
+    row = wf.iloc[0]
+    pos = ret.index.get_loc(pd.Timestamp(row["bas"]))
+    past = ret.index[pos - TRAIN:pos]
+    assert past[-1] < pd.Timestamp(row["bas"])
+    sh = {n: (lambda x: x.mean() / x.std(ddof=1) * np.sqrt(252))(run_backtest(w.reindex(ret.index), ret)["net"].loc[past])
+          for n, w in sub.items()}
+    assert row["secilen"] == max(sh, key=sh.get) and np.isclose(row["egitim_sharpe"], sh[row["secilen"]])
+    assert set(summ["yontem"]) >= {"walk-forward secim", "kiyas xu100"}

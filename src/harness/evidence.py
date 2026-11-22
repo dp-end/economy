@@ -13,7 +13,7 @@ from functools import lru_cache
 import numpy as np
 import pandas as pd
 
-from src.backtest.engine import benchmarks, calculate_performance, load_returns, run_backtest
+from src.backtest.engine import benchmarks, calculate_performance, load_returns, run_backtest, sector_neutral, trade_log
 from src.backtest.strategies import WARMUP, generate_strategy_variants, macro_scale
 from src.data.macro import get_macro_context
 from src.data.news_tags import load_news_events
@@ -214,13 +214,16 @@ def backtest_until(variant: str, day: pd.Timestamp) -> dict:
     ret = load_returns().iloc[WARMUP:].loc[:day]
     if len(ret) < 60:
         return dict(variant=variant, end=None, uyari="backtest için yeterli gün yok")
-    bt = run_backtest(_variants()[variant].reindex(ret.index), ret)
+    w = _variants()[variant].reindex(ret.index)
+    bt = run_backtest(w, ret)
     bm = benchmarks(ret)
-    p = calculate_performance(bt, bm["esit_agirlik"])
+    p = calculate_performance(bt, bm["esit_agirlik"], sector_neutral(w, ret), trade_log(w, ret))
     xu = float((1 + bm["xu100"].fillna(0)).prod() - 1)
     return dict(variant=variant, start=ret.index[0], end=ret.index[-1], toplam_getiri=p["toplam_getiri"],
                 esit_agirlik=p["kiyas_getiri"], fark=p["fark"], xu100=xu, xu100_fark=p["toplam_getiri"] - xu,
-                sharpe=p["sharpe"], max_dusus=p["max_dusus"], islem_sayisi=p["islem_sayisi"], uyari=p["uyari"])
+                sharpe=p["sharpe"], max_dusus=p["max_dusus"], islem_sayisi=p["islem_sayisi"], uyari=p["uyari"],
+                sektor_kiyas=p["sektor_kiyas_getiri"], sektor_fark=p["sektor_farki"],
+                islem_kazanma=p.get("islem_kazanma_orani"))
 
 
 # ---------- eylem seçimi ----------
@@ -374,7 +377,9 @@ def committed_evidence(action: str, secondary: list, cond: dict, b: dict) -> lis
     if bt.get("end") is not None:
         add(f"Backtest {bt['variant']} ({pd.Timestamp(bt['start']).date()}-{pd.Timestamp(bt['end']).date()}, maliyet dahil): "
             f"{_pct(bt['toplam_getiri'], 0)}; eşit ağırlıklı al-tut {_pct(bt['esit_agirlik'], 0)}, "
-            f"XU100 {_pct(bt['xu100'], 0)}, en büyük düşüş {_pct(bt['max_dusus'], 0)}", bt["fark"], "run_backtest")
+            f"XU100 {_pct(bt['xu100'], 0)}, aynı sektör ağırlıklı kıyas {_pct(bt['sektor_kiyas'], 0)}, "
+            f"en büyük düşüş {_pct(bt['max_dusus'], 0)}, kazanan işlem oranı {_pct(bt['islem_kazanma'], 0)}",
+            bt["fark"], "run_backtest")
     return E
 
 

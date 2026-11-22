@@ -7,8 +7,12 @@ tool list and the replays are recomputed when the report is built (no API key ne
 
 | file | size | sha256 |
 |:---|:---|:---|
-| `reports/backtest_strategies.csv` | 6 kB | 5266ca6a8032 |
+| `reports/backtest_strategies.csv` | 9 kB | 5526e7fba350 |
 | `reports/backtest_cost_sensitivity.csv` | 1 kB | 5adf4069e31b |
+| `reports/backtest_trades.csv` | 479 kB | 237ce044ab64 |
+| `reports/backtest_rolling.csv` | 10 kB | 8360a5b56f32 |
+| `reports/backtest_walkforward.csv` | 1 kB | fd0f30561d7f |
+| `reports/backtest_walkforward_summary.csv` | 1 kB | 987d006b1e3a |
 | `reports/harness_experiments.csv` | 1 kB | f4228efab21d |
 | `reports/experiments/per_case.csv` | 12 kB | 8ad9869a852a |
 | `reports/experiments/raw.jsonl` | 81 kB | 380094d87ece |
@@ -108,6 +112,76 @@ are indicator warm-up and are not evaluated.
 | D_makro_faiz | 143 | 110 | 82 |
 | E_haber | 228 | 176 | 132 |
 
+**Table 3b. Sector-neutral benchmark and trade-level results.** The sector-neutral benchmark holds, every day, the
+same sector weights as the strategy but every stock of each sector in equal weight (sector members outside the
+30-stock universe included), at no cost. The difference is what the strategy gained or lost by **picking stocks
+inside sectors**. A trade is one continuous holding of a stock, entry to exit, after one-way costs on both sides;
+trades still open at the end of a period are left out.
+
+| strategy | period | total % | sector-neutral % | vs sector-neutral pt | closed trades | winning trades % | median trade % | trades beating XU100 % | avg days held |
+|:---|:---|---:|---:|---:|---:|---:|---:|---:|---:|
+| A_teknik | full | 181 | 175 | +6 | 594 | 44 | -1.16 | 39 | 12.6 |
+| A_teknik | first half | 176 | 154 | +22 | 299 | 47 | -0.30 | 40 | 12.9 |
+| A_teknik | second half | 2 | 8 | -7 | 295 | 39 | -1.91 | 38 | 12.2 |
+| B_sektor | full | 188 | 212 | -24 | 688 | 48 | -0.30 | 44 | 10.6 |
+| B_sektor | first half | 164 | 176 | -11 | 367 | 53 | +0.71 | 44 | 10.1 |
+| B_sektor | second half | 9 | 13 | -4 | 321 | 42 | -1.74 | 43 | 11.0 |
+| C_temel | full | 213 | 212 | +1 | 627 | 49 | -0.15 | 45 | 11.1 |
+| C_temel | first half | 175 | 180 | -5 | 353 | 55 | +1.23 | 45 | 10.4 |
+| C_temel | second half | 14 | 11 | +2 | 274 | 42 | -1.86 | 46 | 12.0 |
+| D_makro | full | 163 | 154 | +9 | 627 | 49 | -0.15 | 45 | 11.1 |
+| D_makro | first half | 145 | 144 | +1 | 353 | 55 | +1.23 | 45 | 10.4 |
+| D_makro | second half | 7 | 4 | +3 | 274 | 42 | -1.86 | 46 | 12.0 |
+| D_makro_oynaklik | full | 164 | 154 | +11 | 627 | 49 | -0.15 | 45 | 11.1 |
+| D_makro_oynaklik | first half | 148 | 146 | +2 | 353 | 55 | +1.23 | 45 | 10.4 |
+| D_makro_oynaklik | second half | 7 | 3 | +4 | 274 | 42 | -1.86 | 46 | 12.0 |
+| D_makro_faiz | full | 110 | 97 | +13 | 627 | 49 | -0.15 | 45 | 11.1 |
+| D_makro_faiz | first half | 96 | 89 | +6 | 353 | 55 | +1.23 | 45 | 10.4 |
+| D_makro_faiz | second half | 7 | 4 | +3 | 274 | 42 | -1.86 | 46 | 12.0 |
+| E_haber | full | 176 | 169 | +6 | 611 | 49 | -0.11 | 46 | 11.2 |
+| E_haber | first half | 145 | 143 | +2 | 339 | 55 | +1.33 | 46 | 10.8 |
+| E_haber | second half | 12 | 11 | +1 | 272 | 43 | -1.67 | 47 | 11.7 |
+
+**Table 3c. Rolling ~6-month windows (126 trading days, not overlapping)**
+
+| strategy | windows beating XU100 (of 8) | beating equal weight (of 8) | beating sector-neutral (of 8) | worst window vs XU100 pt | best window vs XU100 pt |
+|:---|---:|---:|---:|---:|---:|
+| A_teknik | 3 | 2 | 3 | -21 | +20 |
+| B_sektor | 3 | 2 | 3 | -18 | +19 |
+| C_temel | 3 | 2 | 5 | -20 | +22 |
+| D_makro | 3 | 2 | 5 | -35 | +23 |
+| D_makro_faiz | 3 | 2 | 5 | -40 | +18 |
+| D_makro_oynaklik | 4 | 2 | 4 | -34 | +23 |
+| E_haber | 3 | 2 | 4 | -35 | +22 |
+
+**Table 3d. Walk-forward selection.** At the start of each ~6-month test window the variant with the highest
+Sharpe ratio over the previous 252 trading days (after costs, data before the window only) is chosen and held for
+the window. The windows are joined into one out-of-sample run with switching costs.
+
+| test window | chosen (best Sharpe, previous 12 months) | training Sharpe | chosen return % | XU100 % | best in hindsight |
+|:---|:---|---:|---:|---:|:---|
+| 2023-11-01 – 2024-05-02 | C_temel | 2.48 | +34 | +36 | D_makro_oynaklik |
+| 2024-05-03 – 2024-11-04 | D_makro_faiz | 2.83 | +3 | -15 | D_makro |
+| 2024-11-05 – 2025-05-06 | D_makro_oynaklik | 2.07 | -2 | +5 | C_temel |
+| 2025-05-07 – 2025-11-05 | C_temel | 0.66 | +6 | +20 | C_temel |
+| 2025-11-06 – 2026-05-06 | C_temel | 0.59 | +16 | +36 | B_sektor |
+| 2026-05-07 – 2026-11-06 | E_haber | 1.38 | -10 | -23 | D_makro_oynaklik |
+
+**Table 3e. The same out-of-sample period (2023-11-01 – 2026-11-06)**
+
+| method | total % | Sharpe | max DD % |
+|:---|---:|---:|---:|
+| walk-forward selection | 52 | 0.89 | -20 |
+| always A_teknik | 35 | 0.60 | -23 |
+| always B_sektor | 52 | 0.80 | -24 |
+| always C_temel | 63 | 0.97 | -21 |
+| always D_makro | 55 | 0.90 | -19 |
+| always D_makro_oynaklik | 56 | 0.91 | -19 |
+| always D_makro_faiz | 29 | 0.62 | -19 |
+| always E_haber | 60 | 0.97 | -17 |
+| XU100 | 53 | 0.70 | -29 |
+| equal-weight buy & hold | 88 | 0.98 | -29 |
+
 **Table 4. Look-ahead self-test of the engine.** A deliberately impossible signal (it holds today's winners)
 is run once without the one-day shift and once with it.
 
@@ -138,12 +212,34 @@ is run once without the one-day shift and once with it.
   - The shift is what prevents look-ahead, and a test (`tests/test_strategies.py`) enforces it.
   - Without costs, the shifted signal earns +1,075%. Yesterday's winners kept winning the next day, the same
     short-term continuation found in Report 3, but the daily turnover makes it worthless after costs.
+- **Picking stocks inside sectors adds little (Table 3b).**
+  - Against the sector-neutral benchmark (same sector weights, all sector members in equal weight), most variants
+    are within ±13 pt over four years.
+  - The sector catch-up variant B is **24 pt behind** it. Its laggards did not beat their own sectors over the
+    holding period; whatever B earned came from the sectors it was in, not from the laggard choice. This fits
+    Report 2: the harness rule's +0.8 pt edge is a 10-day effect, smaller than one round trip of costs, and B
+    holds a stock for about 11 days.
+- **Trades: fewer than half win (Table 3b).**
+  - 44–49% of closed trades are positive after costs and the median trade loses 0.1–1.2%; only 39–47% beat XU100
+    over the same days. The total return comes from a minority of large winners and from being invested in a
+    rising market.
+  - In the second half the winning share falls to 39–43%.
+  - C, D and its two variants share the same trades: the macro filter only halves position sizes, which a trade's
+    return does not see.
+- **Rolling windows (Table 3c).** Each variant beat XU100 in 3–4 of the eight ~6-month windows and equal-weight
+  buy-and-hold in only 2. The gap to XU100 swings from about −40 to +23 pt between windows.
+- **Walk-forward selection does not help (Tables 3d, 3e).**
+  - Choosing, every six months, the variant with the best Sharpe over the past year earned +52% over the
+    three-year out-of-sample period, the same as XU100 (+53%) and below always holding C (+63%) or equal-weight
+    buy-and-hold (+88%).
+  - The past year's winner was the best variant of the next window only once in six. In May 2024 the rule picked
+    the rate-filter variant, the weakest over the full period.
+  - Its advantage over XU100 is a smaller drawdown (−20% vs −29%), not a higher return.
 - **Spec checklist (§18).**
-  - Done: signal shifting, publication dates, buy-and-hold and XU100 benchmarks, return / Sharpe / drawdown /
-    win rate / benchmark difference, costs, signal counts (no variant had fewer than 30 entries), and
-    in-sample/out-of-sample halves.
-  - Not done: a rolling walk-forward or a separate validation period (only halves), and a sector benchmark at
-    portfolio level. The optional ML layer (§19) was not built.
+  - Done: signal shifting, publication dates, buy-and-hold, XU100 and sector-neutral benchmarks, return / Sharpe /
+    drawdown / win rate (days and trades) / benchmark difference, costs, signal counts (no variant had fewer than
+    30 entries), in-sample/out-of-sample halves, rolling windows and a walk-forward selection test.
+  - Not done: the optional ML layer (§19).
 
 ## 2. MCP tools and the stateful harness
 

@@ -10,15 +10,16 @@
 - **Harness.** 15 deterministic MCP tools sit under a fixed 17-state machine with per-state tool permissions,
   a rule-based action, a quality gate, human review and a SQLite decision log.
 - **Experiments.** The version comparison shows what each layer adds:
-  - **Tools alone** (B) improve the action from 17% to 50% agreement with the evidence-based reference but leave
+  - **Tools alone** (B) improve the action from 17% to 33% agreement with the evidence-based reference but leave
     unsupported labels.
   - **The state machine** (C) removes the unsupported labels and forces backtests.
   - **The evidence bundle and gate** (D, E) give the reference action with complete, number-safe explanations.
 - **Numbers.** After fixing a validator false alarm, no version invented numbers. The differences are in **which
   action** is chosen and **how completely** the evidence is explained.
-- **Replay.** Replaying the real decision log with today's code reproduces the same actions and gates and correctly
-  reports what changed since the decisions were made: the procedure, and one data file (the earnings table rebuilt
-  by the point-in-time fix of 22 November).
+- **Replay.** Replaying the real decision log with today's code reproduces the same actions and gates for all five
+  records. For the two records from 18 November it correctly reports what changed since: the procedure, and two
+  data files (the earnings table rebuilt by the point-in-time fix and the technical-event table extended on
+  22 November). The three scan analyses of 23 November replay with an identical fingerprint.
 
 <!-- backtest -->
 **Reading Tables 1–4 and Figure 1.**
@@ -95,91 +96,103 @@
   sell-off, no stock is a catch-up candidate. Five stocks lag a strong sector, and the table says which condition
   stops each of them. For ECILC and EKGYO the only obstacle is a latest statement in the bottom third.
 - **On 9 Jan 2026 there are four candidates.** The three with the largest sector lag (TTKOM, PGSUS, MAVI) went
-  through the full harness with the mock model, and the scan and the three analyses were logged together (demo
-  log). `replay_scan` recomputed the same 30 rows and the same candidates.
+  through the full harness with `gemini-3.1-flash-lite` on 23 November 2026. The scan and the three analyses are
+  in the real decision log (Table 12). `replay_scan` recomputed the same 30 rows and the same candidates, and each
+  analysis replays with the same fingerprint (Table 13). The mock-model version of this scan stays in the demo log
+  for the live demo.
+- **The reviewer changed all three candidates to `WATCH`.** The reasons cite two items:
+  - the historical edge of the rule is small: lagging stocks without a shock beat their peers over the next 10
+    days in 51% of cases (n = 907, mean gap +0.59 pt; Report 2);
+  - the sector strategy B lagged its benchmarks: 200% against 207% for XU100 and 210% for the sector benchmark.
+
+  This matches Report 2: the catch-up state is a weak tendency, not a strong signal. The system labels the state;
+  the human decides how much weight it deserves.
 - **ARCLK on 9 Jan 2026** meets every catch-up condition but has bullish and bearish technical events in the same
   three days, so the rules say `INVESTIGATE`. The scan lists it as "secondary" with that reason instead of hiding it.
 - **The scan adds no new decision rule.** Every row is exactly the rule layer's result for that stock and day (a
   test checks this), so the scan inherits the point-in-time guarantees and the evidence of Reports 1–5.
-- **Gemini run pending.** The real-model run of a scan is part of the final experiment re-run.
 
 <!-- experiments -->
-**Status of this experiment.** It ran on 19–20 November 2026, before the point-in-time fix of 22 November (findings
-9 and 10). We recomputed the rule result for all six cases with the corrected data. The action, the secondary
-candidates and the gate are unchanged in every case, so the reference labels and the agreement figures below stand.
-Some numbers in the evidence the models saw have changed:
-
-| case | evidence item | in the experiment | now |
-|---|---|---|---|
-| ASELS, KRDMD (2026-11-06) | C backtest return (max drawdown) | 241% (−25%) | 213% (−21%) |
-| ASELS, KRDMD | earnings-reaction history, top − bottom over days 0–4 | +1.97 pt (n = 162) | +2.59 pt (n = 131) |
-| TURSG, PETKM (2026-11-06) | D backtest return (max drawdown) | 176% (−22%) | 163% (−21%) |
-| PETKM | earnings third | top | middle (+48.1% vs cut-off +50.5%) |
-| the four 2026 cases | earnings sentence | third within the quarter | third against the previous quarter's cut-offs; amounts with their unit |
-| ASELS, 2023-02-15 | D backtest return | 38% | 41% |
-
-The stored explanations therefore quote the pre-fix numbers. The experiment will be re-run once, after the remaining
-corrections from the 22 November review, so that explanations and evidence match again.
+**When it ran.** The final run took place on 22–23 November 2026, after all corrections, with
+`gemini-3.1-flash-lite` for every row, an empty model cache and two independent runs. It replaces the run of 19–20
+November (kept as `raw_before_finalrerun.jsonl`), whose explanations quoted pre-fix evidence. The model inputs changed
+between the two runs (corrected evidence, new tool outputs), so a difference between them cannot be traced to one
+cause. Only this run is used below. One validator false alarm was found in this run and fixed (finding 11): the
+stored explanations were re-scored without new model calls.
 
 **What each layer added** (Tables 7–8, Figure 2).
 
 - **A — raw LLM.**
-  - **Action:** correct in only 2 of 12 runs, only for the unknown ticker. Half of its labels are
-    *unsupported*: a candidate label despite a shock, negative news or a missing condition.
-  - **Context it missed:** it labelled TURSG (−39.5% in 20 days, negative KAP news) as `WATCH`, and called the
-    earthquake case `WATCH` although the market was closed.
+  - **Action:** correct in only 2 of 12 runs, only for the unknown ticker. It chose `WATCH` or `HOLD` for every
+    other case.
+  - **Context it missed:** it labelled TURSG (−39.5% in 20 days, negative KAP news) and the KRDMD shock as `WATCH`,
+    and called the earthquake case `WATCH` although the market was closed (an *unsupported* label, 2 of 12 runs).
+  - **Numbers:** none fabricated, but 6 of 56 numbers (10.7%) were wrongly rounded, all in the 2023 case.
 - **B — LLM + tools (free use).**
   - **Tool use:** only about 3 tool calls per run and never a backtest.
-  - **Action:** right in 50% of runs, but it called TURSG a `TECHNICAL_REVERSAL_CANDIDATE` despite a shock and
-    negative news, the most dangerous error in the table.
-  - **Numbers:** after the validator fix (Section 5) it fabricated none and had small rounding errors (4.5% of
-    numbers). Tools solved the *numbers* problem but not the *judgement* problem.
+  - **Action:** right in 4 of 12 runs (the two unsafe cases). In both runs it called TURSG a
+    `TECHNICAL_REVERSAL_CANDIDATE` despite a shock and negative news, the most dangerous error in the table.
+  - **Numbers:** none fabricated after the validator fix, 2 rounding errors (3.8%). Tools solved the *numbers*
+    problem but not the *judgement* problem.
 - **C — state machine.**
   - **Tool use:** forced to visit every state, it made about 25 tool calls and ran a backtest every time.
-  - **Action:** no unsupported conclusions, but it still chose conservative labels in place of the evidence-based
-    ones (`WATCH` for the ASELS earnings candidate, `INVESTIGATE` instead of `REJECT_SIGNAL` for the KRDMD shock).
-  - **Errors:** 6% of its tool calls failed, mostly on the unknown ticker, where the tool errors were the
-    *intended* behaviour.
+  - **Action:** no unsupported conclusions, but `WATCH` for all four 2026 cases in place of the evidence-based
+    labels (the earnings candidate, the two `INVESTIGATE` cases and the KRDMD shock rejection).
+  - **Errors:** 6% of its tool calls failed. Almost all were on the unknown ticker, where the tool errors were the
+    *intended* behaviour; one call passed an argument the tool does not accept.
 - **D and E — evidence, gate, memory, human review.**
   - **Action:** 100% agreement with the reference. This is **by construction**: the reference is the rule result
     that D and E use. It shows the harness cannot drift from its rules, not that the rules are right (Reports 1–5
     discuss that).
-  - **Explanations:** cover 97.5% of the committed evidence, against 38–50% for A–C, with no fabricated or rounded
-    numbers. Semantic mistakes remain, as Section 5 shows.
+  - **Explanations:** cover 94% of the committed evidence, against 45–62% for A–C, with no fabricated or rounded
+    numbers. In both runs the ASELS explanation left out the backtest line and the KRDMD explanation left out the
+    earnings-reaction history. Wrong evidence ids remain (Section 5).
 - **Reproducibility** is 100% for every version. With temperature 0 and a separate cache for the second run, the
   same model chose the same action twice. That is consistency, not correctness: A was consistently wrong.
 - **Cost.** D needs about 5 LLM calls and 23 tool calls per analysis. The time column is unreliable: it includes
-  cached calls, retries after "503 high demand" errors and, for E run 1, the human's reading time.
-- **Human review (Table 10).** The reviewer accepted 5 cases and modified one.
-  - **KRDMD override:** `REJECT_SIGNAL` → `FUNDAMENTAL_IMPROVEMENT_CANDIDATE`, reason "it is in a position to
-    rise". That reason is a forecast, and it contradicts evidence E4 (a −10% shock day and −15.9% vs XU100 −6.0% in
-    20 days). The system allows the override, by design, and keeps the reason for later review.
-  - **TURSG reason** ("moved in parallel with the market") also contradicts E2 (−39.5% vs −6.0%).
-  - These two cases show why the log must store the human's reasoning, not only the final label: human judgement
-    is also fallible and must be reviewable.
+  waits after "429 too many requests" errors and, for E run 1, the human's reading and typing time.
+- **Human review (Table 10).** The reviewer accepted 3 cases, modified 2 and rejected 1.
+  - **Accepted:** the KRDMD shock rejection and the two unsafe cases.
+  - **ASELS** `FUNDAMENTAL_IMPROVEMENT_CANDIDATE` → `WATCH`, citing macro risk (E7) and "backtest
+    underperformance" (E8). E8 shows that strategy C beat XU100 (213% vs 189%) and matched the sector benchmark
+    (212%); it lagged only equal-weight buy-and-hold (342%).
+  - **PETKM** `INVESTIGATE` → `WATCH`, citing the coin-flip hit rates of the conflicting technical signals.
+  - **TURSG** `INVESTIGATE` rejected. The reason says that E1–E4 (profit turned into a loss, the shock, the filing
+    delay, the executive exit) support `INVESTIGATE`, and rejects it because of macro risk and the backtest. Those
+    two items are the same for every stock on that day. The reviewer entered this review twice on 23 November with
+    the same decision; the second entry is the one stored (the first is kept as a backup).
+  - **The pattern:** every change of the rule label pointed to the macro line or the backtest line, which are
+    market-wide, not stock-specific. The log makes this visible. It is also why the log must store the reviewer's
+    reasoning, not only the final label: human judgement is fallible and must be reviewable.
 
 <!-- replay -->
-**What the real log contains.** Two real Gemini runs (ASELS, 2026-11-06, made on 2026-11-18 during Step 13). In
-both, the rules gave `FUNDAMENTAL_IMPROVEMENT_CANDIDATE`, and the human changed it to `WATCH`. Reason, in
-translation: "strong earnings, but the strategy does not beat buy-and-hold; watch it". The `llm` column says only
-`gemini` because these runs predate the model-name field. Newer runs store e.g. `gemini:gemini-3.1-flash-lite`.
+**What the real log contains** (Table 12). Five real Gemini analyses:
 
-**What the replay shows (Table 13).** Replaying both records today gives:
+- **Two from 18 November** (ASELS, 2026-11-06, Step 13). The rules gave `FUNDAMENTAL_IMPROVEMENT_CANDIDATE`, and the
+  human changed it to `WATCH` both times. Reason, in translation: "strong earnings, but the strategy does not beat
+  buy-and-hold; watch it". The `llm` column says only `gemini` because these runs predate the model-name field.
+- **Three from the scan of 9 January 2026** (TTKOM, PGSUS, MAVI, made on 23 November with
+  `gemini:gemini-3.1-flash-lite`). The rules gave `POTENTIAL_CATCH_UP_CANDIDATE`; the human changed all three to
+  `WATCH` (Section 2.5).
 
-- the **same action and the same gate**;
-- **one changed data file**: `reports/earnings_events.parquet`;
-- **procedure changed = yes**, and a different fingerprint.
+**What the replay shows (Table 13).** Replaying every record today gives the **same action and the same gate**
+in all five. The difference is in what changed since each decision:
+
+- **The three scan analyses:** identical fingerprint, no changed data file, procedure unchanged.
+- **The two November-18 analyses:** **two changed data files** (`earnings_events.parquet`,
+  `technical_events.parquet`), **procedure changed = yes**, and a different fingerprint.
 
 That is the correct diagnosis. Since 18 November the rules were extended (the conflicting-signal rule), the evidence
 sentences were improved (shock direction, profit direction, units, earnings cut-offs), and on 22 November the
-earnings table was rebuilt so that it contains only figures that were public on each event day (findings 9–10).
-Neither change alters these two decisions. A replay separates "the data changed" from "our method changed". That is
-the purpose of storing data hashes and a procedure hash with every decision.
+earnings table was rebuilt so that it contains only figures that were public on each event day (findings 9–10)
+and the technical-event table gained new event families and event-time states. None of these changes alters the
+two decisions. A replay separates "the data changed" from "our method changed". That is the purpose of storing data
+hashes and a procedure hash with every decision.
 
 <!-- findings -->
 The checks built into the system (point-in-time gate, replay, numerical validator, tests) and the experiments
 found problems 1–8 during Steps 14–15. Problems 9–10 were found on 22 November, while checking the project brief's
-fundamental-analysis requirements against the data. Each was fixed with a test that fails without the fix:
+fundamental-analysis requirements against the data, and problem 11 during the final experiment run. Each was fixed with a test that fails without the fix:
 
 | # | Problem | How it showed up | Fix | Effect on results |
 |---|---|---|---|---|
@@ -193,10 +206,13 @@ fundamental-analysis requirements against the data. Each was fixed with a test t
 | 8 | `--mock` demo wrote to the real decision log | found while writing the README | mock runs use the demo database | none |
 | 9 | Fintables stores inflation-accounting restatements and re-expressed figures, not the figures published at the time | 2023Q1–Q2 median profit growth was +178% and +209% for the 24 restating companies against +58% and +105% for the other six: restated figures, published a year later, were compared with original ones | point-in-time fundamentals layer: a figure is used only after the version we hold was published, comparisons only within one unit, amounts in the report's money; checked against 20 published figures | 2023Q1–Q3 no longer ranked; with row 10: Report 4's pre-event result and ROE drift no longer significant, C backtest 241% → 213% |
 | 10 | Earnings thirds used companies that reported later | an early reporter's third depended on results published weeks later, and on 11 companies that reported after the data end | thirds from the previous quarter's cut-offs, using only figures already published; same-quarter ranking kept as a robustness check (Report 4) | C/D/E backtests, Reports 2 and 4, experiment evidence (Section 3) |
+| 11 | Validator flagged indicator parameters ("RSI(14)", "SMA 20, 50, 200") as fabricated | in the final run, B's 6.7% hallucination was 2 such numbers | indicator parameters excluded like window lengths; a Turkish decimal such as "RSI (37,99)" is still checked | stored explanations re-scored offline: hallucination 0% for all versions |
 
-**Not caught automatically.** Some explanations cite the wrong evidence id. The KRDMD orchestrator attributed
-technical hit rates to E1 (an earnings sentence) and skipped two evidence items in one run. The validator checks
-numbers, not meaning. Catching such errors needs a second check (evidence-id consistency) or the human reviewer.
+**Not caught automatically.** Some explanations cite the wrong evidence id or skip items. In the final run, the
+PETKM explanation attributed the coin-flip warning to E1 (an earnings sentence) instead of E2, and the 2023 ASELS
+explanation attributed the earthquake closure, a gate reason that is not an evidence item, to E1. The ASELS and
+KRDMD explanations each skipped one evidence item in both runs. The validator checks numbers, not meaning. Catching
+such errors needs a second check (evidence-id consistency) or the human reviewer.
 
 <!-- limitations -->
 - **Small experiment.** 6 cases × 2 runs with one model at temperature 0. The cases were chosen to cover failure

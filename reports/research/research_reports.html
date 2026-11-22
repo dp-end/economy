@@ -3596,7 +3596,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">auto id</td>
 <td style="text-align: left;">int</td>
 <td style="text-align: left;">100%</td>
-<td style="text-align: left;">5 – 6</td>
+<td style="text-align: left;">5 – 9</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>analysis_id</code></td>
@@ -4011,11 +4011,18 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">1 – 2</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>model</code></td>
+<td style="text-align: left;">LLM used</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">gemini:gemini-3.1-flash-lite</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>action</code></td>
 <td style="text-align: left;">action returned</td>
 <td style="text-align: left;">text</td>
 <td style="text-align: left;">100%</td>
-<td style="text-align: left;">TECHNICAL_REVERSAL_CANDIDATE</td>
+<td style="text-align: left;">WATCH</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>ref_action</code></td>
@@ -4036,21 +4043,21 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">action == reference</td>
 <td style="text-align: left;">bool</td>
 <td style="text-align: left;">100%</td>
-<td style="text-align: left;">63% True</td>
+<td style="text-align: left;">57% True</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>unsupported_conclusion</code></td>
 <td style="text-align: left;">action not supported by deterministic evidence</td>
 <td style="text-align: left;">bool</td>
 <td style="text-align: left;">100%</td>
-<td style="text-align: left;">13% True</td>
+<td style="text-align: left;">7% True</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>numbers</code></td>
 <td style="text-align: left;">numbers in the explanation</td>
 <td style="text-align: left;">int</td>
 <td style="text-align: left;">100%</td>
-<td style="text-align: left;">0 – 12</td>
+<td style="text-align: left;">0 – 11</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>fabricated</code></td>
@@ -4064,14 +4071,14 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">numbers that are rounding mistakes</td>
 <td style="text-align: left;">int</td>
 <td style="text-align: left;">100%</td>
-<td style="text-align: left;">0 – 1</td>
+<td style="text-align: left;">0 – 3</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>evidence_completeness</code></td>
 <td style="text-align: left;">share of committed evidence covered</td>
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">83%</td>
-<td style="text-align: left;">0 – 1</td>
+<td style="text-align: left;">0.25 – 1</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>tool_calls</code></td>
@@ -4113,7 +4120,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">seconds (unreliable: includes human time and cache)</td>
 <td style="text-align: left;">float</td>
 <td style="text-align: left;">100%</td>
-<td style="text-align: left;">1.16 – 405.1</td>
+<td style="text-align: left;">0.04 – 497.3</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>backtest_run</code></td>
@@ -4127,7 +4134,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;"><strong>unstructured</strong>: final explanation text</td>
 <td style="text-align: left;">text</td>
 <td style="text-align: left;">100%</td>
-<td style="text-align: left;">ASELS hissesi 2026-11-06 itibarıyla 331,…</td>
+<td style="text-align: left;">ASELS hissesi için 2026-11-06 kapanış fi…</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>unsupported</code></td>
@@ -4163,13 +4170,6 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">list/JSON</td>
 <td style="text-align: left;">20%</td>
 <td style="text-align: left;">–</td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>model</code></td>
-<td style="text-align: left;">LLM used</td>
-<td style="text-align: left;">text</td>
-<td style="text-align: left;">100%</td>
-<td style="text-align: left;">gemini:gemini-3.1-flash-lite</td>
 </tr>
 </tbody>
 </table></section><section class="report"><h1>Report 1 — Technical Reversal Events on 30 BIST 100 Stocks</h1>
@@ -11372,22 +11372,22 @@ tool list and the replays are recomputed when the report is built (no API key ne
 <tr>
 <td style="text-align: left;"><code>reports/harness_experiments.csv</code></td>
 <td style="text-align: left;">1 kB</td>
-<td style="text-align: left;">f4228efab21d</td>
+<td style="text-align: left;">0db0458e091d</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/experiments/per_case.csv</code></td>
-<td style="text-align: left;">12 kB</td>
-<td style="text-align: left;">8ad9869a852a</td>
+<td style="text-align: left;">14 kB</td>
+<td style="text-align: left;">68ff9cc3387f</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/experiments/raw.jsonl</code></td>
 <td style="text-align: left;">81 kB</td>
-<td style="text-align: left;">380094d87ece</td>
+<td style="text-align: left;">0fcc48704885</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/decision_log.sqlite</code></td>
-<td style="text-align: left;">66 kB</td>
-<td style="text-align: left;">229dea2a61f3</td>
+<td style="text-align: left;">168 kB</td>
+<td style="text-align: left;">18363a6ec0e9</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/scans/scan_2026-01-09_POTENTIAL_CATCH_UP_CANDIDATE.csv</code></td>
@@ -11413,7 +11413,7 @@ the <strong>decision-log and replay demonstration</strong>.</p>
 <li><strong>Harness.</strong> 15 deterministic MCP tools sit under a fixed 17-state machine with per-state tool permissions,
   a rule-based action, a quality gate, human review and a SQLite decision log.</li>
 <li><strong>Experiments.</strong> The version comparison shows what each layer adds:<ul>
-<li><strong>Tools alone</strong> (B) improve the action from 17% to 50% agreement with the evidence-based reference but leave
+<li><strong>Tools alone</strong> (B) improve the action from 17% to 33% agreement with the evidence-based reference but leave
   unsupported labels.</li>
 <li><strong>The state machine</strong> (C) removes the unsupported labels and forces backtests.</li>
 <li><strong>The evidence bundle and gate</strong> (D, E) give the reference action with complete, number-safe explanations.</li>
@@ -11421,9 +11421,10 @@ the <strong>decision-log and replay demonstration</strong>.</p>
 </li>
 <li><strong>Numbers.</strong> After fixing a validator false alarm, no version invented numbers. The differences are in <strong>which
   action</strong> is chosen and <strong>how completely</strong> the evidence is explained.</li>
-<li><strong>Replay.</strong> Replaying the real decision log with today's code reproduces the same actions and gates and correctly
-  reports what changed since the decisions were made: the procedure, and one data file (the earnings table rebuilt
-  by the point-in-time fix of 22 November).</li>
+<li><strong>Replay.</strong> Replaying the real decision log with today's code reproduces the same actions and gates for all five
+  records. For the two records from 18 November it correctly reports what changed since: the procedure, and two
+  data files (the earnings table rebuilt by the point-in-time fix and the technical-event table extended on
+  22 November). The three scan analyses of 23 November replay with an identical fingerprint.</li>
 </ul>
 <h2>1. Backtests and benchmarks</h2>
 <h3>1.1 Strategy variants (spec §29)</h3>
@@ -13136,13 +13137,24 @@ order is for display and was not tested as a forecast.</p>
   sell-off, no stock is a catch-up candidate. Five stocks lag a strong sector, and the table says which condition
   stops each of them. For ECILC and EKGYO the only obstacle is a latest statement in the bottom third.</li>
 <li><strong>On 9 Jan 2026 there are four candidates.</strong> The three with the largest sector lag (TTKOM, PGSUS, MAVI) went
-  through the full harness with the mock model, and the scan and the three analyses were logged together (demo
-  log). <code>replay_scan</code> recomputed the same 30 rows and the same candidates.</li>
-<li><strong>ARCLK on 9 Jan 2026</strong> meets every catch-up condition but has bullish and bearish technical events in the same
-  three days, so the rules say <code>INVESTIGATE</code>. The scan lists it as "secondary" with that reason instead of hiding it.</li>
-<li><strong>The scan adds no new decision rule.</strong> Every row is exactly the rule layer's result for that stock and day (a
-  test checks this), so the scan inherits the point-in-time guarantees and the evidence of Reports 1–5.</li>
-<li><strong>Gemini run pending.</strong> The real-model run of a scan is part of the final experiment re-run.</li>
+  through the full harness with <code>gemini-3.1-flash-lite</code> on 23 November 2026. The scan and the three analyses are
+  in the real decision log (Table 12). <code>replay_scan</code> recomputed the same 30 rows and the same candidates, and each
+  analysis replays with the same fingerprint (Table 13). The mock-model version of this scan stays in the demo log
+  for the live demo.</li>
+<li>
+<p><strong>The reviewer changed all three candidates to <code>WATCH</code>.</strong> The reasons cite two items:</p>
+<ul>
+<li>the historical edge of the rule is small: lagging stocks without a shock beat their peers over the next 10
+  days in 51% of cases (n = 907, mean gap +0.59 pt; Report 2);</li>
+<li>the sector strategy B lagged its benchmarks: 200% against 207% for XU100 and 210% for the sector benchmark.</li>
+</ul>
+<p>This matches Report 2: the catch-up state is a weak tendency, not a strong signal. The system labels the state;
+the human decides how much weight it deserves.
+- <strong>ARCLK on 9 Jan 2026</strong> meets every catch-up condition but has bullish and bearish technical events in the same
+three days, so the rules say <code>INVESTIGATE</code>. The scan lists it as "secondary" with that reason instead of hiding it.
+- <strong>The scan adds no new decision rule.</strong> Every row is exactly the rule layer's result for that stock and day (a
+test checks this), so the scan inherits the point-in-time guarantees and the evidence of Reports 1–5.</p>
+</li>
 </ul>
 <h2>3. Harness experiments A–E (spec §30)</h2>
 <p><strong>Table 5. Versions</strong></p>
@@ -13247,51 +13259,51 @@ result of the evidence bundle.</p>
 <td style="text-align: right;">12</td>
 <td style="text-align: right;">100.0</td>
 <td style="text-align: right;">16.7</td>
-<td style="text-align: right;">50.0</td>
+<td style="text-align: right;">16.7</td>
 <td style="text-align: right;">100.0</td>
 <td style="text-align: right;">0.0</td>
-<td style="text-align: right;">0.0</td>
-<td style="text-align: right;">45.8</td>
+<td style="text-align: right;">10.7</td>
+<td style="text-align: right;">54.2</td>
 <td style="text-align: right;">0.0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0.0</td>
 <td style="text-align: right;">0.0</td>
 <td style="text-align: right;">1.0</td>
-<td style="text-align: right;">28</td>
+<td style="text-align: right;">2</td>
 </tr>
 <tr>
 <td style="text-align: left;">B</td>
 <td style="text-align: right;">12</td>
 <td style="text-align: right;">100.0</td>
-<td style="text-align: right;">50.0</td>
+<td style="text-align: right;">33.3</td>
 <td style="text-align: right;">16.7</td>
 <td style="text-align: right;">100.0</td>
 <td style="text-align: right;">0.0</td>
-<td style="text-align: right;">4.5</td>
-<td style="text-align: right;">38.0</td>
+<td style="text-align: right;">3.8</td>
+<td style="text-align: right;">61.7</td>
 <td style="text-align: right;">0.0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0.0</td>
-<td style="text-align: right;">3.2</td>
+<td style="text-align: right;">3.0</td>
 <td style="text-align: right;">4.0</td>
-<td style="text-align: right;">72</td>
+<td style="text-align: right;">9</td>
 </tr>
 <tr>
 <td style="text-align: left;">C</td>
 <td style="text-align: right;">12</td>
 <td style="text-align: right;">100.0</td>
-<td style="text-align: right;">50.0</td>
+<td style="text-align: right;">33.3</td>
 <td style="text-align: right;">0.0</td>
 <td style="text-align: right;">100.0</td>
 <td style="text-align: right;">0.0</td>
 <td style="text-align: right;">0.0</td>
-<td style="text-align: right;">49.7</td>
+<td style="text-align: right;">45.0</td>
 <td style="text-align: right;">6.0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">100.0</td>
 <td style="text-align: right;">24.8</td>
 <td style="text-align: right;">5.0</td>
-<td style="text-align: right;">124</td>
+<td style="text-align: right;">13</td>
 </tr>
 <tr>
 <td style="text-align: left;">D</td>
@@ -13302,13 +13314,13 @@ result of the evidence bundle.</p>
 <td style="text-align: right;">100.0</td>
 <td style="text-align: right;">0.0</td>
 <td style="text-align: right;">0.0</td>
-<td style="text-align: right;">97.5</td>
+<td style="text-align: right;">94.2</td>
 <td style="text-align: right;">0.0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">83.3</td>
 <td style="text-align: right;">22.7</td>
 <td style="text-align: right;">5.3</td>
-<td style="text-align: right;">11</td>
+<td style="text-align: right;">6</td>
 </tr>
 <tr>
 <td style="text-align: left;">E</td>
@@ -13319,13 +13331,13 @@ result of the evidence bundle.</p>
 <td style="text-align: right;">100.0</td>
 <td style="text-align: right;">0.0</td>
 <td style="text-align: right;">0.0</td>
-<td style="text-align: right;">97.5</td>
+<td style="text-align: right;">94.2</td>
 <td style="text-align: right;">0.0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">83.3</td>
 <td style="text-align: right;">22.7</td>
 <td style="text-align: right;">5.3</td>
-<td style="text-align: right;">65</td>
+<td style="text-align: right;">112</td>
 </tr>
 </tbody>
 </table>
@@ -13351,7 +13363,7 @@ result of the evidence bundle.</p>
 <td style="text-align: left;">2026-11-06</td>
 <td style="text-align: left;">earnings candidate</td>
 <td style="text-align: left;">FUNDAMENTAL_IMPROVEMENT_CANDIDATE</td>
-<td style="text-align: left;">TECHNICAL_REVERSAL_CANDIDATE ✗</td>
+<td style="text-align: left;">WATCH ✗</td>
 <td style="text-align: left;">WATCH ✗</td>
 <td style="text-align: left;">WATCH ✗</td>
 <td style="text-align: left;">FUNDAMENTAL_IMPROVEMENT_CANDIDATE</td>
@@ -13373,9 +13385,9 @@ result of the evidence bundle.</p>
 <td style="text-align: left;">2026-11-06</td>
 <td style="text-align: left;">conflicting technical signals</td>
 <td style="text-align: left;">INVESTIGATE</td>
-<td style="text-align: left;">TECHNICAL_REVERSAL_CANDIDATE ✗</td>
-<td style="text-align: left;">INVESTIGATE</td>
-<td style="text-align: left;">INVESTIGATE</td>
+<td style="text-align: left;">HOLD ✗</td>
+<td style="text-align: left;">WATCH ✗</td>
+<td style="text-align: left;">WATCH ✗</td>
 <td style="text-align: left;">INVESTIGATE</td>
 <td style="text-align: left;">INVESTIGATE</td>
 </tr>
@@ -13385,8 +13397,8 @@ result of the evidence bundle.</p>
 <td style="text-align: left;">rejected because of a shock</td>
 <td style="text-align: left;">REJECT_SIGNAL</td>
 <td style="text-align: left;">WATCH ✗</td>
-<td style="text-align: left;">INVESTIGATE ✗</td>
-<td style="text-align: left;">INVESTIGATE ✗</td>
+<td style="text-align: left;">WATCH ✗</td>
+<td style="text-align: left;">WATCH ✗</td>
 <td style="text-align: left;">REJECT_SIGNAL</td>
 <td style="text-align: left;">REJECT_SIGNAL</td>
 </tr>
@@ -13435,25 +13447,25 @@ output). Before the fix, six B runs were flagged; every flagged number was a mov
 <td style="text-align: left;">ASELS</td>
 <td style="text-align: left;">2026-11-06</td>
 <td style="text-align: left;">FUNDAMENTAL_IMPROVEMENT_CANDIDATE</td>
-<td style="text-align: left;">ACCEPT</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">gerekçeler olumlu</td>
+<td style="text-align: left;">MODIFY</td>
+<td style="text-align: left;">WATCH</td>
+<td style="text-align: left;">E1–E6 support the thesis, but macro risks (E7) and backtest underperformance (E8) weaken the signal; therefore, I modified the action to WATCH.</td>
 </tr>
 <tr>
-<td style="text-align: left;">YOKBOYLE</td>
-<td style="text-align: left;">2026-11-06</td>
-<td style="text-align: left;">ANALYSIS_UNSAFE</td>
-<td style="text-align: left;">ACCEPT</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">böyle bir kod yok</td>
-</tr>
-<tr>
-<td style="text-align: left;">TURSG</td>
+<td style="text-align: left;">PETKM</td>
 <td style="text-align: left;">2026-11-06</td>
 <td style="text-align: left;">INVESTIGATE</td>
+<td style="text-align: left;">MODIFY</td>
+<td style="text-align: left;">WATCH</td>
+<td style="text-align: left;">E1 and E2 support INVESTIGATE, but conflicting coin-flip technical signals (E2: 47%–52%), macro pressure (E3), and weak backtest performance (E4) weaken the signal; therefore, I modified the action to WATCH.</td>
+</tr>
+<tr>
+<td style="text-align: left;">KRDMD</td>
+<td style="text-align: left;">2026-11-06</td>
+<td style="text-align: left;">REJECT_SIGNAL</td>
 <td style="text-align: left;">ACCEPT</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">dururmu kötü gözüküyor ama genel borsaya göre paralel gitmiş</td>
+<td style="text-align: left;">E3 and E4 support REJECT_SIGNAL via conflicting coin-flip technicals (47%–52%) and a %-10.0 shock drop, despite the profit swing (E1), E2 historical edge, macro risk (E5), and backtest lag (E6); therefore, I chose ACCEPT.</td>
 </tr>
 <tr>
 <td style="text-align: left;">ASELS</td>
@@ -13461,124 +13473,84 @@ output). Before the fix, six B runs were flagged; every flagged number was a mov
 <td style="text-align: left;">ANALYSIS_UNSAFE</td>
 <td style="text-align: left;">ACCEPT</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">açıklamadan dolayı</td>
+<td style="text-align: left;">E1 and E2 support ANALYSIS_UNSAFE via conflicting technicals and the February 2023 shock/market closure window, despite the 20-day rebound (E2), positive contract news (E3–E4), no macro risk (E5), and solid backtest metrics (E6); therefore, I accepted the ANALYSIS_UNSAFE flag.</td>
 </tr>
 <tr>
-<td style="text-align: left;">PETKM</td>
+<td style="text-align: left;">YOKBOYLE</td>
 <td style="text-align: left;">2026-11-06</td>
-<td style="text-align: left;">INVESTIGATE</td>
+<td style="text-align: left;">ANALYSIS_UNSAFE</td>
 <td style="text-align: left;">ACCEPT</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">yeterince sağlam veri yok</td>
+<td style="text-align: left;">No evidence and HARD_BLOCK support ANALYSIS_UNSAFE, with the unknown YOKBOYLE ticker and missing data leaving no basis to analyze; therefore, I accepted ANALYSIS_UNSAFE.</td>
 </tr>
 <tr>
-<td style="text-align: left;">KRDMD</td>
+<td style="text-align: left;">TURSG</td>
 <td style="text-align: left;">2026-11-06</td>
-<td style="text-align: left;">REJECT_SIGNAL</td>
-<td style="text-align: left;">MODIFY</td>
-<td style="text-align: left;">FUNDAMENTAL_IMPROVEMENT_CANDIDATE</td>
-<td style="text-align: left;">yükseliş göstericek durumda</td>
+<td style="text-align: left;">INVESTIGATE</td>
+<td style="text-align: left;">REJECT</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">E1–E4 support INVESTIGATE via the profit-to-loss swing, sharp shock drop, filing delay, and executive exit, but macro risk (E5) and backtest lag with a 49% win rate (E6) weaken confidence; therefore, I rejected the candidate (REJECT).</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Status of this experiment.</strong> It ran on 19–20 November 2026, before the point-in-time fix of 22 November (findings
-9 and 10). We recomputed the rule result for all six cases with the corrected data. The action, the secondary
-candidates and the gate are unchanged in every case, so the reference labels and the agreement figures below stand.
-Some numbers in the evidence the models saw have changed:</p>
-<table>
-<thead>
-<tr>
-<th>case</th>
-<th>evidence item</th>
-<th>in the experiment</th>
-<th>now</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>ASELS, KRDMD (2026-11-06)</td>
-<td>C backtest return (max drawdown)</td>
-<td>241% (−25%)</td>
-<td>213% (−21%)</td>
-</tr>
-<tr>
-<td>ASELS, KRDMD</td>
-<td>earnings-reaction history, top − bottom over days 0–4</td>
-<td>+1.97 pt (n = 162)</td>
-<td>+2.59 pt (n = 131)</td>
-</tr>
-<tr>
-<td>TURSG, PETKM (2026-11-06)</td>
-<td>D backtest return (max drawdown)</td>
-<td>176% (−22%)</td>
-<td>163% (−21%)</td>
-</tr>
-<tr>
-<td>PETKM</td>
-<td>earnings third</td>
-<td>top</td>
-<td>middle (+48.1% vs cut-off +50.5%)</td>
-</tr>
-<tr>
-<td>the four 2026 cases</td>
-<td>earnings sentence</td>
-<td>third within the quarter</td>
-<td>third against the previous quarter's cut-offs; amounts with their unit</td>
-</tr>
-<tr>
-<td>ASELS, 2023-02-15</td>
-<td>D backtest return</td>
-<td>38%</td>
-<td>41%</td>
-</tr>
-</tbody>
-</table>
-<p>The stored explanations therefore quote the pre-fix numbers. The experiment will be re-run once, after the remaining
-corrections from the 22 November review, so that explanations and evidence match again.</p>
+<p><strong>When it ran.</strong> The final run took place on 22–23 November 2026, after all corrections, with
+<code>gemini-3.1-flash-lite</code> for every row, an empty model cache and two independent runs. It replaces the run of 19–20
+November (kept as <code>raw_before_finalrerun.jsonl</code>), whose explanations quoted pre-fix evidence. The model inputs changed
+between the two runs (corrected evidence, new tool outputs), so a difference between them cannot be traced to one
+cause. Only this run is used below. One validator false alarm was found in this run and fixed (finding 11): the
+stored explanations were re-scored without new model calls.</p>
 <p><strong>What each layer added</strong> (Tables 7–8, Figure 2).</p>
 <ul>
 <li><strong>A — raw LLM.</strong><ul>
-<li><strong>Action:</strong> correct in only 2 of 12 runs, only for the unknown ticker. Half of its labels are
-  <em>unsupported</em>: a candidate label despite a shock, negative news or a missing condition.</li>
-<li><strong>Context it missed:</strong> it labelled TURSG (−39.5% in 20 days, negative KAP news) as <code>WATCH</code>, and called the
-  earthquake case <code>WATCH</code> although the market was closed.</li>
+<li><strong>Action:</strong> correct in only 2 of 12 runs, only for the unknown ticker. It chose <code>WATCH</code> or <code>HOLD</code> for every
+  other case.</li>
+<li><strong>Context it missed:</strong> it labelled TURSG (−39.5% in 20 days, negative KAP news) and the KRDMD shock as <code>WATCH</code>,
+  and called the earthquake case <code>WATCH</code> although the market was closed (an <em>unsupported</em> label, 2 of 12 runs).</li>
+<li><strong>Numbers:</strong> none fabricated, but 6 of 56 numbers (10.7%) were wrongly rounded, all in the 2023 case.</li>
 </ul>
 </li>
 <li><strong>B — LLM + tools (free use).</strong><ul>
 <li><strong>Tool use:</strong> only about 3 tool calls per run and never a backtest.</li>
-<li><strong>Action:</strong> right in 50% of runs, but it called TURSG a <code>TECHNICAL_REVERSAL_CANDIDATE</code> despite a shock and
-  negative news, the most dangerous error in the table.</li>
-<li><strong>Numbers:</strong> after the validator fix (Section 5) it fabricated none and had small rounding errors (4.5% of
-  numbers). Tools solved the <em>numbers</em> problem but not the <em>judgement</em> problem.</li>
+<li><strong>Action:</strong> right in 4 of 12 runs (the two unsafe cases). In both runs it called TURSG a
+  <code>TECHNICAL_REVERSAL_CANDIDATE</code> despite a shock and negative news, the most dangerous error in the table.</li>
+<li><strong>Numbers:</strong> none fabricated after the validator fix, 2 rounding errors (3.8%). Tools solved the <em>numbers</em>
+  problem but not the <em>judgement</em> problem.</li>
 </ul>
 </li>
 <li><strong>C — state machine.</strong><ul>
 <li><strong>Tool use:</strong> forced to visit every state, it made about 25 tool calls and ran a backtest every time.</li>
-<li><strong>Action:</strong> no unsupported conclusions, but it still chose conservative labels in place of the evidence-based
-  ones (<code>WATCH</code> for the ASELS earnings candidate, <code>INVESTIGATE</code> instead of <code>REJECT_SIGNAL</code> for the KRDMD shock).</li>
-<li><strong>Errors:</strong> 6% of its tool calls failed, mostly on the unknown ticker, where the tool errors were the
-  <em>intended</em> behaviour.</li>
+<li><strong>Action:</strong> no unsupported conclusions, but <code>WATCH</code> for all four 2026 cases in place of the evidence-based
+  labels (the earnings candidate, the two <code>INVESTIGATE</code> cases and the KRDMD shock rejection).</li>
+<li><strong>Errors:</strong> 6% of its tool calls failed. Almost all were on the unknown ticker, where the tool errors were the
+  <em>intended</em> behaviour; one call passed an argument the tool does not accept.</li>
 </ul>
 </li>
 <li><strong>D and E — evidence, gate, memory, human review.</strong><ul>
 <li><strong>Action:</strong> 100% agreement with the reference. This is <strong>by construction</strong>: the reference is the rule result
   that D and E use. It shows the harness cannot drift from its rules, not that the rules are right (Reports 1–5
   discuss that).</li>
-<li><strong>Explanations:</strong> cover 97.5% of the committed evidence, against 38–50% for A–C, with no fabricated or rounded
-  numbers. Semantic mistakes remain, as Section 5 shows.</li>
+<li><strong>Explanations:</strong> cover 94% of the committed evidence, against 45–62% for A–C, with no fabricated or rounded
+  numbers. In both runs the ASELS explanation left out the backtest line and the KRDMD explanation left out the
+  earnings-reaction history. Wrong evidence ids remain (Section 5).</li>
 </ul>
 </li>
 <li><strong>Reproducibility</strong> is 100% for every version. With temperature 0 and a separate cache for the second run, the
   same model chose the same action twice. That is consistency, not correctness: A was consistently wrong.</li>
 <li><strong>Cost.</strong> D needs about 5 LLM calls and 23 tool calls per analysis. The time column is unreliable: it includes
-  cached calls, retries after "503 high demand" errors and, for E run 1, the human's reading time.</li>
-<li><strong>Human review (Table 10).</strong> The reviewer accepted 5 cases and modified one.<ul>
-<li><strong>KRDMD override:</strong> <code>REJECT_SIGNAL</code> → <code>FUNDAMENTAL_IMPROVEMENT_CANDIDATE</code>, reason "it is in a position to
-  rise". That reason is a forecast, and it contradicts evidence E4 (a −10% shock day and −15.9% vs XU100 −6.0% in
-  20 days). The system allows the override, by design, and keeps the reason for later review.</li>
-<li><strong>TURSG reason</strong> ("moved in parallel with the market") also contradicts E2 (−39.5% vs −6.0%).</li>
-<li>These two cases show why the log must store the human's reasoning, not only the final label: human judgement
-  is also fallible and must be reviewable.</li>
+  waits after "429 too many requests" errors and, for E run 1, the human's reading and typing time.</li>
+<li><strong>Human review (Table 10).</strong> The reviewer accepted 3 cases, modified 2 and rejected 1.<ul>
+<li><strong>Accepted:</strong> the KRDMD shock rejection and the two unsafe cases.</li>
+<li><strong>ASELS</strong> <code>FUNDAMENTAL_IMPROVEMENT_CANDIDATE</code> → <code>WATCH</code>, citing macro risk (E7) and "backtest
+  underperformance" (E8). E8 shows that strategy C beat XU100 (213% vs 189%) and matched the sector benchmark
+  (212%); it lagged only equal-weight buy-and-hold (342%).</li>
+<li><strong>PETKM</strong> <code>INVESTIGATE</code> → <code>WATCH</code>, citing the coin-flip hit rates of the conflicting technical signals.</li>
+<li><strong>TURSG</strong> <code>INVESTIGATE</code> rejected. The reason says that E1–E4 (profit turned into a loss, the shock, the filing
+  delay, the executive exit) support <code>INVESTIGATE</code>, and rejects it because of macro risk and the backtest. Those
+  two items are the same for every stock on that day. The reviewer entered this review twice on 23 November with
+  the same decision; the second entry is the one stored (the first is kept as a backup).</li>
+<li><strong>The pattern:</strong> every change of the rule label pointed to the macro line or the backtest line, which are
+  market-wide, not stock-specific. The log makes this visible. It is also why the log must store the reviewer's
+  reasoning, not only the final label: human judgement is fallible and must be reviewable.</li>
 </ul>
 </li>
 </ul>
@@ -13684,6 +13656,42 @@ corrections from the 22 November review, so that explanations and evidence match
 <td style="text-align: left;">WATCH</td>
 <td style="text-align: left;">bilanço iyi ama yeterli değil. izlemede kalalım</td>
 </tr>
+<tr>
+<td style="text-align: left;">9b89c803932e</td>
+<td style="text-align: left;">2026-11-23 00:46:30</td>
+<td style="text-align: left;">TTKOM</td>
+<td style="text-align: left;">2026-01-09</td>
+<td style="text-align: left;">POTENTIAL_CATCH_UP_CANDIDATE</td>
+<td style="text-align: left;">PASS</td>
+<td style="text-align: left;">gemini:gemini-3.1-flash-lite</td>
+<td style="text-align: left;">MODIFY</td>
+<td style="text-align: left;">WATCH</td>
+<td style="text-align: left;">E1–E8 support catch-up potential, but the modest 51% peer outperformance rate (E4) and backtest lag against benchmarks with a 50% win rate (E9) weaken the signal; therefore, I set the action to WATCH.</td>
+</tr>
+<tr>
+<td style="text-align: left;">22bce1fd38c0</td>
+<td style="text-align: left;">2026-11-23 00:47:25</td>
+<td style="text-align: left;">PGSUS</td>
+<td style="text-align: left;">2026-01-09</td>
+<td style="text-align: left;">POTENTIAL_CATCH_UP_CANDIDATE</td>
+<td style="text-align: left;">PASS</td>
+<td style="text-align: left;">gemini:gemini-3.1-flash-lite</td>
+<td style="text-align: left;">MODIFY</td>
+<td style="text-align: left;">WATCH</td>
+<td style="text-align: left;">E1–E3 and E5–E6 support catch-up potential, but the modest 51% peer outperformance rate (E4) and backtest lag against benchmarks with a 50% win rate (E7) weaken the signal; therefore, I modified the action to WATCH.</td>
+</tr>
+<tr>
+<td style="text-align: left;">2cfc34a7be10</td>
+<td style="text-align: left;">2026-11-23 00:48:12</td>
+<td style="text-align: left;">MAVI</td>
+<td style="text-align: left;">2026-01-09</td>
+<td style="text-align: left;">POTENTIAL_CATCH_UP_CANDIDATE</td>
+<td style="text-align: left;">PASS_WITH_WARNINGS</td>
+<td style="text-align: left;">gemini:gemini-3.1-flash-lite</td>
+<td style="text-align: left;">MODIFY</td>
+<td style="text-align: left;">WATCH</td>
+<td style="text-align: left;">E1–E3 and E6–E7 support catch-up potential, but coin-flip historical odds for resistance_break (E5: 49%) and peer outperformance (E4: 51%) alongside backtest lag against benchmarks (E8) weaken the signal; therefore, I modified the action to WATCH.</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Table 13. Replay of every real record with today's code and data</strong></p>
@@ -13721,27 +13729,64 @@ corrections from the 22 November review, so that explanations and evidence match
 <td style="text-align: left;">reports/technical_events.parquet, reports/earnings_events.parquet</td>
 <td style="text-align: left;">yes</td>
 </tr>
+<tr>
+<td style="text-align: left;">9b89c803932e</td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">POTENTIAL_CATCH_UP_CANDIDATE</td>
+<td style="text-align: left;">POTENTIAL_CATCH_UP_CANDIDATE</td>
+<td style="text-align: left;">PASS</td>
+<td style="text-align: left;">PASS</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">no</td>
+</tr>
+<tr>
+<td style="text-align: left;">22bce1fd38c0</td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">POTENTIAL_CATCH_UP_CANDIDATE</td>
+<td style="text-align: left;">POTENTIAL_CATCH_UP_CANDIDATE</td>
+<td style="text-align: left;">PASS</td>
+<td style="text-align: left;">PASS</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">no</td>
+</tr>
+<tr>
+<td style="text-align: left;">2cfc34a7be10</td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">POTENTIAL_CATCH_UP_CANDIDATE</td>
+<td style="text-align: left;">POTENTIAL_CATCH_UP_CANDIDATE</td>
+<td style="text-align: left;">PASS_WITH_WARNINGS</td>
+<td style="text-align: left;">PASS_WITH_WARNINGS</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">no</td>
+</tr>
 </tbody>
 </table>
-<p><strong>What the real log contains.</strong> Two real Gemini runs (ASELS, 2026-11-06, made on 2026-11-18 during Step 13). In
-both, the rules gave <code>FUNDAMENTAL_IMPROVEMENT_CANDIDATE</code>, and the human changed it to <code>WATCH</code>. Reason, in
-translation: "strong earnings, but the strategy does not beat buy-and-hold; watch it". The <code>llm</code> column says only
-<code>gemini</code> because these runs predate the model-name field. Newer runs store e.g. <code>gemini:gemini-3.1-flash-lite</code>.</p>
-<p><strong>What the replay shows (Table 13).</strong> Replaying both records today gives:</p>
+<p><strong>What the real log contains</strong> (Table 12). Five real Gemini analyses:</p>
 <ul>
-<li>the <strong>same action and the same gate</strong>;</li>
-<li><strong>one changed data file</strong>: <code>reports/earnings_events.parquet</code>;</li>
-<li><strong>procedure changed = yes</strong>, and a different fingerprint.</li>
+<li><strong>Two from 18 November</strong> (ASELS, 2026-11-06, Step 13). The rules gave <code>FUNDAMENTAL_IMPROVEMENT_CANDIDATE</code>, and the
+  human changed it to <code>WATCH</code> both times. Reason, in translation: "strong earnings, but the strategy does not beat
+  buy-and-hold; watch it". The <code>llm</code> column says only <code>gemini</code> because these runs predate the model-name field.</li>
+<li><strong>Three from the scan of 9 January 2026</strong> (TTKOM, PGSUS, MAVI, made on 23 November with
+  <code>gemini:gemini-3.1-flash-lite</code>). The rules gave <code>POTENTIAL_CATCH_UP_CANDIDATE</code>; the human changed all three to
+  <code>WATCH</code> (Section 2.5).</li>
+</ul>
+<p><strong>What the replay shows (Table 13).</strong> Replaying every record today gives the <strong>same action and the same gate</strong>
+in all five. The difference is in what changed since each decision:</p>
+<ul>
+<li><strong>The three scan analyses:</strong> identical fingerprint, no changed data file, procedure unchanged.</li>
+<li><strong>The two November-18 analyses:</strong> <strong>two changed data files</strong> (<code>earnings_events.parquet</code>,
+  <code>technical_events.parquet</code>), <strong>procedure changed = yes</strong>, and a different fingerprint.</li>
 </ul>
 <p>That is the correct diagnosis. Since 18 November the rules were extended (the conflicting-signal rule), the evidence
 sentences were improved (shock direction, profit direction, units, earnings cut-offs), and on 22 November the
-earnings table was rebuilt so that it contains only figures that were public on each event day (findings 9–10).
-Neither change alters these two decisions. A replay separates "the data changed" from "our method changed". That is
-the purpose of storing data hashes and a procedure hash with every decision.</p>
+earnings table was rebuilt so that it contains only figures that were public on each event day (findings 9–10)
+and the technical-event table gained new event families and event-time states. None of these changes alters the
+two decisions. A replay separates "the data changed" from "our method changed". That is the purpose of storing data
+hashes and a procedure hash with every decision.</p>
 <h2>5. Problems found by the system's own checks</h2>
 <p>The checks built into the system (point-in-time gate, replay, numerical validator, tests) and the experiments
 found problems 1–8 during Steps 14–15. Problems 9–10 were found on 22 November, while checking the project brief's
-fundamental-analysis requirements against the data. Each was fixed with a test that fails without the fix:</p>
+fundamental-analysis requirements against the data, and problem 11 during the final experiment run. Each was fixed with a test that fails without the fix:</p>
 <table>
 <thead>
 <tr>
@@ -13823,11 +13868,20 @@ fundamental-analysis requirements against the data. Each was fixed with a test t
 <td>thirds from the previous quarter's cut-offs, using only figures already published; same-quarter ranking kept as a robustness check (Report 4)</td>
 <td>C/D/E backtests, Reports 2 and 4, experiment evidence (Section 3)</td>
 </tr>
+<tr>
+<td>11</td>
+<td>Validator flagged indicator parameters ("RSI(14)", "SMA 20, 50, 200") as fabricated</td>
+<td>in the final run, B's 6.7% hallucination was 2 such numbers</td>
+<td>indicator parameters excluded like window lengths; a Turkish decimal such as "RSI (37,99)" is still checked</td>
+<td>stored explanations re-scored offline: hallucination 0% for all versions</td>
+</tr>
 </tbody>
 </table>
-<p><strong>Not caught automatically.</strong> Some explanations cite the wrong evidence id. The KRDMD orchestrator attributed
-technical hit rates to E1 (an earnings sentence) and skipped two evidence items in one run. The validator checks
-numbers, not meaning. Catching such errors needs a second check (evidence-id consistency) or the human reviewer.</p>
+<p><strong>Not caught automatically.</strong> Some explanations cite the wrong evidence id or skip items. In the final run, the
+PETKM explanation attributed the coin-flip warning to E1 (an earnings sentence) instead of E2, and the 2023 ASELS
+explanation attributed the earthquake closure, a gate reason that is not an evidence item, to E1. The ASELS and
+KRDMD explanations each skipped one evidence item in both runs. The validator checks numbers, not meaning. Catching
+such errors needs a second check (evidence-id consistency) or the human reviewer.</p>
 <h2>6. Limitations</h2>
 <ul>
 <li><strong>Small experiment.</strong> 6 cases × 2 runs with one model at temperature 0. The cases were chosen to cover failure

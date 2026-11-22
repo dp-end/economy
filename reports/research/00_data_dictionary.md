@@ -640,7 +640,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 
 | column | description | type | filled | range / example |
 |:---|:---|:---|:---|:---|
-| `review_id` | auto id | int | 100% | 5 – 6 |
+| `review_id` | auto id | int | 100% | 5 – 9 |
 | `analysis_id` | reviewed analysis | text | 100% | 2f8d0f98ef03 |
 | `reviewed_at` | time | text | 100% | 2026-11-18 20:37:40 |
 | `reviewer` | who | text | 100% | insan |
@@ -725,26 +725,26 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `label` | case description | text | 100% | bilanço adayı |
 | `version` | A–E harness version | text | 100% | A |
 | `run` | 1 or 2 | int | 100% | 1 – 2 |
-| `action` | action returned | text | 100% | TECHNICAL_REVERSAL_CANDIDATE |
+| `model` | LLM used | text | 100% | gemini:gemini-3.1-flash-lite |
+| `action` | action returned | text | 100% | WATCH |
 | `ref_action` | rule-based reference action | text | 100% | FUNDAMENTAL_IMPROVEMENT_CANDIDATE |
 | `valid_action` | action in the allowed set | bool | 100% | 100% True |
-| `matches_reference` | action == reference | bool | 100% | 63% True |
-| `unsupported_conclusion` | action not supported by deterministic evidence | bool | 100% | 13% True |
-| `numbers` | numbers in the explanation | int | 100% | 0 – 12 |
+| `matches_reference` | action == reference | bool | 100% | 57% True |
+| `unsupported_conclusion` | action not supported by deterministic evidence | bool | 100% | 7% True |
+| `numbers` | numbers in the explanation | int | 100% | 0 – 11 |
 | `fabricated` | numbers not found in tool outputs | int | 100% | 0 – 0 |
-| `rounding` | numbers that are rounding mistakes | int | 100% | 0 – 1 |
-| `evidence_completeness` | share of committed evidence covered | float | 83% | 0 – 1 |
+| `rounding` | numbers that are rounding mistakes | int | 100% | 0 – 3 |
+| `evidence_completeness` | share of committed evidence covered | float | 83% | 0.25 – 1 |
 | `tool_calls` | MCP tool calls | int | 100% | 0 – 27 |
 | `invalid_calls` | calls rejected (unknown tool / bad arguments) | int | 100% | 0 – 0 |
 | `tool_errors` | tool errors | int | 100% | 0 – 9 |
 | `future_calls` | tool calls asking for data after asof | int | 100% | 0 – 0 |
 | `llm_calls` | LLM calls | int | 100% | 1 – 6 |
-| `latency` | seconds (unreliable: includes human time and cache) | float | 100% | 1.16 – 405.1 |
+| `latency` | seconds (unreliable: includes human time and cache) | float | 100% | 0.04 – 497.3 |
 | `backtest_run` | a backtest was run | bool | 100% | 53% True |
-| `explanation` | **unstructured**: final explanation text | text | 100% | ASELS hissesi 2026-11-06 itibarıyla 331,… |
+| `explanation` | **unstructured**: final explanation text | text | 100% | ASELS hissesi için 2026-11-06 kapanış fi… |
 | `unsupported` | list of fabricated numbers | list/JSON | 100% | – |
 | `rounding_list` | list of rounding mistakes | list/JSON | 100% | – |
 | `review` | human review (E only) | list/JSON | 20% | – |
 | `all_agents_hallucination` | fabricated numbers across all agent calls | float | 60% | 0 – 1 |
 | `tools_used` | list of tools used | list/JSON | 20% | – |
-| `model` | LLM used | text | 100% | gemini:gemini-3.1-flash-lite |

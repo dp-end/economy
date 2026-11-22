@@ -171,22 +171,22 @@ statistically real effects, yet a long-only rule built on them does not beat sim
 
 <!-- experiments -->
 The same model (Gemini 3.1 Flash-Lite, temperature 0) was run in five configurations on six cases chosen to expose
-failure modes, twice each. The runs took place on 19–20 November, before the point-in-time fix (Section 10). With the
-corrected data the six cases keep their actions and gate results, but some evidence numbers changed (Report 6 §3);
-the experiment will be re-run once after the remaining corrections.
+failure modes, twice each. The final run took place on 22–23 November, after all corrections, with an empty model
+cache (Report 6 §3).
 
-- **A — raw LLM.** Text in, label out. It gave the evidence-based label in 2 of 12 runs, and half of its labels were
-  unsupported (a candidate label despite a shock or negative news).
-- **B — LLM + tools.** It used about 3 tool calls per run and never a backtest. It once called a stock with a −10%
-  shock and two negative disclosures a "reversal candidate".
+- **A — raw LLM.** Text in, label out. It gave the evidence-based label in 2 of 12 runs, only for the unknown ticker.
+  It called everything else `WATCH` or `HOLD`, including the earthquake case when the market was closed.
+- **B — LLM + tools.** It used about 3 tool calls per run and never a backtest. In both runs it called a stock with a
+  −10% shock and two negative disclosures a "reversal candidate".
 - **C — state machine.** It forced about 25 tool calls and a backtest each time and removed unsupported labels, but
-  still chose conservative labels instead of the evidence-based ones.
-- **D/E — rules, evidence and gate.** They matched the reference by construction and explained 97.5% of the
-  committed evidence. A–C covered 38–50%.
+  still chose `WATCH` for all four 2026 cases instead of the evidence-based labels.
+- **D/E — rules, evidence and gate.** They matched the reference by construction and explained 94% of the committed
+  evidence. A–C covered 45–62%.
 
-After correcting a validator false alarm (moving-average windows counted as numbers), **no version fabricated
-numbers**. Tools fixed the *numbers*; structure fixed the *judgement*. Reproducibility was 100% in every version,
-but that means consistency, not correctness: version A was consistently wrong.
+After correcting two validator false alarms (window lengths and indicator parameters such as "RSI(14)" counted as
+numbers), **no version fabricated numbers**. Tools fixed the *numbers*; structure fixed the *judgement*.
+Reproducibility was 100% in every version, but that means consistency, not correctness: version A was consistently
+wrong.
 
 <!-- examples -->
 Table 4 shows how the rules turn evidence into a state, and how the system fails safely:
@@ -220,18 +220,24 @@ the explanation agent may not add a number that is not in these sentences.
 - gate result, action and committed evidence;
 - the explanation, the model name, the full agent trace, and the human decision with its reason.
 
-**Replay.** The two real Gemini analyses in the log (ASELS, 18 Nov 2026; both changed by the human from candidate to
-`WATCH`) were replayed with the final code. The action and the gate were identical. The replay reported a different
-procedure hash and one changed data file, the earnings table rebuilt by the point-in-time fix. That is correct:
-rules and evidence wording were improved after those decisions, and the earnings data were corrected. Replay thus
-separates "the data changed" from "the method changed".
+**Replay.** The real log holds five Gemini analyses: two of ASELS from 18 November, and three from the universe
+scan of 9 January 2026 (TTKOM, PGSUS, MAVI), made on 23 November. The human changed all five from a candidate label
+to `WATCH`. All five were replayed with the final code, and the action and the gate were identical in every case.
+
+- **The three scan analyses:** identical fingerprint.
+- **The two older ones:** a different procedure hash and two changed data files (the earnings table rebuilt by the
+  point-in-time fix and the extended technical-event table).
+
+That is correct: rules and evidence wording were improved after those decisions, and the data were corrected.
+Replay thus separates "the data changed" from "the method changed".
 
 **Memory.** Episodic memory shows agents up to three earlier cases of the same stock, but only cases with an earlier
 analysis date. The missing date filter was one of the bugs found during the experiments.
 
-**Human review is also data.** In the experiment the reviewer overrode one rejection with the reason "it is in a
-position to rise". That is a forecast, and it contradicts the logged shock evidence. The system allows it, by
-design, and the stored reason makes the override reviewable later.
+**Human review is also data.** In the experiment the reviewer accepted three labels, changed two to `WATCH` and
+rejected one (TURSG, `INVESTIGATE`). Every change cited the macro line or the backtest line, which are the same for
+every stock on that day. For TURSG the stated reason says that the stock-specific evidence supports the label. The
+system allows such decisions, by design, and the stored reason makes them reviewable later.
 
 <!-- distinctions -->
 The brief (§38) lists seven distinctions. Each one appeared in our own results:
@@ -258,8 +264,8 @@ The brief (§38) lists seven distinctions. Each one appeared in our own results:
    and only those entered the evidence. The TCMB briefing sounded hawkish while TCMB had just cut rates (Report 5).
 
 <!-- findings -->
-The system's own safeguards found eight design errors during Steps 14–15, and a final review on 22 November found
-two more in the earnings data. Each was fixed together with a test that fails without the fix (full table in
+The system's own safeguards found eight design errors during Steps 14–15, a final review on 22 November found
+two more in the earnings data, and the final experiment run exposed one more validator false alarm. Each was fixed together with a test that fails without the fix (full table in
 Report 6 §5):
 
 1. **Memory leak.** Episodic memory could show a 2026 decision to a 2023 analysis (look-ahead in memory).
@@ -275,11 +281,12 @@ Report 6 §5):
 9. **Restated figures used too early.** Fintables shows inflation-accounting restatements of 2022Q4 – 2023Q3 that
    were published a year later; they had been used on the original dates and compared with unrestated figures.
 10. **Ranking with later reporters.** A company's earnings third depended on companies that reported weeks later.
+11. **Second validator false alarm.** Indicator parameters such as "RSI(14)" or "SMA 20, 50, 200" were counted as
+    fabricated numbers.
 
-For findings 1–8, affected experiment rows were re-run with the real model, except wording-only changes, which are
-stated; the validator fix was applied by re-scoring the stored explanations offline. Findings 9–10 changed some
-evidence numbers of the experiment but none of its actions; it will be re-run once after the remaining corrections.
-They also changed research results: the pre-event earnings move and the ROE drift of Report 4 are no longer
+After all corrections the whole experiment was run again from an empty cache; the two validator fixes (7, 11)
+were applied by re-scoring the stored explanations offline, without new model calls. Findings 9–10 changed some
+evidence numbers but none of the experiment's actions. They also changed research results: the pre-event earnings move and the ROE drift of Report 4 are no longer
 significant, and strategy C's lead over XU100 fell from 53 to 24 pt.
 
 One class of error is **not** caught automatically: an explanation that cites the wrong evidence id or skips an
@@ -313,7 +320,8 @@ reviewer.
   - The reference label is the rule result, so D/E agreement is not independent evidence that the rules are good.
     A human-labelled reference set would be needed.
   - Evidence completeness is a heuristic. Latency includes human time.
-  - The stored explanations predate the point-in-time fix (Report 6 §3).
+  - The model inputs of the final run differ from those of the earlier run, so the two runs cannot be compared
+    case by case.
 
 <!-- conclusion -->
 - **Research.** Careful timing and benchmarks matter more than clever signals. The few effects that survive are
@@ -329,7 +337,7 @@ reviewer.
 - Test the net-margin drift (Report 4, borderline q = 0.058) and the EBITDA-margin reaction (H2) on new quarters.
 - Add an evidence-id consistency check to the validator.
 - Collect a human-labelled reference set for the harness experiment.
-- Extend the speech layer with an instructor-approved source list and a speech-day event study.
+- Extend the speech layer with a fixed, pre-defined list of official speeches and a speech-day event study.
 
 <!-- reproduce -->
 ```bash

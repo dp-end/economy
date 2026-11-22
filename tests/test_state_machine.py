@@ -171,3 +171,16 @@ def test_validator_skips_window_lengths_but_not_values():
     assert raw("%20 düştü, 20 hisse") == ["20", "20"]                     # gerçek değerler korunur
     r = check_numbers("20 günlük ortalama 342,5 TL", {"sma_20": 342.525})
     assert r["n_numbers"] == 1 and r["unsupported"] == []
+
+
+def test_validator_skips_indicator_parameters_but_not_values():
+    """'RSI(14)', 'SMA 20, 50, 200' gösterge parametresidir (son deneyde B sürümünde bulunan yanlış alarm);
+    'RSI 33,88', 'EMA 4,10 TL' gibi değerler yine kontrol edilir."""
+    from src.agents.validate import numbers_in
+    raw = lambda t: [r for _, _, r in numbers_in(t)]  # noqa: E731
+    assert raw("RSI(14) 26,53 seviyesinde") == ["26,53"]
+    assert raw("fiyat tüm hareketli ortalamaların (SMA 20, 50, 200) altında") == []
+    assert raw("SMA200 üstünde, EMA 20 ve 50 kesişti, MACD(12, 26, 9)") == []
+    assert raw("RSI 33,88 ile, 20 günlük EMA 4,10 TL") == ["33,88", "4,10"]       # değerler korunur
+    assert raw("RSI 26, MACD negatif") == ["26"]                                   # parantezsiz RSI = değer
+    assert raw("RSI (37,99) ve MACD(12,26,9)") == ["37,99"]                         # Türkçe ondalık = değer

@@ -2,7 +2,7 @@
 
 Kural: metindeki sayı, bağlamdaki bir sayının aynı ondalığa yuvarlanmış hâline (ya da %/oran çevrimine)
 eşitse desteklidir. Tarihler (2026-10-27, 27.10.2026, '27 Ekim 2026'), yıllar, kanıt kimlikleri (E1, E2), pencere/ufuk
-uzunlukları ('20 günlük', '5-day') ve 10'dan küçük tam sayılar (sayım, gün) sayılmaz.
+uzunlukları ('20 günlük', '5-day'), gösterge parametreleri ('RSI(14)', 'SMA 20, 50') ve 10'dan küçük tam sayılar (sayım, gün) sayılmaz.
 """
 import json
 import re
@@ -19,6 +19,15 @@ YEAR = re.compile(r"(?<![\d.,])(?:19[89]\d|20[0-3]\d)(?![\d.,]\d)")
 # sürümünün "uydurma" sayılan 6 sayısının 6'sı da hareketli ortalama penceresiydi). Tarih gibi sayılmaz.
 WINDOW = re.compile(r"(?<![\d.,])\d{1,3}(?:\s*,\s*\d{1,3})*(?:\s+(?:ve|veya|and|or)\s+\d{1,3})?\s*[-–]?\s*"
                     r"(?=(?:işlem\s+)?gün|(?:trading\s+)?days?\b|hafta|weeks?\b|ay\b|aylık|months?\b)", re.I)
+# Gösterge parametresi (son deney: B'nin 2 "uydurma" sayısı da buydu): parantez içi her gösterge için "RSI(14)",
+# "MACD(12, 26, 9)"; hareketli ortalamada parantezsiz de "SMA 20, 50, 200", "EMA 20 ve 50", "SMA200".
+# Değer gibi yazılanlar ("RSI 33,88", "EMA 4,10 TL", parantezsiz "RSI 26") sayılmaya devam eder.
+_LETTER = r"(?<![A-Za-zÇĞİÖŞÜçğıöşü])"
+_INTS = r"\d{1,3}(?:(?:\s*,\s+|\s+(?:ve|veya|and|or)\s+)\d{1,3})*"
+IND_PAREN = re.compile(_LETTER + r"((?:RSI|SMA|EMA|KAMA|MA|MACD|ATR|ADX|BB|Bollinger|Supertrend|Stoch\w*|CCI|ROC)\s*)"
+                       r"\(\s*(?:\d{1,3}(?:,\d{1,3}){2,}|\d{1,3}(?:\s*,\s+\d{1,3})*)\s*\)", re.I)
+# Boşluksuz virgül Türkçe ondalıktır: "RSI (37,99)" değerdir; "(12,26,9)" gibi 3+ öğe ise parametre listesi.
+IND_MA = re.compile(_LETTER + r"((?:SMA|EMA|KAMA|MA)\s*)" + _INTS + r"(?!\d|[.,]\d)")
 
 
 def parse_number(tok: str):
@@ -39,6 +48,7 @@ def parse_number(tok: str):
 def numbers_in(text: str) -> list:
     """(sayı, ondalık basamak, orijinal yazım) listesi. Tarih ve kanıt kimlikleri atılır."""
     clean = WINDOW.sub(" ", YEAR.sub(" ", WRITTEN_DATE.sub(" ", EVID.sub(" ", DATE.sub(" ", text or "")))))
+    clean = IND_MA.sub(r"\1 ", IND_PAREN.sub(r"\1 ", clean))
     out = []
     for m in NUM.finditer(clean):
         v, d = parse_number(m.group())

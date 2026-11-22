@@ -440,7 +440,10 @@ DATASETS = [
                "backtest.esit_agirlik": "equal-weight buy-and-hold [fraction]", "backtest.fark": "difference to equal weight",
                "backtest.xu100": "XU100 return [fraction]", "backtest.xu100_fark": "difference to XU100",
                "backtest.sharpe": "annualised Sharpe", "backtest.max_dusus": "maximum drawdown [fraction]",
-               "backtest.islem_sayisi": "number of position entries", "backtest.uyari": "`az sinyal` if < 30 trades",
+               "backtest.islem_sayisi": "number of position entries",
+               "meta.bist100": "BIST 100 membership on the analysis day: {member: True / False / None = period not "
+                               "verified, period, source (official announcement)}",
+               "backtest.uyari": "`az sinyal` if < 30 trades",
                "backtest.sektor_kiyas": "sector-neutral benchmark: the strategy's daily sector weights, equal weight "
                                         "inside each sector [fraction]",
                "backtest.sektor_fark": "strategy minus sector-neutral benchmark (= stock picking inside sectors)",
@@ -476,7 +479,9 @@ DATASETS = [
          load=lambda: pd.read_csv(sorted(Path("reports/scans").glob("scan_*.csv"))[-1]), kind="structured",
          step="Adım 4 (22 Nov)", grain="one row per stock of the 30-stock universe on the scan day",
          pit="each row is the rule layer (`run_analysis`) on the scan day: only data public by that day",
-         cols={"ticker": "stock code", "peer_group": "sector group", "action": "rule action on that day",
+         cols={"ticker": "stock code", "peer_group": "sector group",
+               "bist100": "BIST 100 member on the scan day per `config/bist100_membership.csv`; empty = not verified",
+               "action": "rule action on that day",
                "secondary": "other candidate labels, comma separated", "gate": "quality-gate status",
                "sector_lag_10": "10-day return minus peer median [fraction]",
                "sector_median_10": "peer median 10-day return [fraction]",

@@ -90,7 +90,9 @@ The human decides. There is no broker connection.</p>
 <h2>2. Data and point-in-time design</h2>
 <ul>
 <li><strong>Universe.</strong> 30 study stocks from ten sectors (<code>config/universe.csv</code>), plus four BIST 100 peers used only for
-  sector medians. The list is the 2026 one, which creates a survivorship caveat.</li>
+  sector medians. The list is the 2026 one, which creates a survivorship caveat. Membership is re-checked at the
+  start of every run (brief §5): all 34 are BIST 100 members for 1 Oct – 31 Dec 2026 (Borsa İstanbul periodic
+  changes, KAP 21 Sep 2026; none of the 27 removed shares is ours).</li>
 <li><strong>Prices.</strong> Daily İş Yatırım series, adjusted for corporate actions, 1 Nov 2021 – 6 Nov 2026. Validated
   against Yahoo; the quality report found no broken day.</li>
 <li><strong>Fundamentals.</strong> Fintables quarterly statements (30 files). A quarter becomes usable only on its <strong>KAP event
@@ -179,7 +181,7 @@ tools; it does not invent or predict financial facts.</strong></p>
 </tr>
 <tr>
 <td style="text-align: left;">3 Weekday &amp; multi-day</td>
-<td style="text-align: left;">Wednesday -0.41, Thursday +0.34 pt vs other days; big down days continue (−1.35 pt in 5 days)</td>
+<td style="text-align: left;">Wednesday -0.41, Thursday +0.34 pt vs other days, in all ten sectors; Thursday after a Fed decision +0.96 pt (pre-registered, q = 0.025); big down days continue (−1.35 pt in 5 days)</td>
 <td style="text-align: left;">Wed-buy/Thu-sell: +201% before costs, +42% at 0.15% (XU100 +647%)</td>
 <td style="text-align: left;">not used for actions</td>
 </tr>
@@ -209,8 +211,9 @@ tools; it does not invent or predict financial facts.</strong></p>
 <li>short-term continuation after big down days and over weekends.</li>
 </ul>
 </li>
-<li><strong>Robust but not tradable.</strong> The Thursday strength, partly linked to central-bank decision days, is the most
-  stable weekday effect. It is not tradable after costs.</li>
+<li><strong>Robust but not tradable.</strong> The Thursday strength, seen in all ten sectors and partly linked to central-bank
+  decisions (most clearly the first trading day after a Fed decision), is the most stable weekday effect. It is
+  not tradable after costs.</li>
 <li><strong>Non-findings</strong> are reported as carefully as findings:<ul>
 <li>no technical reversal type beats the index, with or without the spec's confirming indicators (20 event types,
   8 of them added and pre-registered for the spec's missing families, and 32 combined-condition tests; none
@@ -581,8 +584,9 @@ design, and the stored reason makes the override reviewable later.</p>
    (Report 3). The sector catch-up effect is the most robust finding, yet the strategy built on it only matched
    XU100 (Report 2).</li>
 <li><strong>Correlation ≠ causation.</strong> Thursday's strength coincides with TCMB and Fed decision days (all 26 rate changes
-   fell on a Thursday). That is a plausible mechanism, not a proven cause: meetings that held the rate are not in the
-   data (Report 3).</li>
+   fell on a Thursday). With the official meeting calendars, holds included, the clearest link is the Fed: the
+   Thursday after an FOMC decision beat other Thursdays by +0.96 pt (q = 0.025). That is a plausible mechanism,
+   not a proven cause (Report 3).</li>
 <li><strong>Backtest ≠ future guarantee.</strong> Every strategy variant except the rate filter beat XU100 in the first half, and
    all of them lagged it in the second (Report 6).</li>
 <li><strong>Historical evidence ≠ investment advice.</strong> Even the best-supported label (<code>POTENTIAL_CATCH_UP_CANDIDATE</code>)

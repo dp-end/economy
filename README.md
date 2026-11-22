@@ -41,6 +41,8 @@ Then try the demos in section 3.
 
 ```
 config/universe.csv        30 study stocks + 4 extra peers, sector and peer-group map (Step 1)
+config/bist100_membership.csv  BIST 100 membership of the 34 stocks per index period, with the official source
+config/policy_meetings.csv     TCMB and Fed rate-decision dates (holds included), with the official source
 src/data/                  data loaders with on-disk caches: prices, fundamentals, KAP dates, macro, news, speech
 src/indicators/            technical indicators, support/resistance, sector-relative features
 src/events/                event studies: technical reversals, sector catch-up, calendar, earnings, news
@@ -61,6 +63,42 @@ Main documents:
 - `reports/research/00_data_dictionary.md`: every structured and unstructured field.
 - `reports/research/01_…05_*.md`: technical reversals, sector catch-up, weekday patterns, earnings reaction,
   macro/news/speech context.
+
+## Brief §32 function names
+
+Every function name suggested in the brief can be imported from `src/spec_functions.py`. 16 existed under the same
+name; the other 12 were built under a different name and are thin wrappers there (no new calculation).
+
+| brief name | where it is done |
+|---|---|
+| `load_universe` | src/data/universe.py: load_universe |
+| `get_stock_history` | src/data/prices.py: get_stock_history |
+| `get_index_history` | src/data/prices.py: get_index_history |
+| `build_sector_peer_groups` | src/data/universe.py: build_sector_peer_groups |
+| `calculate_indicators` | src/mcp_server/tools.py: calculate_indicators (src/indicators/technical.py: add_all) |
+| `calculate_bollinger_events` | src/events/technical_events.py: detect_events (Bollinger types) |
+| `calculate_kama_state` | src/events/technical_events.py: states (kama_state, kama_turn) |
+| `calculate_supertrend_state` | src/events/technical_events.py: states (st_state) |
+| `calculate_ichimoku_state` | src/events/technical_events.py: states (cloud_pos); src/indicators/technical.py: ichimoku |
+| `find_support_resistance` | src/mcp_server/tools.py: find_support_resistance (src/indicators/support_resistance.py) |
+| `calculate_reversal_strength` | src/events/technical_events.py: event_table (direction-adjusted forward returns) |
+| `rank_sector_laggards` | src/mcp_server/tools.py: rank_sector_relative_strength (every peer group) |
+| `test_weekday_pattern` | src/mcp_server/tools.py: test_weekday_pattern |
+| `detect_multiday_patterns` | src/events/calendar_patterns.py: pattern_table |
+| `get_fundamental_metrics` | src/mcp_server/tools.py: get_fundamental_metrics (src/data/pit_fundamentals.py) |
+| `calculate_quarterly_changes` | src/mcp_server/tools.py: calculate_fundamental_change |
+| `align_financial_disclosure_dates` | src/data/kap_dates.py: load_kap_table / visible_asof_kap |
+| `get_macro_context` | src/mcp_server/tools.py: get_macro_context (src/data/macro.py) |
+| `extract_news_events` | src/data/news_tags.py: get_news_events |
+| `transcribe_finance_video_segment` | src/data/speech.py: transcribe (+ merge_to_sentences) |
+| `extract_speech_features` | src/data/speech_features.py: segment_features / get_speech_features |
+| `build_evidence_bundle` | src/harness/evidence.py: build_evidence_bundle |
+| `generate_strategy_variants` | src/backtest/strategies.py: generate_strategy_variants |
+| `run_backtest` | src/backtest/engine.py: run_backtest (MCP: src/mcp_server/tools.py: run_backtest) |
+| `calculate_performance` | src/backtest/engine.py: calculate_performance |
+| `check_data_quality` | src/harness/quality_gate.py: check_data_quality |
+| `log_decision` | src/harness/decision_log.py: log_decision |
+| `replay_analysis` | src/harness/decision_log.py: replay_analysis |
 
 ## 3. Demos (no API key)
 
@@ -197,6 +235,10 @@ No test calls a paid API or uses a key. LLM behaviour is tested with `MockLLM`.
 ## 8. Known limitations
 
 - **Sample:** 30 stocks, five years, nominal TRY. Survivorship: the 2026 index list is used for the whole period.
+  Index membership is checked at the start of every harness run and scan (`config/bist100_membership.csv`): all 34
+  stocks are BIST 100 members in the current period (1 Oct – 31 Dec 2026, Borsa İstanbul / KAP 21 Sep 2026); a
+  stock listed as a non-member gets a gate warning. Earlier periods are not recorded, so historical runs show
+  membership as "not verified" without a warning.
 - **Fundamentals data:** around the inflation-accounting switch (2022Q4 – 2024Q1) earnings cannot be ranked,
   because the restated figures were published a year later. EBITDA, leverage, liquidity, cash-flow and return
   ratios are computed (`src/data/pit_fundamentals.py`; EBITDA, operating cash flow and net debt checked against

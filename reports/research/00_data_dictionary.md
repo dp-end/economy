@@ -10,7 +10,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage points; `[TRY]` Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.
 
-**23 datasets, 502 fields.**
+**23 datasets, 504 fields.**
 
 | # | dataset | kind | step | columns |
 |---:|:---|:---|:---|---:|
@@ -30,11 +30,11 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | 14 | Speech segments | unstructured text | 10B | 16 |
 | 15 | Speech features and claim checks | structured features from unstructured text | 10B | 26 |
 | 16 | Numerical claims in speeches | structured | 10B | 9 |
-| 17 | Evidence bundle (one per stock and analysis day) | structured + text evidence | 11 | 112 |
+| 17 | Evidence bundle (one per stock and analysis day) | structured + text evidence | 11 | 113 |
 | 18 | Decision log: analyses | structured (JSON fields) | 11, 13 | 21 |
 | 19 | Decision log: human reviews | structured + text | 11 | 7 |
 | 20 | Decision log: harness traces | structured (JSON) | 13 | 5 |
-| 21 | Universe scan (spec §33) | structured | Adım 4 (22 Nov) | 17 |
+| 21 | Universe scan (spec §33) | structured | Adım 4 (22 Nov) | 18 |
 | 22 | Decision log: universe scans | structured (JSON fields) | Adım 4 (22 Nov) | 14 |
 | 23 | Harness experiment results | structured + text | 14 | 28 |
 
@@ -493,6 +493,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 | `meta.requested_asof` | date asked for | datetime | – | 2026-11-06 |
 | `meta.known_ticker` | False → HARD_BLOCK | bool | – | True |
 | `meta.sector` | sector | text | – | Technology / Defense |
+| `meta.bist100` | BIST 100 membership on the analysis day: {member: True / False / None = period not verified, period, source (official announcement)} | text | – | {"member": true, "period": "2026-10-01/2… |
 | `conditions.laggard` | sector_lag_10 ≤ −5 pt | bool | – | False |
 | `conditions.sector_strong` | peers' median 10-day return > 0 | bool | – | False |
 | `conditions.recovering` | close > KAMA or Supertrend up | bool | – | False |
@@ -671,6 +672,7 @@ Units: `[fraction]` 0.05 = 5%; `[%]` already in percent; `[pt]` percentage point
 |:---|:---|:---|:---|:---|
 | `ticker` | stock code | text | 100% | AKBNK |
 | `peer_group` | sector group | text | 100% | Banking |
+| `bist100` | BIST 100 member on the scan day per `config/bist100_membership.csv`; empty = not verified | bool | 100% | 100% True |
 | `action` | rule action on that day | text | 100% | TECHNICAL_REVERSAL_CANDIDATE |
 | `secondary` | other candidate labels, comma separated | text | 33% | TECHNICAL_REVERSAL_CANDIDATE |
 | `gate` | quality-gate status | text | 100% | PASS_WITH_WARNINGS |

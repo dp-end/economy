@@ -17,8 +17,8 @@ tool list and the replays are recomputed when the report is built (no API key ne
 | `reports/experiments/per_case.csv` | 12 kB | 8ad9869a852a |
 | `reports/experiments/raw.jsonl` | 81 kB | 380094d87ece |
 | `reports/decision_log.sqlite` | 66 kB | 229dea2a61f3 |
-| `reports/scans/scan_2026-01-09_POTENTIAL_CATCH_UP_CANDIDATE.csv` | 5 kB | 6c820f2163be |
-| `reports/scans/scan_2026-11-06_POTENTIAL_CATCH_UP_CANDIDATE.csv` | 5 kB | f8980559053d |
+| `reports/scans/scan_2026-01-09_POTENTIAL_CATCH_UP_CANDIDATE.csv` | 5 kB | 4bc018f4e24f |
+| `reports/scans/scan_2026-11-06_POTENTIAL_CATCH_UP_CANDIDATE.csv` | 5 kB | 493af61eb6f8 |
 
 This report covers four deliverables of the project brief (§36): **backtesting results and benchmark comparisons**,
 **MCP tool definitions and the stateful harness implementation**, the **agent-harness experiment comparison**, and
@@ -323,6 +323,7 @@ The action itself is chosen by rules (`evidence.decide`) from the 8 allowed labe
 | soft | a historical hit rate below 50% (not better than a coin flip) |
 | soft | peer group smaller than 3 |
 | soft | backtest flagged (fewer than 30 entries) |
+| soft | stock listed as not a BIST 100 member on the analysis day (`config/bist100_membership.csv`; a period without a record is 'not verified', no warning) |
 | result | no warnings → PASS; 1–2 → PASS_WITH_WARNINGS; ≥3 → INVESTIGATE |
 
 ### 2.4 Memory (spec §24)

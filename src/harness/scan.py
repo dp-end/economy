@@ -87,7 +87,8 @@ def scan_universe(asof, action: str = CATCH_UP, tickers: list = None) -> dict:
     for t in tickers or _core():
         r = run_analysis(t, day)
         s, c = r["observed"]["sector"], r["conditions"]
-        rows.append(dict(ticker=t, peer_group=r["meta"].get("sector"), action=r["action"],
+        rows.append(dict(ticker=t, peer_group=r["meta"].get("sector"), bist100=(r["meta"].get("bist100") or {}).get("member"),
+                         action=r["action"],
                          secondary=list(r["secondary"]), gate=r["gate"]["status"],
                          sector_lag_10=s.get("sector_lag_10"), sector_median_10=s.get("sector_median_10"),
                          **{k: bool(c[k]) for k in COND_COLS}))

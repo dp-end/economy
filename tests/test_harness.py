@@ -185,3 +185,23 @@ def test_fundamental_evidence_in_report_money_and_unit():
     r = run_analysis("ASELS", "2026-11-06")
     e1 = next(e["text"] for e in r["committed"] if e["text"].startswith("Son açıklanan bilanço"))
     assert "ikisi de Eylül 2026 TL'si" in e1 and "bir önceki çeyrekte 30 hissenin" in e1
+
+
+# ---------- Adım 6: BIST 100 üyelik kontrolü (brief §5) ----------
+def test_index_membership_lookup():
+    from src.data.universe import index_membership
+    m = index_membership("ASELS", "2026-11-06")
+    assert m["member"] is True and m["period"] == "2026-10-01/2026-12-31" and "kap.org.tr" in m["source"]
+    assert index_membership("ASELS", "2024-01-05")["member"] is None          # dönem doğrulanmadı
+    assert index_membership("SKBNK", "2026-11-06")["member"] is None          # dosya tam liste değil
+
+
+def test_gate_warns_only_when_membership_is_false():
+    from src.harness.quality_gate import check_data_quality
+    from src.harness.evidence import build_evidence_bundle
+    b = build_evidence_bundle("ASELS", "2026-11-06")
+    base = check_data_quality(b)["soft_warnings"]
+    b["meta"]["bist100"] = dict(member=None)
+    assert check_data_quality(b)["soft_warnings"] == base                     # bilinmeyen dönem uyarı değil
+    b["meta"]["bist100"] = dict(member=False)
+    assert any("BIST 100 üyesi değil" in w for w in check_data_quality(b)["soft_warnings"])

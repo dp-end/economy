@@ -69,6 +69,9 @@ def check_data_quality(bundle: dict) -> dict:
         unsafe.append("deprem nedeniyle piyasa kapanış penceresi (Şubat 2023)")
 
     # yumuşak uyarılar
+    mem = bundle.get("meta", {}).get("bist100") or {}
+    if mem.get("member") is False:                     # yalnız kesin "üye değil"; doğrulanmamış dönem uyarı değildir
+        soft.append("hisse analiz gününde BIST 100 üyesi değil (dönemsel değişiklik listesi)")
     macro = obs.get("macro", {})
     missing = [k for k in ("policy_rate", "cpi_yoy", "usdtry", "fed_upper") if pd.isna(macro.get(k))]
     if missing:

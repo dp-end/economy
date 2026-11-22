@@ -18,7 +18,7 @@ from src.events.calendar_patterns import WEEKDAYS, _data, pattern_table, welch
 from src.reports.common import C, DISCLAIMER, bh, load_notes, md_table, note, save_fig, stamp, style, write
 
 SOURCES = ["reports/weekday_portfolio.csv", "reports/weekday_per_stock.csv", "reports/streak_patterns.csv",
-           "reports/macro_panel.csv"]
+           "reports/macro_panel.csv", "config/policy_meetings.csv"]
 NOTES_FILE = "03_weekday_patterns.md"
 EN = dict(zip(WEEKDAYS, ["Mon", "Tue", "Wed", "Thu", "Fri"]))
 BIG_DOWN = (-0.05, -0.095)          # büyük düşüş günü: -%5 ile limit (-%9,5) arası; limit günleri haber şokudur
@@ -57,6 +57,84 @@ def weekday_table(port, dow, valid) -> pd.DataFrame:
                      "mean if XU100 up": port[up & (dow == k)].mean() * 100,
                      "mean if XU100 down": port[down & (dow == k)].mean() * 100})
     return pd.DataFrame(rows).set_index("day")
+
+
+# ---------- Adım 6 (22 Kasım 2026, sonuçlara bakmadan yazıldı): sektör, sektör yönü, makro haftaları ----------
+def _day_vs_rest(series: pd.Series, dow: pd.Series, valid: pd.Series, k: int) -> tuple:
+    a, b = series[valid & (dow == k)].dropna(), series[valid & (dow != k)].dropna()
+    t, p = welch(a, b)
+    return (a.mean() - b.mean()) * 100, t, p, len(a)
+
+
+def sector_returns_all(index: pd.DatetimeIndex) -> pd.DataFrame:
+    """Akran grubu başına eşit ağırlıklı günlük getiri (evrendeki tüm hisseler; backtest sektör kıyasıyla aynı)."""
+    from src.backtest.engine import sector_returns
+    return sector_returns(index)[0]
+
+
+def sector_weekday(dow, valid) -> pd.DataFrame:
+    """10 sektör portföyü x 5 gün: o gün diğer günlerden farklı mı (50 test)."""
+    sec = sector_returns_all(dow.index)
+    rows = []
+    for g in sec.columns:
+        for k, name in enumerate(WEEKDAYS):
+            diff, t, p, n = _day_vs_rest(sec[g], dow, valid, k)
+            rows.append({"sector": g, "day": EN[name], "n": n, "diff vs other days %": diff, "t": t, "p": p})
+    return pd.DataFrame(rows)
+
+
+def sector_direction(d, dow, valid) -> pd.DataFrame:
+    """R3'ün iki bulgusu (Çarşamba zayıf, Perşembe güçlü), hissenin sektörü önceki 5 günde yükselmişken ve
+    düşmüşken ayrı ayrı. Sektör yönü t-5..t-1 getirisi (t günü açılışında bilinir). 4 test."""
+    from src.data.universe import load_universe
+    grp = load_universe().set_index("ticker")["peer_group"]
+    sec = sector_returns_all(d["ret"].index)
+    prior = (1 + sec).rolling(5).apply(np.prod, raw=True).sub(1).shift(1)
+    sec_dir = pd.DataFrame({t: prior[grp[t]] for t in d["ret"].columns})
+    rows = []
+    for lab, cond in (("sector up in previous 5 days", sec_dir > 0), ("sector down in previous 5 days", sec_dir < 0)):
+        port = d["ret"].where(cond).mean(axis=1)
+        for k in (2, 3):
+            diff, t, p, n = _day_vs_rest(port, dow, valid, k)
+            rows.append({"condition": lab, "day": EN[WEEKDAYS[k]], "days": n, "diff vs other days %": diff, "t": t, "p": p})
+    return pd.DataFrame(rows)
+
+
+def macro_weeks(idx: pd.DatetimeIndex) -> pd.DataFrame:
+    """Her işlem günü için: haftasında TCMB PPK kararı / Fed FOMC kararı / TÜFE açıklaması var mı.
+    TCMB 14:00'te açıklar (aynı gün); Fed BIST kapandıktan sonra açıklar (sonraki işlem günü); TÜFE ayın 3'ü."""
+    from src.data.macro import cpi_release_date
+    m = pd.read_csv("config/policy_meetings.csv", parse_dates=["date"])
+    def first_on_or_after(days):
+        pos = idx.searchsorted(pd.DatetimeIndex(days))
+        return idx[pos[pos < len(idx)]]
+    ev = {"TCMB decision week": first_on_or_after(m.loc[m["bank"] == "TCMB", "date"]),
+          "Fed decision week": first_on_or_after(m.loc[m["bank"] == "FED", "date"] + pd.Timedelta(days=1)),
+          "CPI release week": first_on_or_after([cpi_release_date(x) for x in
+                                                 pd.date_range(idx[0] - pd.offsets.MonthBegin(2), idx[-1], freq="MS")])}
+    wk = idx.to_period("W")
+    return pd.DataFrame({k: wk.isin(pd.DatetimeIndex(v).to_period("W")) for k, v in ev.items()}, index=idx)
+
+
+def macro_week_tests(port, dow, valid) -> pd.DataFrame:
+    """Her makro hafta türü için: o haftaların Çarşambası / Perşembesi diğer haftalarınkinden farklı mı, hafta
+    toplamı (geçerli günlerin birleşik getirisi) diğer haftalardan farklı mı. 3 x 3 = 9 test."""
+    mw = macro_weeks(port.index)
+    wk = port.index.to_period("W")
+    weekly = port[valid].groupby(wk[valid.to_numpy()]).apply(lambda x: (1 + x).prod() - 1)
+    rows = []
+    for typ in mw.columns:
+        e = mw[typ]
+        for k in (2, 3):
+            a, b = port[valid & e & (dow == k)], port[valid & ~e & (dow == k)]
+            t, p = welch(a, b)
+            rows.append({"week type": typ, "test": f"{EN[WEEKDAYS[k]]} in these weeks vs other weeks", "n": len(a),
+                         "effect %": (a.mean() - b.mean()) * 100, "t": t, "p": p})
+        ew = pd.Series(e.to_numpy(), index=wk).groupby(level=0).any().reindex(weekly.index)
+        t, p = welch(weekly[ew], weekly[~ew])
+        rows.append({"week type": typ, "test": "whole-week return vs other weeks", "n": int(ew.sum()),
+                     "effect %": (weekly[ew].mean() - weekly[~ew].mean()) * 100, "t": t, "p": p})
+    return pd.DataFrame(rows)
 
 
 def per_stock() -> tuple:
@@ -192,6 +270,10 @@ def build() -> str:
     ppk, ppk_s = ppk_thursdays(port, dow, valid)
     streak = pd.read_csv("reports/streak_patterns.csv").set_index(["pattern", "h"])
     newp = new_patterns(d, port, dow, valid)
+    secw = sector_weekday(dow, valid)
+    secd = sector_direction(d, dow, valid)
+    mwt = macro_week_tests(port, dow, valid)
+    mw_counts = macro_weeks(port.index).groupby(port.index.to_period("W")).any().sum()
     bt, curves = wed_thu_backtest()
     f1, f2 = fig_is_oos(wt), fig_costs(curves)
 
@@ -202,6 +284,12 @@ def build() -> str:
         pd.DataFrame({"family": "streaks", "test": [f"{a} h={b}" for a, b in streak.index], "p": streak["p"].to_numpy()}),
         pd.DataFrame({"family": "new patterns", "test": newp.index, "p": newp["p"].to_numpy()}),
         pd.DataFrame({"family": "PPK Thursdays", "test": ["other Thursdays vs non-Thursdays"], "p": [ppk_s["p_other"]]}),
+        pd.DataFrame({"family": "sector portfolios (pre-registered)", "test": secw["sector"] + " " + secw["day"],
+                      "p": secw["p"]}),
+        pd.DataFrame({"family": "sector direction (pre-registered)", "test": secd["condition"] + " / " + secd["day"],
+                      "p": secd["p"]}),
+        pd.DataFrame({"family": "macro-event weeks (pre-registered)", "test": mwt["week type"] + " / " + mwt["test"],
+                      "p": mwt["p"]}),
     ], ignore_index=True)
     fam["q (all tests)"] = bh(fam["p"])
     fam_sum = fam.groupby("family", sort=False).agg(tests=("p", "size"), raw_p=("p", lambda x: int((x < 0.05).sum())),
@@ -209,6 +297,11 @@ def build() -> str:
     fam_sum.columns = ["tests", "raw p < 0.05", "q < 0.05 (all tests together)"]
     survivors = fam[fam["q (all tests)"] < 0.05].sort_values("p")[["family", "test", "p", "q (all tests)"]]
     newp["q (all tests)"] = fam.loc[fam["family"] == "new patterns", "q (all tests)"].to_numpy()
+    for tab, famname in ((secw, "sector portfolios (pre-registered)"), (secd, "sector direction (pre-registered)"),
+                         (mwt, "macro-event weeks (pre-registered)")):
+        tab["q (all tests)"] = fam.loc[fam["family"] == famname, "q (all tests)"].to_numpy()
+    sec_piv = secw.pivot(index="sector", columns="day", values="diff vs other days %")[[EN[w] for w in WEEKDAYS]]
+    sec_low = secw[secw["p"] < 0.05].sort_values("p")[["sector", "day", "diff vs other days %", "p", "q (all tests)"]]
     streak_v = streak.reset_index()
     streak_v["q (all tests)"] = fam.loc[fam["family"] == "streaks", "q (all tests)"].to_numpy()
     streak_v = streak_v.rename(columns={"mean_ab": "mean %", "IS": "first half %", "OOS": "second half %",
@@ -305,6 +398,42 @@ Rate-change Thursdays vs other Thursdays: t = {ppk_s['t_change']:.2f}, p = {ppk_
 {md_table(newp, fmt={"effect %": "{:+.3f}", "t": "{:.2f}", "p": "{:.4f}", "q (all tests)": "{:.3f}"})}
 
 {note(notes, "new")}
+
+## 6b. Sectors, sector direction and macro-event weeks (pre-registered)
+
+The spec asks for patterns in **sectors** and **conditional on sector direction or macro-event weeks**. These
+tests were written on 22 November 2026, before their results were computed, and join the report's single
+Benjamini–Hochberg family.
+
+- **Sector portfolios.** Ten equal-weight sector portfolios (all universe members of the sector), each weekday vs
+  the other days of the same portfolio: {len(secw)} tests.
+- **Sector direction.** The two portfolio findings of Section 3 (weak Wednesday, strong Thursday), computed
+  separately on stock-days whose sector rose / fell over the previous five trading days (known before the day):
+  {len(secd)} tests.
+- **Macro-event weeks.** Weeks with a TCMB rate decision (announced 14:00, same day), a Fed FOMC decision (announced
+  after the Borsa İstanbul close, so the next trading day counts) or a CPI release (TÜİK, the 3rd of the month).
+  The meeting dates, including meetings without a rate change, are in `config/policy_meetings.csv` with the
+  official source of each: {", ".join(f"{k} {int(v)}" for k, v in mw_counts.items())} weeks. For each type:
+  Wednesday and Thursday in these weeks vs the same day in other weeks, and the whole-week return: {len(mwt)} tests.
+
+**Table 7a. Sector portfolios: weekday minus other days (%, mean daily return)**
+
+{md_table(sec_piv, default="{:+.3f}")}
+
+Sector-day cells with p < 0.05 (before correction):
+
+{md_table(sec_low, index=False, fmt={"diff vs other days %": "{:+.3f}", "p": "{:.4f}", "q (all tests)": "{:.3f}"})
+ if len(sec_low) else "none"}
+
+**Table 7b. Wednesday and Thursday by the sector's direction over the previous five days**
+
+{md_table(secd, index=False, fmt={"diff vs other days %": "{:+.3f}", "t": "{:.2f}", "p": "{:.4f}", "q (all tests)": "{:.3f}"})}
+
+**Table 7c. Macro-event weeks**
+
+{md_table(mwt, index=False, fmt={"effect %": "{:+.3f}", "t": "{:.2f}", "p": "{:.4f}", "q (all tests)": "{:.3f}"})}
+
+{note(notes, "sector_macro")}
 
 ## 7. Transaction costs: trading the best calendar pattern
 

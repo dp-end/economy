@@ -58,7 +58,7 @@ def test_report_3_builds_with_single_multiple_testing_family():
     from src.reports.r3_weekday import build
     text = open(build(), encoding="utf-8").read()
     assert "not written yet" not in text
-    for k in ("Table 1. Portfolio return by weekday", "Table 8. Wednesday-buy", "correcting all 180 tests",
+    for k in ("Table 1. Portfolio return by weekday", "Table 8. Wednesday-buy", "correcting all 243 tests",
               "fig/03_wed_thu_costs.png"):
         assert k in text
 

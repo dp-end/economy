@@ -5,9 +5,14 @@
 trading rule.
 
 - **Wednesdays were weak and Thursdays strong** for the 30-stock portfolio.
-  - Wednesday's weakness survives even when all 180 tests in this report are corrected together.
+  - Wednesday's weakness survives even when all 243 tests in this report are corrected together.
   - Thursday's strength is the only weekday effect that keeps its size in the second half.
-  - Part of the Thursday effect comes from central-bank decision days, which fall on Thursdays in our data.
+  - Part of the Thursday effect comes from central-bank decisions. With the official meeting calendars, the
+    clearest link is the **Fed**: Thursdays right after an FOMC decision (announced after the Borsa İstanbul close
+    on Wednesday) beat other Thursdays by +0.96 pt (q = 0.025, positive in both halves). TCMB decision weeks
+    point the same way but are not significant.
+- **Every sector shows it.** All ten sector portfolios have a negative Wednesday and a positive Thursday; five
+  sector-day cells survive correction, four of them on a Wednesday or Thursday. It is one market-wide effect, not ten sector patterns.
 - **Trading it does not pay.** Buying on Wednesday and selling on Thursday would have earned +201% before costs,
   only +42% with a 0.15% one-way cost, and lost money at 0.30%. XU100 rose 647% over the same five years.
 - **The multi-day patterns go the "wrong" way.** Classic reversal ideas ("three down days, then a rebound",
@@ -45,9 +50,9 @@ falls on a Thursday.
 - **Fed decisions** are also announced on Wednesday evening (Türkiye time), after BIST closes, so BIST
   reacts on Thursday. Fed rate changes in our data are therefore also dated on Thursdays.
 
-**Caveat:** our data only shows meetings where the rate *changed*. Meetings that held the rate are invisible, so
-"other Thursdays" still contains some decision days. With the official TCMB meeting calendar this could be tested
-properly. Here it stays a plausible explanation, not a proven one.
+**Caveat:** our macro data only shows meetings where the rate *changed*. Meetings that held the rate are
+invisible there, so "other Thursdays" still contains some decision days. Section 6b repeats the test with the
+official TCMB and Fed meeting calendars, including hold decisions.
 
 <!-- per_stock -->
 Table 3 is the clearest multiple-testing lesson in the project:
@@ -100,12 +105,17 @@ This is the "prediction ≠ profitable strategy" lesson in one table.
 A statistically significant weekday difference is a fact about averages, not a trade.
 
 <!-- multiple -->
-- **Tests run.** In total 180 tests were run for this report (Table 9), and 52 had raw p < 0.05.
-- **Correction.** After correcting all of them together, **9 survive**:
-  - the portfolio Wednesday effect,
-  - six single-stock weekday effects (mostly the same Wednesday/Thursday effect),
-  - the large-down-day continuation at 5 days,
-  - the Friday → Monday continuation.
+- **Tests run.** 243 tests (Table 9): the 180 of the original analysis and 63 pre-registered on 22 November
+  (sector portfolios, sector direction, macro-event weeks). 74 had raw p < 0.05.
+- **Correction.** After correcting all of them together, **18 survive**:
+  - the nine survivors of the original 180 tests, all still below 0.05: the portfolio Wednesday effect, six
+    single-stock weekday effects (mostly the same Wednesday/Thursday effect), the large-down-day continuation at
+    5 days and the Friday → Monday continuation;
+  - five sector-day cells and the Fed-week Thursday (pre-registered);
+  - three borderline original tests (TRALT and PETKM Wednesday, the large-down-day continuation at 1 day,
+    q = 0.046–0.049). They crossed 0.05 only because the family grew: adding tests with small p-values loosens
+    the Benjamini–Hochberg thresholds. With the original 180 tests they did not survive, so we do not count them
+    as findings.
 - **Thursday.** The portfolio Thursday effect (p = 0.007) does *not* survive when everything is corrected
   together, even though it is the most stable over time.
 
@@ -142,10 +152,12 @@ warning, not as evidence for a candidate label.
 <!-- limitations -->
 - **Five years, one market.** About 240 observations per weekday. Weekday effects are known to come and go
   across decades.
-- **Decision days only partly identified.** Only rate *changes* are identifiable. Hold decisions, TÜİK inflation
-  days (the 3rd of each month) and options/futures expiry days were not tested as separate calendar events.
-- **Sector and macro-event conditions not tested.** We condition only on the XU100 trend, not on sector
-  direction or macro-event weeks.
+- **Calendar of events.** TCMB and Fed meetings come from the official calendars (`config/policy_meetings.csv`;
+  TCMB November–December 2021 from our EVDS rate changes because the official 2021 page did not load). CPI
+  release weeks use TÜİK's rule (3rd of the month), not a checked release calendar. Options/futures expiry days
+  were not tested.
+- **Sector portfolios overlap with the 30-stock portfolio**, so the sector results are not independent of the
+  portfolio Wednesday/Thursday effect.
 - **Normal approximation.** Welch tests use it, but the permutation p-values agree closely, so this does not
   change conclusions.
 - **Simplified backtest.** No interest on cash, a fixed cost, and no market-impact or bid-ask modelling for the
@@ -154,10 +166,30 @@ warning, not as evidence for a candidate label.
 <!-- conclusion -->
 Calendar patterns are where data mining is easiest. In this sample:
 
-- Wednesday-weak / Thursday-strong is the one weekday effect worth mentioning. It is partly explained by
-  central-bank decision days and is not tradable after costs.
+- Wednesday-weak / Thursday-strong is the one weekday effect worth mentioning. It appears in every sector, is
+  partly explained by central-bank decisions (most clearly the first trading day after a Fed decision) and is
+  not tradable after costs.
 - Single-stock weekday patterns are mostly the same market effect repeated, plus noise.
 - Short-term multi-day behaviour is continuation, not the reversal the classic patterns assume.
 
 The project treats these results as **descriptive context only**: none of them is allowed to drive an action label
 in the harness.
+
+<!-- sector_macro -->
+- **Sectors (Table 7a).** Wednesday is negative and Thursday positive in **all ten** sectors. The cells that
+  survive correction (Metals & Mining, Healthcare and Construction & Utilities on Wednesday, Automotive & Durables
+  on Thursday, Healthcare on Friday) are mostly the same market-wide effect. The
+  Healthcare Friday (+0.58 pt) comes from two stocks only (MPARK, ECILC) and is the one sector-specific cell.
+- **Sector direction (Table 7b).** The pattern does not depend on it: Wednesday −0.30 / −0.40 pt and Thursday
+  +0.30 / +0.40 pt after a rising / falling sector week. It is slightly larger after a falling week, but none of
+  the four tests survives correction on its own.
+- **Macro-event weeks (Table 7c).**
+  - **Fed decision weeks:** the Thursday after the FOMC announcement beat other Thursdays by **+0.96 pt**
+    (q = 0.025), +1.26 and +0.64 in the two halves, and +0.81 when the ten weeks that also had a TCMB decision are
+    removed. The Fed announces after the Borsa İstanbul close on Wednesday, so Thursday is the first day BIST can
+    react.
+  - **TCMB decision weeks:** Thursday +0.39 pt, not significant. With hold decisions included, the strong
+    rate-change Thursdays of Section 3 are diluted.
+  - **CPI weeks:** the whole week is +1.5 pt better than other weeks (p = 0.012), but it does not survive
+    correction (q = 0.082).
+  - So the "central-bank Thursday" of Section 3 is at least as much a Fed reaction as a TCMB one.

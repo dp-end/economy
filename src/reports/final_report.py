@@ -118,7 +118,8 @@ def research_summary() -> pd.DataFrame:
          f"{oos2.loc['harness catch-up', 'gap 10d second']:+.2f} in the two halves; ~half still lag after 20 days",
          "`POTENTIAL_CATCH_UP_CANDIDATE`"),
         ("3 Weekday & multi-day", f"Wednesday {w.loc['Çar', 'diff']:+.2f}, Thursday {w.loc['Per', 'diff']:+.2f} pt vs "
-         f"other days; big down days continue (−1.35 pt in 5 days)",
+         f"other days, in all ten sectors; Thursday after a Fed decision +0.96 pt (pre-registered, q = 0.025); "
+         f"big down days continue (−1.35 pt in 5 days)",
          f"Wed-buy/Thu-sell: {bt3.iloc[0]['total return %']:+.0f}% before costs, {bt3.iloc[1]['total return %']:+.0f}% at 0.15% "
          f"(XU100 +{bt3.iloc[0]['XU100 %']:.0f}%)", "not used for actions"),
         ("4 Earnings reaction", f"top − bottom net-income third: {sp4.loc['pre5', 'ort_fark']:+.2f} pt before "

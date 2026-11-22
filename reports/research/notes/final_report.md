@@ -61,7 +61,9 @@ Two questions run through the project:
 
 <!-- data -->
 - **Universe.** 30 study stocks from ten sectors (`config/universe.csv`), plus four BIST 100 peers used only for
-  sector medians. The list is the 2026 one, which creates a survivorship caveat.
+  sector medians. The list is the 2026 one, which creates a survivorship caveat. Membership is re-checked at the
+  start of every run (brief §5): all 34 are BIST 100 members for 1 Oct – 31 Dec 2026 (Borsa İstanbul periodic
+  changes, KAP 21 Sep 2026; none of the 27 removed shares is ours).
 - **Prices.** Daily İş Yatırım series, adjusted for corporate actions, 1 Nov 2021 – 6 Nov 2026. Validated
   against Yahoo; the quality report found no broken day.
 - **Fundamentals.** Fintables quarterly statements (30 files). A quarter becomes usable only on its **KAP event
@@ -127,8 +129,9 @@ tools; it does not invent or predict financial facts.**
     including the EBITDA-margin change, which was written down as a hypothesis before it was tested;
   - the Wednesday weakness;
   - short-term continuation after big down days and over weekends.
-- **Robust but not tradable.** The Thursday strength, partly linked to central-bank decision days, is the most
-  stable weekday effect. It is not tradable after costs.
+- **Robust but not tradable.** The Thursday strength, seen in all ten sectors and partly linked to central-bank
+  decisions (most clearly the first trading day after a Fed decision), is the most stable weekday effect. It is
+  not tradable after costs.
 - **Non-findings** are reported as carefully as findings:
   - no technical reversal type beats the index, with or without the spec's confirming indicators (20 event types,
     8 of them added and pre-registered for the spec's missing families, and 32 combined-condition tests; none
@@ -238,8 +241,9 @@ The brief (§38) lists seven distinctions. Each one appeared in our own results:
    (Report 3). The sector catch-up effect is the most robust finding, yet the strategy built on it only matched
    XU100 (Report 2).
 2. **Correlation ≠ causation.** Thursday's strength coincides with TCMB and Fed decision days (all 26 rate changes
-   fell on a Thursday). That is a plausible mechanism, not a proven cause: meetings that held the rate are not in the
-   data (Report 3).
+   fell on a Thursday). With the official meeting calendars, holds included, the clearest link is the Fed: the
+   Thursday after an FOMC decision beat other Thursdays by +0.96 pt (q = 0.025). That is a plausible mechanism,
+   not a proven cause (Report 3).
 3. **Backtest ≠ future guarantee.** Every strategy variant except the rate filter beat XU100 in the first half, and
    all of them lagged it in the second (Report 6).
 4. **Historical evidence ≠ investment advice.** Even the best-supported label (`POTENTIAL_CATCH_UP_CANDIDATE`)

@@ -18,7 +18,7 @@ from src.backtest.strategies import WARMUP, generate_strategy_variants, macro_sc
 from src.data.macro import get_macro_context
 from src.data.news_tags import load_news_events
 from src.data.prices import get_index_history, get_stock_history
-from src.data.universe import load_universe
+from src.data.universe import index_membership, load_universe
 from src.events.news_reaction import NEWS_WINDOW, news_signal_events
 from src.events.technical_events import HARNESS_EVENTS
 from src.harness.quality_gate import check_data_quality
@@ -395,6 +395,7 @@ def build_evidence_bundle(ticker: str, asof) -> dict:
         return dict(meta=meta, observed={}, history={}, backtest={}, source_dates={})
     obs, src = observe(ticker, day)
     meta["sector"] = load_universe().set_index("ticker").loc[ticker, "sector_pdf"]
+    meta["bist100"] = index_membership(ticker, day)                      # Adım 6: brief §5 üyelik kontrolü
     cond = conditions(obs)
     hist = dict(catch_up=catchup_history(day) if cond["laggard"] else None,
                 fundamental=fundamental_history(day) if obs["fundamentals"].get("tercile") else None)

@@ -213,6 +213,8 @@ def gate_table() -> pd.DataFrame:
             ("soft", f"a historical statistic based on fewer than {G.MIN_HIST_EVENTS} events"),
             ("soft", f"a historical hit rate below {G.MIN_HIT:.0%} (not better than a coin flip)"),
             ("soft", f"peer group smaller than {G.MIN_PEERS}"), ("soft", "backtest flagged (fewer than 30 entries)"),
+            ("soft", "stock listed as not a BIST 100 member on the analysis day (`config/bist100_membership.csv`; "
+                     "a period without a record is 'not verified', no warning)"),
             ("result", f"no warnings → PASS; 1–{G.INVESTIGATE_AT - 1} → PASS_WITH_WARNINGS; "
                        f"≥{G.INVESTIGATE_AT} → INVESTIGATE")]
     return pd.DataFrame(rows, columns=["outcome", "rule"])

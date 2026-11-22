@@ -23,7 +23,7 @@ from mcp import Client
 from src.agents.llm import MockLLM, assistant_message, tool_schemas
 from src.agents.prompts import FIX_PROMPT, system_prompt
 from src.agents.validate import check_numbers
-from src.data.universe import load_universe
+from src.data.universe import index_membership, load_universe
 from src.harness.decision_log import (DEMO_DB, REVIEW_DECISIONS, log_decision, log_trace, past_cases, record_review)
 from src.harness.evidence import ACTIONS, VARIANT_FOR, DEFAULT_VARIANT, run_analysis
 from src.mcp_server.server import build_server
@@ -223,6 +223,8 @@ class Harness:
             u = load_universe()
             ctx["universe"] = u[u["is_core"] == 1]["ticker"].tolist()
             ctx["peer_group"] = u.set_index("ticker")["peer_group"].get(t)
+            ctx["bist100"] = index_membership(t, asof)                       # brief §5: her çalıştırmada kontrol
+            self.trace["notes"]["bist100"] = ctx["bist100"]
             return t not in ctx["universe"]
         if state == "LOAD_MARKET_DATA":
             ctx["prices"] = await T("get_stock_history", ticker=t, start=y1, end=asof)

@@ -33,7 +33,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 (news, speeches, LLM explanations, review reasons); all other fields are structured.</p>
 <p>Units: <code>[fraction]</code> 0.05 = 5%; <code>[%]</code> already in percent; <code>[pt]</code> percentage points; <code>[TRY]</code> Turkish lira.
 "Point-in-time rule" states from when a value may be used in a historical decision.</p>
-<p><strong>23 datasets, 502 fields.</strong></p>
+<p><strong>23 datasets, 504 fields.</strong></p>
 <table>
 <thead>
 <tr>
@@ -162,7 +162,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">Evidence bundle (one per stock and analysis day)</td>
 <td style="text-align: left;">structured + text evidence</td>
 <td style="text-align: left;">11</td>
-<td style="text-align: right;">112</td>
+<td style="text-align: right;">113</td>
 </tr>
 <tr>
 <td style="text-align: right;">18</td>
@@ -190,7 +190,7 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">Universe scan (spec §33)</td>
 <td style="text-align: left;">structured</td>
 <td style="text-align: left;">Adım 4 (22 Nov)</td>
-<td style="text-align: right;">17</td>
+<td style="text-align: right;">18</td>
 </tr>
 <tr>
 <td style="text-align: right;">22</td>
@@ -2651,6 +2651,13 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">Technology / Defense</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>meta.bist100</code></td>
+<td style="text-align: left;">BIST 100 membership on the analysis day: {member: True / False / None = period not verified, period, source (official announcement)}</td>
+<td style="text-align: left;">text</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">{"member": true, "period": "2026-10-01/2…</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>conditions.laggard</code></td>
 <td style="text-align: left;">sector_lag_10 ≤ −5 pt</td>
 <td style="text-align: left;">bool</td>
@@ -3719,6 +3726,13 @@ column lacks a description, so this dictionary cannot drift from the code. "Unst
 <td style="text-align: left;">text</td>
 <td style="text-align: left;">100%</td>
 <td style="text-align: left;">Banking</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bist100</code></td>
+<td style="text-align: left;">BIST 100 member on the scan day per <code>config/bist100_membership.csv</code>; empty = not verified</td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">100%</td>
+<td style="text-align: left;">100% True</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>action</code></td>
@@ -7515,6 +7529,11 @@ decision stays with a human.</p></section><section class="report"><h1>Report 3 �
 <td style="text-align: left;">159 kB</td>
 <td style="text-align: left;">160ca8d8d783</td>
 </tr>
+<tr>
+<td style="text-align: left;"><code>config/policy_meetings.csv</code></td>
+<td style="text-align: left;">12 kB</td>
+<td style="text-align: left;">af10f25a02d9</td>
+</tr>
 </tbody>
 </table>
 <h2>1. Research question</h2>
@@ -7526,11 +7545,16 @@ combinations will produce patterns by chance.</p>
 trading rule.</p>
 <ul>
 <li><strong>Wednesdays were weak and Thursdays strong</strong> for the 30-stock portfolio.<ul>
-<li>Wednesday's weakness survives even when all 180 tests in this report are corrected together.</li>
+<li>Wednesday's weakness survives even when all 243 tests in this report are corrected together.</li>
 <li>Thursday's strength is the only weekday effect that keeps its size in the second half.</li>
-<li>Part of the Thursday effect comes from central-bank decision days, which fall on Thursdays in our data.</li>
+<li>Part of the Thursday effect comes from central-bank decisions. With the official meeting calendars, the
+  clearest link is the <strong>Fed</strong>: Thursdays right after an FOMC decision (announced after the Borsa İstanbul close
+  on Wednesday) beat other Thursdays by +0.96 pt (q = 0.025, positive in both halves). TCMB decision weeks
+  point the same way but are not significant.</li>
 </ul>
 </li>
+<li><strong>Every sector shows it.</strong> All ten sector portfolios have a negative Wednesday and a positive Thursday; five
+  sector-day cells survive correction, four of them on a Wednesday or Thursday. It is one market-wide effect, not ten sector patterns.</li>
 <li><strong>Trading it does not pay.</strong> Buying on Wednesday and selling on Thursday would have earned +201% before costs,
   only +42% with a 0.15% one-way cost, and lost money at 0.30%. XU100 rose 647% over the same five years.</li>
 <li><strong>The multi-day patterns go the "wrong" way.</strong> Classic reversal ideas ("three down days, then a rebound",
@@ -7708,9 +7732,9 @@ falls on a Thursday.</p>
 <li><strong>Fed decisions</strong> are also announced on Wednesday evening (Türkiye time), after BIST closes, so BIST
   reacts on Thursday. Fed rate changes in our data are therefore also dated on Thursdays.</li>
 </ul>
-<p><strong>Caveat:</strong> our data only shows meetings where the rate <em>changed</em>. Meetings that held the rate are invisible, so
-"other Thursdays" still contains some decision days. With the official TCMB meeting calendar this could be tested
-properly. Here it stays a plausible explanation, not a proven one.</p>
+<p><strong>Caveat:</strong> our macro data only shows meetings where the rate <em>changed</em>. Meetings that held the rate are
+invisible there, so "other Thursdays" still contains some decision days. Section 6b repeats the test with the
+official TCMB and Fed meeting calendars, including hold decisions.</p>
 <h2>4. Day of week, stock by stock</h2>
 <p><strong>Table 3. 150 tests (30 stocks × 5 days)</strong></p>
 <table>
@@ -7905,7 +7929,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.205</td>
 <td style="text-align: right;">-0.006</td>
 <td style="text-align: right;">0.494</td>
-<td style="text-align: right;">0.150</td>
+<td style="text-align: right;">0.137</td>
 </tr>
 <tr>
 <td style="text-align: left;">down2</td>
@@ -7918,7 +7942,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.199</td>
 <td style="text-align: right;">+0.159</td>
 <td style="text-align: right;">0.980</td>
-<td style="text-align: right;">0.930</td>
+<td style="text-align: right;">0.912</td>
 </tr>
 <tr>
 <td style="text-align: left;">down2</td>
@@ -7931,7 +7955,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.322</td>
 <td style="text-align: right;">+0.044</td>
 <td style="text-align: right;">0.571</td>
-<td style="text-align: right;">0.388</td>
+<td style="text-align: right;">0.370</td>
 </tr>
 <tr>
 <td style="text-align: left;">down3</td>
@@ -7944,7 +7968,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">+0.049</td>
 <td style="text-align: right;">-0.054</td>
 <td style="text-align: right;">0.980</td>
-<td style="text-align: right;">0.970</td>
+<td style="text-align: right;">0.961</td>
 </tr>
 <tr>
 <td style="text-align: left;">down3</td>
@@ -7957,7 +7981,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.014</td>
 <td style="text-align: right;">-0.093</td>
 <td style="text-align: right;">0.930</td>
-<td style="text-align: right;">0.720</td>
+<td style="text-align: right;">0.704</td>
 </tr>
 <tr>
 <td style="text-align: left;">down3</td>
@@ -7970,7 +7994,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.036</td>
 <td style="text-align: right;">-0.215</td>
 <td style="text-align: right;">0.794</td>
-<td style="text-align: right;">0.507</td>
+<td style="text-align: right;">0.496</td>
 </tr>
 <tr>
 <td style="text-align: left;">down4</td>
@@ -7983,7 +8007,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.091</td>
 <td style="text-align: right;">-0.010</td>
 <td style="text-align: right;">0.930</td>
-<td style="text-align: right;">0.739</td>
+<td style="text-align: right;">0.724</td>
 </tr>
 <tr>
 <td style="text-align: left;">down4</td>
@@ -7996,7 +8020,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">+0.174</td>
 <td style="text-align: right;">-0.115</td>
 <td style="text-align: right;">0.980</td>
-<td style="text-align: right;">0.970</td>
+<td style="text-align: right;">0.961</td>
 </tr>
 <tr>
 <td style="text-align: left;">down4</td>
@@ -8009,7 +8033,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">+0.110</td>
 <td style="text-align: right;">-0.099</td>
 <td style="text-align: right;">0.980</td>
-<td style="text-align: right;">0.991</td>
+<td style="text-align: right;">0.988</td>
 </tr>
 <tr>
 <td style="text-align: left;">up2</td>
@@ -8022,7 +8046,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.038</td>
 <td style="text-align: right;">+0.051</td>
 <td style="text-align: right;">0.980</td>
-<td style="text-align: right;">0.956</td>
+<td style="text-align: right;">0.938</td>
 </tr>
 <tr>
 <td style="text-align: left;">up2</td>
@@ -8035,7 +8059,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.204</td>
 <td style="text-align: right;">-0.067</td>
 <td style="text-align: right;">0.494</td>
-<td style="text-align: right;">0.281</td>
+<td style="text-align: right;">0.269</td>
 </tr>
 <tr>
 <td style="text-align: left;">up2</td>
@@ -8048,7 +8072,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.213</td>
 <td style="text-align: right;">-0.145</td>
 <td style="text-align: right;">0.494</td>
-<td style="text-align: right;">0.281</td>
+<td style="text-align: right;">0.269</td>
 </tr>
 <tr>
 <td style="text-align: left;">up3</td>
@@ -8061,7 +8085,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.085</td>
 <td style="text-align: right;">-0.031</td>
 <td style="text-align: right;">0.825</td>
-<td style="text-align: right;">0.560</td>
+<td style="text-align: right;">0.553</td>
 </tr>
 <tr>
 <td style="text-align: left;">up3</td>
@@ -8074,7 +8098,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.186</td>
 <td style="text-align: right;">-0.159</td>
 <td style="text-align: right;">0.571</td>
-<td style="text-align: right;">0.377</td>
+<td style="text-align: right;">0.356</td>
 </tr>
 <tr>
 <td style="text-align: left;">up3</td>
@@ -8087,7 +8111,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.457</td>
 <td style="text-align: right;">-0.127</td>
 <td style="text-align: right;">0.494</td>
-<td style="text-align: right;">0.196</td>
+<td style="text-align: right;">0.191</td>
 </tr>
 <tr>
 <td style="text-align: left;">up4</td>
@@ -8100,7 +8124,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">+0.082</td>
 <td style="text-align: right;">-0.166</td>
 <td style="text-align: right;">0.980</td>
-<td style="text-align: right;">0.819</td>
+<td style="text-align: right;">0.795</td>
 </tr>
 <tr>
 <td style="text-align: left;">up4</td>
@@ -8113,7 +8137,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.089</td>
 <td style="text-align: right;">-0.168</td>
 <td style="text-align: right;">0.825</td>
-<td style="text-align: right;">0.605</td>
+<td style="text-align: right;">0.585</td>
 </tr>
 <tr>
 <td style="text-align: left;">up4</td>
@@ -8126,7 +8150,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.370</td>
 <td style="text-align: right;">-0.291</td>
 <td style="text-align: right;">0.494</td>
-<td style="text-align: right;">0.235</td>
+<td style="text-align: right;">0.225</td>
 </tr>
 </tbody>
 </table>
@@ -8159,7 +8183,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.409</td>
 <td style="text-align: right;">-2.91</td>
 <td style="text-align: right;">0.0036</td>
-<td style="text-align: right;">0.054</td>
+<td style="text-align: right;">0.049</td>
 </tr>
 <tr>
 <td style="text-align: left;">stock-day ≤ −5% (not limit) → next 3d vs same-day average</td>
@@ -8168,7 +8192,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">-0.735</td>
 <td style="text-align: right;">-2.88</td>
 <td style="text-align: right;">0.0040</td>
-<td style="text-align: right;">0.055</td>
+<td style="text-align: right;">0.051</td>
 </tr>
 <tr>
 <td style="text-align: left;">stock-day ≤ −5% (not limit) → next 5d vs same-day average</td>
@@ -8186,7 +8210,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">+0.047</td>
 <td style="text-align: right;">0.55</td>
 <td style="text-align: right;">0.5856</td>
-<td style="text-align: right;">0.712</td>
+<td style="text-align: right;">0.694</td>
 </tr>
 <tr>
 <td style="text-align: left;">Mon, Tue, Wed all negative → Thu+Fri (vs other weeks)</td>
@@ -8195,7 +8219,7 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <td style="text-align: right;">+0.959</td>
 <td style="text-align: right;">1.58</td>
 <td style="text-align: right;">0.1138</td>
-<td style="text-align: right;">0.247</td>
+<td style="text-align: right;">0.234</td>
 </tr>
 <tr>
 <td style="text-align: left;">next Monday after an up Friday minus after a down Friday</td>
@@ -8221,6 +8245,413 @@ noise, since none of them keeps its sign in both halves at the portfolio level.<
 <li><strong>"End-of-week continuation vs reversal."</strong> Continuation. Monday after a rising Friday is 1.12 pt better than
   Monday after a falling Friday (q = 0.002). News and sentiment over the weekend tend to extend Friday's
   direction.</li>
+</ul>
+<h2>6b. Sectors, sector direction and macro-event weeks (pre-registered)</h2>
+<p>The spec asks for patterns in <strong>sectors</strong> and <strong>conditional on sector direction or macro-event weeks</strong>. These
+tests were written on 22 November 2026, before their results were computed, and join the report's single
+Benjamini–Hochberg family.</p>
+<ul>
+<li><strong>Sector portfolios.</strong> Ten equal-weight sector portfolios (all universe members of the sector), each weekday vs
+  the other days of the same portfolio: 50 tests.</li>
+<li><strong>Sector direction.</strong> The two portfolio findings of Section 3 (weak Wednesday, strong Thursday), computed
+  separately on stock-days whose sector rose / fell over the previous five trading days (known before the day):
+  4 tests.</li>
+<li><strong>Macro-event weeks.</strong> Weeks with a TCMB rate decision (announced 14:00, same day), a Fed FOMC decision (announced
+  after the Borsa İstanbul close, so the next trading day counts) or a CPI release (TÜİK, the 3rd of the month).
+  The meeting dates, including meetings without a rate change, are in <code>config/policy_meetings.csv</code> with the
+  official source of each: TCMB decision week 54, Fed decision week 41, CPI release week 61 weeks. For each type:
+  Wednesday and Thursday in these weeks vs the same day in other weeks, and the whole-week return: 9 tests.</li>
+</ul>
+<p><strong>Table 7a. Sector portfolios: weekday minus other days (%, mean daily return)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">sector</th>
+<th style="text-align: right;">Mon</th>
+<th style="text-align: right;">Tue</th>
+<th style="text-align: right;">Wed</th>
+<th style="text-align: right;">Thu</th>
+<th style="text-align: right;">Fri</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Automotive &amp; Durables</td>
+<td style="text-align: right;">+0.078</td>
+<td style="text-align: right;">-0.134</td>
+<td style="text-align: right;">-0.426</td>
+<td style="text-align: right;">+0.544</td>
+<td style="text-align: right;">-0.063</td>
+</tr>
+<tr>
+<td style="text-align: left;">Banking</td>
+<td style="text-align: right;">+0.414</td>
+<td style="text-align: right;">-0.127</td>
+<td style="text-align: right;">-0.263</td>
+<td style="text-align: right;">+0.130</td>
+<td style="text-align: right;">-0.150</td>
+</tr>
+<tr>
+<td style="text-align: left;">Chemicals &amp; Energy</td>
+<td style="text-align: right;">+0.306</td>
+<td style="text-align: right;">-0.342</td>
+<td style="text-align: right;">-0.387</td>
+<td style="text-align: right;">+0.323</td>
+<td style="text-align: right;">+0.102</td>
+</tr>
+<tr>
+<td style="text-align: left;">Construction RE &amp; Utilities</td>
+<td style="text-align: right;">+0.149</td>
+<td style="text-align: right;">-0.232</td>
+<td style="text-align: right;">-0.429</td>
+<td style="text-align: right;">+0.258</td>
+<td style="text-align: right;">+0.253</td>
+</tr>
+<tr>
+<td style="text-align: left;">Healthcare</td>
+<td style="text-align: right;">-0.339</td>
+<td style="text-align: right;">-0.181</td>
+<td style="text-align: right;">-0.496</td>
+<td style="text-align: right;">+0.435</td>
+<td style="text-align: right;">+0.575</td>
+</tr>
+<tr>
+<td style="text-align: left;">Metals &amp; Mining</td>
+<td style="text-align: right;">+0.348</td>
+<td style="text-align: right;">-0.293</td>
+<td style="text-align: right;">-0.675</td>
+<td style="text-align: right;">+0.422</td>
+<td style="text-align: right;">+0.199</td>
+</tr>
+<tr>
+<td style="text-align: left;">Other Financials</td>
+<td style="text-align: right;">+0.130</td>
+<td style="text-align: right;">-0.204</td>
+<td style="text-align: right;">-0.402</td>
+<td style="text-align: right;">+0.358</td>
+<td style="text-align: right;">+0.117</td>
+</tr>
+<tr>
+<td style="text-align: left;">Retail &amp; Consumer</td>
+<td style="text-align: right;">+0.064</td>
+<td style="text-align: right;">-0.215</td>
+<td style="text-align: right;">-0.281</td>
+<td style="text-align: right;">+0.231</td>
+<td style="text-align: right;">+0.200</td>
+</tr>
+<tr>
+<td style="text-align: left;">Tech Telecom &amp; Defense</td>
+<td style="text-align: right;">+0.295</td>
+<td style="text-align: right;">-0.230</td>
+<td style="text-align: right;">-0.292</td>
+<td style="text-align: right;">+0.358</td>
+<td style="text-align: right;">-0.128</td>
+</tr>
+<tr>
+<td style="text-align: left;">Transportation</td>
+<td style="text-align: right;">+0.189</td>
+<td style="text-align: right;">-0.236</td>
+<td style="text-align: right;">-0.279</td>
+<td style="text-align: right;">+0.257</td>
+<td style="text-align: right;">+0.070</td>
+</tr>
+</tbody>
+</table>
+<p>Sector-day cells with p &lt; 0.05 (before correction):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">sector</th>
+<th style="text-align: left;">day</th>
+<th style="text-align: right;">diff vs other days %</th>
+<th style="text-align: right;">p</th>
+<th style="text-align: right;">q (all tests)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Metals &amp; Mining</td>
+<td style="text-align: left;">Wed</td>
+<td style="text-align: right;">-0.675</td>
+<td style="text-align: right;">0.0001</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
+<td style="text-align: left;">Healthcare</td>
+<td style="text-align: left;">Fri</td>
+<td style="text-align: right;">+0.575</td>
+<td style="text-align: right;">0.0002</td>
+<td style="text-align: right;">0.010</td>
+</tr>
+<tr>
+<td style="text-align: left;">Automotive &amp; Durables</td>
+<td style="text-align: left;">Thu</td>
+<td style="text-align: right;">+0.544</td>
+<td style="text-align: right;">0.0003</td>
+<td style="text-align: right;">0.011</td>
+</tr>
+<tr>
+<td style="text-align: left;">Healthcare</td>
+<td style="text-align: left;">Wed</td>
+<td style="text-align: right;">-0.496</td>
+<td style="text-align: right;">0.0020</td>
+<td style="text-align: right;">0.035</td>
+</tr>
+<tr>
+<td style="text-align: left;">Construction RE &amp; Utilities</td>
+<td style="text-align: left;">Wed</td>
+<td style="text-align: right;">-0.429</td>
+<td style="text-align: right;">0.0030</td>
+<td style="text-align: right;">0.046</td>
+</tr>
+<tr>
+<td style="text-align: left;">Automotive &amp; Durables</td>
+<td style="text-align: left;">Wed</td>
+<td style="text-align: right;">-0.426</td>
+<td style="text-align: right;">0.0044</td>
+<td style="text-align: right;">0.053</td>
+</tr>
+<tr>
+<td style="text-align: left;">Other Financials</td>
+<td style="text-align: left;">Wed</td>
+<td style="text-align: right;">-0.402</td>
+<td style="text-align: right;">0.0082</td>
+<td style="text-align: right;">0.071</td>
+</tr>
+<tr>
+<td style="text-align: left;">Healthcare</td>
+<td style="text-align: left;">Thu</td>
+<td style="text-align: right;">+0.435</td>
+<td style="text-align: right;">0.0095</td>
+<td style="text-align: right;">0.073</td>
+</tr>
+<tr>
+<td style="text-align: left;">Chemicals &amp; Energy</td>
+<td style="text-align: left;">Wed</td>
+<td style="text-align: right;">-0.387</td>
+<td style="text-align: right;">0.0141</td>
+<td style="text-align: right;">0.086</td>
+</tr>
+<tr>
+<td style="text-align: left;">Metals &amp; Mining</td>
+<td style="text-align: left;">Thu</td>
+<td style="text-align: right;">+0.422</td>
+<td style="text-align: right;">0.0148</td>
+<td style="text-align: right;">0.088</td>
+</tr>
+<tr>
+<td style="text-align: left;">Other Financials</td>
+<td style="text-align: left;">Thu</td>
+<td style="text-align: right;">+0.358</td>
+<td style="text-align: right;">0.0178</td>
+<td style="text-align: right;">0.092</td>
+</tr>
+<tr>
+<td style="text-align: left;">Chemicals &amp; Energy</td>
+<td style="text-align: left;">Tue</td>
+<td style="text-align: right;">-0.342</td>
+<td style="text-align: right;">0.0256</td>
+<td style="text-align: right;">0.119</td>
+</tr>
+<tr>
+<td style="text-align: left;">Tech Telecom &amp; Defense</td>
+<td style="text-align: left;">Thu</td>
+<td style="text-align: right;">+0.358</td>
+<td style="text-align: right;">0.0260</td>
+<td style="text-align: right;">0.119</td>
+</tr>
+<tr>
+<td style="text-align: left;">Chemicals &amp; Energy</td>
+<td style="text-align: left;">Thu</td>
+<td style="text-align: right;">+0.323</td>
+<td style="text-align: right;">0.0357</td>
+<td style="text-align: right;">0.137</td>
+</tr>
+<tr>
+<td style="text-align: left;">Retail &amp; Consumer</td>
+<td style="text-align: left;">Wed</td>
+<td style="text-align: right;">-0.281</td>
+<td style="text-align: right;">0.0361</td>
+<td style="text-align: right;">0.137</td>
+</tr>
+<tr>
+<td style="text-align: left;">Healthcare</td>
+<td style="text-align: left;">Mon</td>
+<td style="text-align: right;">-0.339</td>
+<td style="text-align: right;">0.0426</td>
+<td style="text-align: right;">0.152</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 7b. Wednesday and Thursday by the sector's direction over the previous five days</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">condition</th>
+<th style="text-align: left;">day</th>
+<th style="text-align: right;">days</th>
+<th style="text-align: right;">diff vs other days %</th>
+<th style="text-align: right;">t</th>
+<th style="text-align: right;">p</th>
+<th style="text-align: right;">q (all tests)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">sector up in previous 5 days</td>
+<td style="text-align: left;">Wed</td>
+<td style="text-align: right;">218</td>
+<td style="text-align: right;">-0.297</td>
+<td style="text-align: right;">-2.26</td>
+<td style="text-align: right;">0.0239</td>
+<td style="text-align: right;">0.116</td>
+</tr>
+<tr>
+<td style="text-align: left;">sector up in previous 5 days</td>
+<td style="text-align: left;">Thu</td>
+<td style="text-align: right;">221</td>
+<td style="text-align: right;">+0.296</td>
+<td style="text-align: right;">2.19</td>
+<td style="text-align: right;">0.0284</td>
+<td style="text-align: right;">0.119</td>
+</tr>
+<tr>
+<td style="text-align: left;">sector down in previous 5 days</td>
+<td style="text-align: left;">Wed</td>
+<td style="text-align: right;">194</td>
+<td style="text-align: right;">-0.397</td>
+<td style="text-align: right;">-2.59</td>
+<td style="text-align: right;">0.0096</td>
+<td style="text-align: right;">0.073</td>
+</tr>
+<tr>
+<td style="text-align: left;">sector down in previous 5 days</td>
+<td style="text-align: left;">Thu</td>
+<td style="text-align: right;">199</td>
+<td style="text-align: right;">+0.402</td>
+<td style="text-align: right;">2.63</td>
+<td style="text-align: right;">0.0085</td>
+<td style="text-align: right;">0.071</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 7c. Macro-event weeks</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">week type</th>
+<th style="text-align: left;">test</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">effect %</th>
+<th style="text-align: right;">t</th>
+<th style="text-align: right;">p</th>
+<th style="text-align: right;">q (all tests)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">TCMB decision week</td>
+<td style="text-align: left;">Wed in these weeks vs other weeks</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">+0.050</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">0.8733</td>
+<td style="text-align: right;">0.923</td>
+</tr>
+<tr>
+<td style="text-align: left;">TCMB decision week</td>
+<td style="text-align: left;">Thu in these weeks vs other weeks</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">+0.389</td>
+<td style="text-align: right;">1.45</td>
+<td style="text-align: right;">0.1464</td>
+<td style="text-align: right;">0.278</td>
+</tr>
+<tr>
+<td style="text-align: left;">TCMB decision week</td>
+<td style="text-align: left;">whole-week return vs other weeks</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">+0.708</td>
+<td style="text-align: right;">1.06</td>
+<td style="text-align: right;">0.2911</td>
+<td style="text-align: right;">0.435</td>
+</tr>
+<tr>
+<td style="text-align: left;">Fed decision week</td>
+<td style="text-align: left;">Wed in these weeks vs other weeks</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">-0.495</td>
+<td style="text-align: right;">-1.31</td>
+<td style="text-align: right;">0.1918</td>
+<td style="text-align: right;">0.331</td>
+</tr>
+<tr>
+<td style="text-align: left;">Fed decision week</td>
+<td style="text-align: left;">Thu in these weeks vs other weeks</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">+0.963</td>
+<td style="text-align: right;">3.31</td>
+<td style="text-align: right;">0.0009</td>
+<td style="text-align: right;">0.025</td>
+</tr>
+<tr>
+<td style="text-align: left;">Fed decision week</td>
+<td style="text-align: left;">whole-week return vs other weeks</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">-0.544</td>
+<td style="text-align: right;">-0.76</td>
+<td style="text-align: right;">0.4469</td>
+<td style="text-align: right;">0.575</td>
+</tr>
+<tr>
+<td style="text-align: left;">CPI release week</td>
+<td style="text-align: left;">Wed in these weeks vs other weeks</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">+0.376</td>
+<td style="text-align: right;">1.38</td>
+<td style="text-align: right;">0.1675</td>
+<td style="text-align: right;">0.302</td>
+</tr>
+<tr>
+<td style="text-align: left;">CPI release week</td>
+<td style="text-align: left;">Thu in these weeks vs other weeks</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">+0.087</td>
+<td style="text-align: right;">0.35</td>
+<td style="text-align: right;">0.7252</td>
+<td style="text-align: right;">0.803</td>
+</tr>
+<tr>
+<td style="text-align: left;">CPI release week</td>
+<td style="text-align: left;">whole-week return vs other weeks</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">+1.539</td>
+<td style="text-align: right;">2.50</td>
+<td style="text-align: right;">0.0124</td>
+<td style="text-align: right;">0.082</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Sectors (Table 7a).</strong> Wednesday is negative and Thursday positive in <strong>all ten</strong> sectors. The cells that
+  survive correction (Metals &amp; Mining, Healthcare and Construction &amp; Utilities on Wednesday, Automotive &amp; Durables
+  on Thursday, Healthcare on Friday) are mostly the same market-wide effect. The
+  Healthcare Friday (+0.58 pt) comes from two stocks only (MPARK, ECILC) and is the one sector-specific cell.</li>
+<li><strong>Sector direction (Table 7b).</strong> The pattern does not depend on it: Wednesday −0.30 / −0.40 pt and Thursday
+  +0.30 / +0.40 pt after a rising / falling sector week. It is slightly larger after a falling week, but none of
+  the four tests survives correction on its own.</li>
+<li><strong>Macro-event weeks (Table 7c).</strong><ul>
+<li><strong>Fed decision weeks:</strong> the Thursday after the FOMC announcement beat other Thursdays by <strong>+0.96 pt</strong>
+  (q = 0.025), +1.26 and +0.64 in the two halves, and +0.81 when the ten weeks that also had a TCMB decision are
+  removed. The Fed announces after the Borsa İstanbul close on Wednesday, so Thursday is the first day BIST can
+  react.</li>
+<li><strong>TCMB decision weeks:</strong> Thursday +0.39 pt, not significant. With hold decisions included, the strong
+  rate-change Thursdays of Section 3 are diluted.</li>
+<li><strong>CPI weeks:</strong> the whole week is +1.5 pt better than other weeks (p = 0.012), but it does not survive
+  correction (q = 0.082).</li>
+<li>So the "central-bank Thursday" of Section 3 is at least as much a Fed reaction as a TCMB one.</li>
+</ul>
+</li>
 </ul>
 <h2>7. Transaction costs: trading the best calendar pattern</h2>
 <p>The strongest weekday result is Wednesday-weak / Thursday-strong. The simplest way to trade it: buy all 30
@@ -8307,7 +8738,7 @@ stocks equally at Wednesday's close and sell at Thursday's close, every week (si
 <td style="text-align: left;">weekday (per stock)</td>
 <td style="text-align: right;">150</td>
 <td style="text-align: right;">44</td>
-<td style="text-align: right;">6</td>
+<td style="text-align: right;">8</td>
 </tr>
 <tr>
 <td style="text-align: left;">streaks</td>
@@ -8319,7 +8750,7 @@ stocks equally at Wednesday's close and sell at Thursday's close, every week (si
 <td style="text-align: left;">new patterns</td>
 <td style="text-align: right;">6</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
 </tr>
 <tr>
 <td style="text-align: left;">PPK Thursdays</td>
@@ -8327,9 +8758,27 @@ stocks equally at Wednesday's close and sell at Thursday's close, every week (si
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
+<tr>
+<td style="text-align: left;">sector portfolios (pre-registered)</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr>
+<td style="text-align: left;">sector direction (pre-registered)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">macro-event weeks (pre-registered)</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+</tr>
 </tbody>
 </table>
-<p><strong>Table 10. Results with q &lt; 0.05 after correcting all 180 tests together</strong></p>
+<p><strong>Table 10. Results with q &lt; 0.05 after correcting all 243 tests together</strong></p>
 <table>
 <thead>
 <tr>
@@ -8353,56 +8802,115 @@ stocks equally at Wednesday's close and sell at Thursday's close, every week (si
 <td style="text-align: right;">0.002</td>
 </tr>
 <tr>
+<td style="text-align: left;">sector portfolios (pre-registered)</td>
+<td style="text-align: left;">Metals &amp; Mining Wed</td>
+<td style="text-align: right;">0.00008</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
 <td style="text-align: left;">weekday (per stock)</td>
 <td style="text-align: left;">ARCLK Thu</td>
 <td style="text-align: right;">0.00014</td>
 <td style="text-align: right;">0.009</td>
 </tr>
 <tr>
+<td style="text-align: left;">sector portfolios (pre-registered)</td>
+<td style="text-align: left;">Healthcare Fri</td>
+<td style="text-align: right;">0.00021</td>
+<td style="text-align: right;">0.010</td>
+</tr>
+<tr>
 <td style="text-align: left;">weekday (per stock)</td>
 <td style="text-align: left;">EREGL Wed</td>
 <td style="text-align: right;">0.00027</td>
-<td style="text-align: right;">0.012</td>
+<td style="text-align: right;">0.011</td>
+</tr>
+<tr>
+<td style="text-align: left;">sector portfolios (pre-registered)</td>
+<td style="text-align: left;">Automotive &amp; Durables Thu</td>
+<td style="text-align: right;">0.00033</td>
+<td style="text-align: right;">0.011</td>
 </tr>
 <tr>
 <td style="text-align: left;">weekday (per stock)</td>
 <td style="text-align: left;">CCOLA Fri</td>
 <td style="text-align: right;">0.00086</td>
-<td style="text-align: right;">0.028</td>
+<td style="text-align: right;">0.025</td>
+</tr>
+<tr>
+<td style="text-align: left;">macro-event weeks (pre-registered)</td>
+<td style="text-align: left;">Fed decision week / Thu in these weeks vs other weeks</td>
+<td style="text-align: right;">0.00095</td>
+<td style="text-align: right;">0.025</td>
 </tr>
 <tr>
 <td style="text-align: left;">weekday (per stock)</td>
 <td style="text-align: left;">CCOLA Wed</td>
 <td style="text-align: right;">0.00116</td>
-<td style="text-align: right;">0.028</td>
+<td style="text-align: right;">0.025</td>
 </tr>
 <tr>
 <td style="text-align: left;">weekday (per stock)</td>
 <td style="text-align: left;">ECILC Fri</td>
 <td style="text-align: right;">0.00119</td>
-<td style="text-align: right;">0.028</td>
+<td style="text-align: right;">0.025</td>
 </tr>
 <tr>
 <td style="text-align: left;">weekday (portfolio)</td>
 <td style="text-align: left;">Wed</td>
 <td style="text-align: right;">0.00124</td>
-<td style="text-align: right;">0.028</td>
+<td style="text-align: right;">0.025</td>
 </tr>
 <tr>
 <td style="text-align: left;">weekday (per stock)</td>
 <td style="text-align: left;">KRDMD Wed</td>
 <td style="text-align: right;">0.00173</td>
+<td style="text-align: right;">0.032</td>
+</tr>
+<tr>
+<td style="text-align: left;">sector portfolios (pre-registered)</td>
+<td style="text-align: left;">Healthcare Wed</td>
+<td style="text-align: right;">0.00199</td>
 <td style="text-align: right;">0.035</td>
+</tr>
+<tr>
+<td style="text-align: left;">weekday (per stock)</td>
+<td style="text-align: left;">TRALT Wed</td>
+<td style="text-align: right;">0.00300</td>
+<td style="text-align: right;">0.046</td>
+</tr>
+<tr>
+<td style="text-align: left;">sector portfolios (pre-registered)</td>
+<td style="text-align: left;">Construction RE &amp; Utilities Wed</td>
+<td style="text-align: right;">0.00302</td>
+<td style="text-align: right;">0.046</td>
+</tr>
+<tr>
+<td style="text-align: left;">new patterns</td>
+<td style="text-align: left;">stock-day ≤ −5% (not limit) → next 1d vs same-day average</td>
+<td style="text-align: right;">0.00357</td>
+<td style="text-align: right;">0.049</td>
+</tr>
+<tr>
+<td style="text-align: left;">weekday (per stock)</td>
+<td style="text-align: left;">PETKM Wed</td>
+<td style="text-align: right;">0.00362</td>
+<td style="text-align: right;">0.049</td>
 </tr>
 </tbody>
 </table>
 <ul>
-<li><strong>Tests run.</strong> In total 180 tests were run for this report (Table 9), and 52 had raw p &lt; 0.05.</li>
-<li><strong>Correction.</strong> After correcting all of them together, <strong>9 survive</strong>:<ul>
-<li>the portfolio Wednesday effect,</li>
-<li>six single-stock weekday effects (mostly the same Wednesday/Thursday effect),</li>
-<li>the large-down-day continuation at 5 days,</li>
-<li>the Friday → Monday continuation.</li>
+<li><strong>Tests run.</strong> 243 tests (Table 9): the 180 of the original analysis and 63 pre-registered on 22 November
+  (sector portfolios, sector direction, macro-event weeks). 74 had raw p &lt; 0.05.</li>
+<li><strong>Correction.</strong> After correcting all of them together, <strong>18 survive</strong>:<ul>
+<li>the nine survivors of the original 180 tests, all still below 0.05: the portfolio Wednesday effect, six
+  single-stock weekday effects (mostly the same Wednesday/Thursday effect), the large-down-day continuation at
+  5 days and the Friday → Monday continuation;</li>
+<li>five sector-day cells and the Fed-week Thursday (pre-registered);</li>
+<li>three borderline original tests (TRALT and PETKM Wednesday, the large-down-day continuation at 1 day,
+  q = 0.046–0.049). They crossed 0.05 only because the family grew: adding tests with small p-values loosens
+  the Benjamini–Hochberg thresholds. With the original 180 tests they did not survive, so we do not count them
+  as findings.</li>
 </ul>
 </li>
 <li><strong>Thursday.</strong> The portfolio Thursday effect (p = 0.007) does <em>not</em> survive when everything is corrected
@@ -8440,10 +8948,12 @@ warning, not as evidence for a candidate label.</p>
 <ul>
 <li><strong>Five years, one market.</strong> About 240 observations per weekday. Weekday effects are known to come and go
   across decades.</li>
-<li><strong>Decision days only partly identified.</strong> Only rate <em>changes</em> are identifiable. Hold decisions, TÜİK inflation
-  days (the 3rd of each month) and options/futures expiry days were not tested as separate calendar events.</li>
-<li><strong>Sector and macro-event conditions not tested.</strong> We condition only on the XU100 trend, not on sector
-  direction or macro-event weeks.</li>
+<li><strong>Calendar of events.</strong> TCMB and Fed meetings come from the official calendars (<code>config/policy_meetings.csv</code>;
+  TCMB November–December 2021 from our EVDS rate changes because the official 2021 page did not load). CPI
+  release weeks use TÜİK's rule (3rd of the month), not a checked release calendar. Options/futures expiry days
+  were not tested.</li>
+<li><strong>Sector portfolios overlap with the 30-stock portfolio</strong>, so the sector results are not independent of the
+  portfolio Wednesday/Thursday effect.</li>
 <li><strong>Normal approximation.</strong> Welch tests use it, but the permutation p-values agree closely, so this does not
   change conclusions.</li>
 <li><strong>Simplified backtest.</strong> No interest on cash, a fixed cost, and no market-impact or bid-ask modelling for the
@@ -8452,8 +8962,9 @@ warning, not as evidence for a candidate label.</p>
 <h2>12. Conclusion</h2>
 <p>Calendar patterns are where data mining is easiest. In this sample:</p>
 <ul>
-<li>Wednesday-weak / Thursday-strong is the one weekday effect worth mentioning. It is partly explained by
-  central-bank decision days and is not tradable after costs.</li>
+<li>Wednesday-weak / Thursday-strong is the one weekday effect worth mentioning. It appears in every sector, is
+  partly explained by central-bank decisions (most clearly the first trading day after a Fed decision) and is
+  not tradable after costs.</li>
 <li>Single-stock weekday patterns are mostly the same market effect repeated, plus noise.</li>
 <li>Short-term multi-day behaviour is continuation, not the reversal the classic patterns assume.</li>
 </ul>
@@ -10881,12 +11392,12 @@ tool list and the replays are recomputed when the report is built (no API key ne
 <tr>
 <td style="text-align: left;"><code>reports/scans/scan_2026-01-09_POTENTIAL_CATCH_UP_CANDIDATE.csv</code></td>
 <td style="text-align: left;">5 kB</td>
-<td style="text-align: left;">6c820f2163be</td>
+<td style="text-align: left;">4bc018f4e24f</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>reports/scans/scan_2026-11-06_POTENTIAL_CATCH_UP_CANDIDATE.csv</code></td>
 <td style="text-align: left;">5 kB</td>
-<td style="text-align: left;">f8980559053d</td>
+<td style="text-align: left;">493af61eb6f8</td>
 </tr>
 </tbody>
 </table>
@@ -12387,6 +12898,10 @@ interpret tool outputs:</p>
 <tr>
 <td style="text-align: left;">soft</td>
 <td style="text-align: left;">backtest flagged (fewer than 30 entries)</td>
+</tr>
+<tr>
+<td style="text-align: left;">soft</td>
+<td style="text-align: left;">stock listed as not a BIST 100 member on the analysis day (<code>config/bist100_membership.csv</code>; a period without a record is 'not verified', no warning)</td>
 </tr>
 <tr>
 <td style="text-align: left;">result</td>

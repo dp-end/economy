@@ -11,6 +11,7 @@ Her araç:
 import functools
 import json
 import os
+import re
 from contextlib import contextmanager
 from functools import lru_cache
 
@@ -322,10 +323,88 @@ def rank_sector_relative_strength(sector: str = None, horizon: int = 10, date: s
                              "gap_to_sector_median: kendisi dahil grup ortancasına fark. Oranlar (0.05 = %5)."))
 
 
+WEEK_RE = re.compile(r"^([DU.]+)-([DU]+)(\.*)$")
+STABLE_P, STABLE_MIN_N = 0.05, 10      # kararlılık kuralı: örneklem içi p < 0,05, dışında aynı yön ve en az 10 gözlem
+PATTERN_HELP = ("pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; "
+                "D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' "
+                "Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)")
+
+
+def _parse_week(pattern: str) -> tuple:
+    """'week:DDD-UU' -> (koşul [(gün, D/U)], sonuç [(gün, D/U)]). Gün 0 = Pazartesi."""
+    m = WEEK_RE.match(pattern.split(":", 1)[1].replace(" ", "").upper())
+    if not m or sum(len(x) for x in m.groups()) != 5 or not set(m.group(1)) - {"."}:
+        raise ToolError(PATTERN_HELP)
+    k = len(m.group(1))
+    return ([(i, c) for i, c in enumerate(m.group(1)) if c != "."],
+            [(k + i, c) for i, c in enumerate(m.group(2))])
+
+
+def _full_weeks(r: pd.Series, valid: pd.Series) -> tuple:
+    """Pzt-Cum 5 günü de olan ve hiçbir günü tatil sonrası/deprem olmayan haftalar (satır = haftanın Pazartesi'si,
+    sütun 0-4 günlük getiri) ve dışarıda kalan (eksik, tatilli ya da dönem sınırına taşan) hafta sayısı."""
+    x = pd.DataFrame({"r": r, "v": valid.reindex(r.index).fillna(False).astype(bool)})
+    rows, idx, skipped = [], [], 0
+    for _, g in x.groupby(x.index.to_period("W-FRI")):
+        if list(g.index.day_of_week) != [0, 1, 2, 3, 4] or not g["v"].all() or g["r"].isna().any():
+            skipped += 1
+            continue
+        rows.append(g["r"].to_numpy())
+        idx.append(g.index[0])
+    return pd.DataFrame(rows, index=pd.DatetimeIndex(idx), columns=range(5)), skipped
+
+
+def _week_stats(W: pd.DataFrame, skipped: int, cond: list, out: list) -> dict:
+    """Koşul haftalarında sonuç günlerinin toplam getirisi (%) ve diğer haftalarla karşılaştırma."""
+    match = lambda i, c: (W[i] < 0) if c == "D" else (W[i] > 0)
+    m, hit_all = pd.Series(True, index=W.index), pd.Series(True, index=W.index)
+    for i, c in cond:
+        m &= match(i, c)
+    for i, c in out:
+        hit_all &= match(i, c)
+    cum = (1 + W[[i for i, _ in out]]).prod(axis=1) - 1
+    signs = {c for _, c in out}
+    sign = (1 if signs == {"U"} else -1) if len(signs) == 1 else None
+    a, b = cum[m], cum[~m]
+    res = dict(n_weeks=len(W), excluded_weeks=skipped, n=int(m.sum()),
+               full_pattern_count=int((m & hit_all).sum()),
+               full_pattern_expected=float(len(W) * np.prod([match(i, c).mean() for i, c in cond + out])) if len(W) else 0.0)
+    if len(a):
+        res.update(mean=a.mean() * 100, median=a.median() * 100,
+                   unconditional=b.mean() * 100 if len(b) else None,
+                   diff_pt=(a.mean() - b.mean()) * 100 if len(b) else None,
+                   hit_rate=float((sign * a > 0).mean()) if sign else None,
+                   all_days_hit_rate=float(hit_all[m].mean()),
+                   mean_after_cost=(sign * a.mean() - 2 * COST_ONE_WAY) * 100 if sign else None)
+    if len(a) >= 3 and len(b) >= 3:
+        res["t"], res["p"] = welch(a, b)
+    if len(a) < STABLE_MIN_N:
+        res["warning"] = "az gözlem"
+    return res
+
+
+def _stability(i: dict, o: dict) -> dict:
+    """Kural: örneklem içinde p < 0,05 VE örneklem dışında aynı yönde fark VE en az 10 gözlem -> 'kararlı'."""
+    reasons, p = [], i.get("p")
+    if p is None:
+        reasons.append("örneklem içinde test yapılamadı (az gözlem)")
+    elif p >= STABLE_P:
+        reasons.append(f"örneklem içinde anlamlı değil (p={p:.2f})")
+    if o.get("n", 0) < STABLE_MIN_N:
+        reasons.append(f"örneklem dışında az gözlem ({o.get('n', 0)} < {STABLE_MIN_N})")
+    di, do = i.get("diff_pt"), o.get("diff_pt")
+    if di is not None and do is not None and np.sign(di) != np.sign(do):
+        reasons.append("örneklem dışında fark ters yönde")
+    return dict(verdict="kararsız" if reasons else "kararlı", reasons=reasons)
+
+
 @_guarded
-def test_weekday_pattern(ticker: str, pattern: str = "weekday", start: str = None, end: str = None) -> dict:
-    """Haftanın günü ya da art arda düşüş/yükseliş sonrası getiri. Koşulsuz getiriyle karşılaştırma,
-    Welch t testi, ilk/ikinci yarı tutarlılığı ve maliyet notu. pattern: 'weekday', 'down_streak:3', 'up_streak:2'."""
+def test_weekday_pattern(ticker: str, pattern: str = "weekday", start: str = None, end: str = None,
+                         oos_start: str = None) -> dict:
+    """Takvim deseni: haftanın günü, art arda düşüş/yükseliş sonrası ertesi gün ya da hafta içi dizi
+    ('week:DDD-UU' = Pzt-Sal-Çar düşüş -> Per+Cum yükseliş). Koşulsuz getiriyle karşılaştırma, Welch t testi,
+    maliyet. oos_start verilirse örneklem içi [start, oos_start) ve dışı [oos_start, end] ayrı hesaplanır ve
+    kurala göre 'kararlı'/'kararsız' kararı verilir. pattern: 'weekday', 'down_streak:3', 'up_streak:2', 'week:...'."""
     cal = _calendar_data()
     if str(ticker).upper() == "PORTFOLIO":
         name, r = "PORTFOLIO", cal["ret"].mean(axis=1)
@@ -335,39 +414,64 @@ def test_weekday_pattern(ticker: str, pattern: str = "weekday", start: str = Non
     s, e = _range(start, end)
     valid = cal["valid"].loc[s:e]
     r = r.loc[s:e]
-    half = r.index[len(r) // 2]
+    if oos_start:
+        o = _date(oos_start, "oos_start")
+        if not s < o <= e:
+            raise ToolError(f"oos_start ({o.date()}) start ({s.date()}) ile end ({e.date()}) arasında olmalı")
+        parts = {"in_sample": r.index < o, "out_of_sample": r.index >= o}
+    else:
+        parts = {"results": np.ones(len(r), dtype=bool)}
 
-    def compare(mask):
-        a, b = r[valid & mask].dropna(), r[valid & ~mask].dropna()
+    def compare(mask, part):
+        rr, vv, mm = r[part], valid[part], mask[part]
+        a, b = rr[vv & mm].dropna(), rr[vv & ~mm].dropna()
         if len(a) < 10:
             return dict(n=len(a), warning="az gözlem")
         t, p = welch(a, b)
-        f, sn = r.index < half, r.index >= half
-        diff = lambda m: (r[valid & mask & m].mean() - r[valid & ~mask & m].mean()) * 100
+        half = rr.index[len(rr) // 2]
+        f, sn = rr.index < half, rr.index >= half
+        diff = lambda h: (rr[vv & mm & h].mean() - rr[vv & ~mm & h].mean()) * 100
         return dict(n=len(a), mean=a.mean() * 100, median=a.median() * 100, unconditional=b.mean() * 100,
                     diff_pt=(a.mean() - b.mean()) * 100, t=t, p=p, first_half_diff=diff(f), second_half_diff=diff(sn),
                     same_sign_halves=bool(np.sign(diff(f)) == np.sign(diff(sn))))
 
     if pattern == "weekday":
         dow = pd.Series(r.index.day_of_week, index=r.index)
-        res = {WEEKDAYS[d]: compare(dow == d) for d in range(5)}
+        run = lambda part: {WEEKDAYS[d]: compare(dow == d, part) for d in range(5)}
         tests = 5
+    elif str(pattern).lower().startswith("week:"):
+        cond, out = _parse_week(pattern)
+        desc = lambda xs: ", ".join(f"{WEEKDAYS[i]} {'düşüş' if c == 'D' else 'yükseliş'}" for i, c in xs)
+        label = f"koşul: {desc(cond)} -> sonuç: {desc(out)}"
+        run = lambda part: {label: _week_stats(*_full_weeks(r[part], valid), cond, out)}
+        tests = 1
     else:
         try:
             kind, k = pattern.split(":")
             k = int(k)
             assert kind in ("down_streak", "up_streak") and 1 <= k <= 6
         except (ValueError, AssertionError):
-            raise ToolError("pattern: 'weekday', 'down_streak:K' ya da 'up_streak:K' (K 1-6)")
+            raise ToolError(PATTERN_HELP)
         sign = (r < 0) if kind == "down_streak" else (r > 0)
-        run = sign.astype(int).groupby((~sign).cumsum()).cumsum()
-        res = {f"{kind}:{k} sonrası ertesi gün": compare(run.shift(1) >= k)}
+        streak = sign.astype(int).groupby((~sign).cumsum()).cumsum()
+        run = lambda part: {f"{kind}:{k} sonrası ertesi gün": compare(streak.shift(1) >= k, part)}
         tests = 1
-    return to_json(dict(ticker=name, pattern=pattern, start=str(s.date()), end=str(e.date()), results=res,
-                        tests_in_this_call=tests,
-                        warnings=["Çoklu test riski: birçok desen denenirse şansla anlamlı görünen çıkar; "
-                                  "Adım 6'da 150 hisse-gün testinden FDR sonrası 6 kaldı.",
-                                  f"Gidiş-dönüş maliyet ~%{2 * COST_ONE_WAY * 100:.2f}; günlük farklar çoğu zaman bundan küçük."]))
+    body = {key: run(part) for key, part in parts.items()}
+    if oos_start:
+        body["stability"] = {k: _stability(body["in_sample"][k], body["out_of_sample"][k]) for k in body["in_sample"]}
+        body["stability_rule"] = (f"kararlı = örneklem içinde p < {STABLE_P} VE örneklem dışında fark aynı yönde VE "
+                                  f"en az {STABLE_MIN_N} gözlem; biri tutmazsa kararsız")
+    return to_json(dict(ticker=name, pattern=pattern, start=str(s.date()), end=str(e.date()),
+                        oos_start=str(o.date()) if oos_start else None, **body, tests_in_this_call=tests,
+                        note="Getiriler yüzde (1.36 = %1,36). week desenlerinde sonuç = sonuç günlerinin toplam "
+                             "getirisi; unconditional = koşulun olmadığı haftalar; full_pattern_expected = günler "
+                             "bağımsız olsaydı tam dizinin beklenen sayısı; mean_after_cost = desen yönünde işlem "
+                             "(son koşul günü kapanışında gir, son sonuç günü kapanışında çık; D için açığa satış "
+                             "varsayımı), gidiş-dönüş maliyet düşülmüş.",
+                        warnings=["Çoklu test riski: birçok desen denenirse şansla anlamlı görünen çıkar; R3'te 243 "
+                                  "testin yalnızca 18'i düzeltme (Benjamini-Hochberg) sonrası kaldı.",
+                                  f"Gidiş-dönüş maliyet ~%{2 * COST_ONE_WAY * 100:.2f}; günlük farklar çoğu zaman "
+                                  "bundan küçük."]))
 
 
 # ---------- 8-9: bilanço ----------

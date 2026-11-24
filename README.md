@@ -129,6 +129,9 @@ BIST_DATA_CEILING=2026-09-10 python -m src.mcp_server.server
 #   rank_sector_relative_strength(tickers=["BIMAS","MGROS","MAVI"], horizon=20)
 #   run_backtest(strategy="catch_up", tickers=[...], start="2024-01-01")  -> 5/10/20-day hit rate, full-close rate,
 #   false positives; threshold = the stock's current lag unless given; open windows are excluded and counted
+# Weekly sequences with an in-sample / out-of-sample split and a rule-based stability verdict:
+#   test_weekday_pattern(ticker="THYAO", pattern="week:DDD-UU", start="2024-01-01", oos_start="2026-01-01")
+#   (D down, U up, . any; the dash splits condition days from outcome days; stable = IS p<0.05 AND same sign OOS AND n>=10)
 
 # Rebuild the research reports and the PDF (needs Google Chrome for the PDF step)
 python -m src.reports.build_reports

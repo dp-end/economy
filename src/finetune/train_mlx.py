@@ -119,7 +119,9 @@ def main(a):
     w = min(cfg["warmup_steps"], max(opt_steps - 1, 1))
     sched = optim.join_schedules([optim.linear_schedule(cfg["learning_rate"] / 10, cfg["learning_rate"], w),
                                   optim.cosine_decay(cfg["learning_rate"], max(opt_steps - w, 1), cfg["min_lr"])], [w])
-    opt = optim.Adam(learning_rate=sched)
+    off = start // cfg["grad_accumulation"]                    # --resume: takvim kaldığı optimizer adımından sürer
+    lr_at = (lambda st: sched(st + off)) if off else sched      # (Adam momentleri sıfırdan başlar; küçük etki)
+    opt = optim.Adam(learning_rate=lr_at)
     lvg = nn.value_and_grad(model, loss_fn)
     total_tok = sum(len(x[1]) for x in order)
     head = dict(kind="start", model=MODEL, train_conversations=len(train), valid_conversations=len(valid),
@@ -157,7 +159,7 @@ def main(a):
             el = time.time() - t0
             rate = (done_tok - sum(len(x[1]) for x in order[:start])) / el
             write(dict(kind="train", micro_step=k, optimizer_step=math.ceil(k / cfg["grad_accumulation"]),
-                       loss=sum(win) / len(win), lr=float(sched(opt.step)), tok_per_s=round(rate, 1),
+                       loss=sum(win) / len(win), lr=float(lr_at(opt.step)), tok_per_s=round(rate, 1),
                        peak_gb=round(mx.get_peak_memory() / 1e9, 2), elapsed_min=round(el / 60, 1),
                        eta_min=round((total_tok - done_tok) / rate / 60, 1)))
             win = []

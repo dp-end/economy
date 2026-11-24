@@ -1,0 +1,8 @@
+================ ÖZET
+{"q": "S1", "action": "INVESTIGATE", "source": "model", "status": "ok", "retries": 0, "calls": [["rank_sector_relative_strength", false], ["run_backtest", true], ["run_backtest", true], ["run_backtest", true]], "invalid": 1, "unsupported": [], "n_numbers": 25, "latency": 116.1, "qid": "fa16f22bc325"}
+{"q": "S2", "action": "ANALYSIS_UNSAFE", "source": "kural: başarılı araç çağrısı yok, cevap kanıta dayanmıyor", "status": "ok", "retries": 1, "calls": [["test_weekday_pattern", false], ["test_weekday_pattern", false]], "invalid": 2, "unsupported": [], "n_numbers": 0, "latency": 80.5, "qid": "b0a316fa8720"}
+{"q": "S3", "action": "INVESTIGATE", "source": "model", "status": "ok", "retries": 0, "calls": [["detect_reversal_events", true], ["detect_reversal_events", false], ["detect_reversal_events", false]], "invalid": 2, "unsupported": [], "n_numbers": 4, "latency": 47.7, "qid": "f4ae293eeca5"}
+{"q": "S4", "action": "INVESTIGATE", "source": "model", "status": "ok", "retries": 0, "calls": [["get_fundamental_metrics", false], ["get_fundamental_metrics", false], ["get_fundamental_metrics", false], ["get_fundamental_metrics", false], ["calculate_fundamental_change", true]], "invalid": 4, "unsupported": [], "n_numbers": 29, "latency": 83.2, "qid": "7da90c0d5bd5"}
+{"q": "S5", "action": "INVESTIGATE", "source": "model", "status": "ok", "retries": 1, "calls": [["check_data_quality", true], ["get_macro_context", false], ["get_fundamental_metrics", true], ["get_stock_history", true], ["calculate_indicators", false], ["detect_reversal_events", true], ["find_support_resistance", false]], "invalid": 3, "unsupported": [], "n_numbers": 13, "latency": 104.9, "qid": "caeb0790514e"}
+
+[exited with code 0]

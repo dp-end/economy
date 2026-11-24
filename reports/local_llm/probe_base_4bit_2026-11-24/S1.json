@@ -1,0 +1,750 @@
+{
+ "question": "Perakende sektöründe (BIMAS, MGROS, MAVI) 10.09.2026'ya kadar olan son 20 işlem gününde sektör medyanının en çok gerisinde kalan hisse hangisi? 01.01.2024 – 10.09.2026 döneminde benzer geride kalmalar 5, 10 ve 20 gün içinde kapanmış mı? Hisse POTENTIAL_CATCH_UP_CANDIDATE olarak etiketlenebilir mi?",
+ "asof": "2026-09-10",
+ "model": "local:models/Qwen3-4B-Instruct-2507-4bit",
+ "action": "INVESTIGATE",
+ "action_source": "model",
+ "status": "ok",
+ "answer": "- Perakende sektöründe 10.09.2026'ya kadar 20 gün içinde en çok geride kalan hisse: **MAVI**  \n  - MAVI, 5, 10 ve 20 günlük analizlerde en düşük getiri gösterdi.  \n  - 20 günlük analizde \"rel_20\" (geri kalmada 20 gün sonra) ortalama -0.0464, median -0.0311, hit_rate 44% (yani 44% zamanında geride kalmayı 20 gün sonra kapattı).  \n  - 5 günlük analizde median getiri 0.0019, 10 günlükte -0.0057, 20 günlükte 0.0006.  \n  - 20 gün içinde 14 kez geride kalmayı 20 gün sonra kapattı (n_false_positives=14), bu durum **POTENTIAL_CATCH_UP_CANDIDATE** etiketi için yeterli olabilir.  \n\n- 01.01.2024 – 10.09.2026 döneminde benzer geride kalmalar:  \n  - 5 günlük: 10 kez (n=89, hit_rate=55%)  \n  - 10 günlük: 19 kez (n=88, hit_rate=53%)  \n  - 20 günlük: 25 kez (n=87, hit_rate=55%)  \n  - 20 günlükte 39 kez yanlış pozitif (geri kalmayı 20 gün sonra kapattı ama geri kalmayı 20 gün sonra hâlâ sürdü) → bu, **POTENTIAL_CATCH_UP_CANDIDATE** etiketi için yetersizdir.  \n\n- **POTENTIAL_CATCH_UP_CANDIDATE** etiketi:  \n  - MAVI, 20 gün içinde 14 kez geride kalmayı 20 gün sonra kapattı, ancak 14 kez yanlış pozitif (geri kalmayı 20 gün sonra hâlâ sürdü).  \n  - Bu durum, \"geri kalmayı 20 gün sonra kapattı\" olasılığı düşük, bu yüzden **POTENTIAL_CATCH_UP_CANDIDATE** etiketi **yetersizdir**.  \n  - 5, 10, 20 günlükte ortalama getirilerin düşük olması, geri kalmayı destekler.  \n\n- **Sınırlamalar**:  \n  - \"POTENTIAL_CATCH_UP_CANDIDATE\" etiketi, 20 gün sonra geri kalmayı kapatan olayların %55'ini gösterir, ancak 20 gün sonra hâlâ geride kalanlar var.  \n  - 14 kez yanlış pozitif (geri kalmayı 20 gün sonra hâlâ sürdü) → bu, etiketleme için yetersiz.  \n  - 20 gün içinde 25 kez olay var, ancak 14 kez yanlış pozitif → bu, güvenilirlik açısından yetersiz.  \n\nANALİTİK DURUM: INVESTIGATE  \nİzinli eylemler: HOLD (durum değişmedi, yeni bir kanıt yok), WATCH (izlemeye değer ama güçlü/doğrulanmış kanıt yok), INVESTIGATE (kanıt karışık ya da yetersiz, daha fazla inceleme gerekli), POTENTIAL_CATCH_UP_CANDIDATE (sektörünün gerisinde ve geçmişte benzer geride kalmalar çoğunlukla kapanmış), TECHNICAL_REVERSAL_CANDIDATE (geçmişte tekrarlanmış ve yeterli sayıda olayla desteklenen teknik dönüş), FUNDAMENTAL_IMPROVEMENT_CANDIDATE (son açıklanan bilançolarda belirgin iyileşme), REJECT_SIGNAL (iddia ya da sinyal geçmiş verilerle desteklenmiyor), ANALYSIS_UNSAFE (veri ya da kalite sorunu, analiz güvenli değil).",
+ "answer_raw": "- Perakende sektöründe 10.09.2026'ya kadar 20 gün içinde en çok geride kalan hisse: **MAVI**  \n  - MAVI, 5, 10 ve 20 günlük analizlerde en düşük getiri gösterdi.  \n  - 20 günlük analizde \"rel_20\" (geri kalmada 20 gün sonra) ortalama -0.0464, median -0.0311, hit_rate 44% (yani 44% zamanında geride kalmayı 20 gün sonra kapattı).  \n  - 5 günlük analizde median getiri 0.0019, 10 günlükte -0.0057, 20 günlükte 0.0006.  \n  - 20 gün içinde 14 kez geride kalmayı 20 gün sonra kapattı (n_false_positives=14), bu durum **POTENTIAL_CATCH_UP_CANDIDATE** etiketi için yeterli olabilir.  \n\n- 01.01.2024 – 10.09.2026 döneminde benzer geride kalmalar:  \n  - 5 günlük: 10 kez (n=89, hit_rate=55%)  \n  - 10 günlük: 19 kez (n=88, hit_rate=53%)  \n  - 20 günlük: 25 kez (n=87, hit_rate=55%)  \n  - 20 günlükte 39 kez yanlış pozitif (geri kalmayı 20 gün sonra kapattı ama geri kalmayı 20 gün sonra hâlâ sürdü) → bu, **POTENTIAL_CATCH_UP_CANDIDATE** etiketi için yetersizdir.  \n\n- **POTENTIAL_CATCH_UP_CANDIDATE** etiketi:  \n  - MAVI, 20 gün içinde 14 kez geride kalmayı 20 gün sonra kapattı, ancak 14 kez yanlış pozitif (geri kalmayı 20 gün sonra hâlâ sürdü).  \n  - Bu durum, \"geri kalmayı 20 gün sonra kapattı\" olasılığı düşük, bu yüzden **POTENTIAL_CATCH_UP_CANDIDATE** etiketi **yetersizdir**.  \n  - 5, 10, 20 günlükte ortalama getirilerin düşük olması, geri kalmayı destekler.  \n\n- **Sınırlamalar**:  \n  - \"POTENTIAL_CATCH_UP_CANDIDATE\" etiketi, 20 gün sonra geri kalmayı kapatan olayların %55'ini gösterir, ancak 20 gün sonra hâlâ geride kalanlar var.  \n  - 14 kez yanlış pozitif (geri kalmayı 20 gün sonra hâlâ sürdü) → bu, etiketleme için yetersiz.  \n  - 20 gün içinde 25 kez olay var, ancak 14 kez yanlış pozitif → bu, güvenilirlik açısından yetersiz.  \n\nANALİTİK DURUM: INVESTIGATE  \nİzinli eylemler: HOLD (durum değişmedi, yeni bir kanıt yok), WATCH (izlemeye değer ama güçlü/doğrulanmış kanıt yok), INVESTIGATE (kanıt karışık ya da yetersiz, daha fazla inceleme gerekli), POTENTIAL_CATCH_UP_CANDIDATE (sektörünün gerisinde ve geçmişte benzer geride kalmalar çoğunlukla kapanmış), TECHNICAL_REVERSAL_CANDIDATE (geçmişte tekrarlanmış ve yeterli sayıda olayla desteklenen teknik dönüş), FUNDAMENTAL_IMPROVEMENT_CANDIDATE (son açıklanan bilançolarda belirgin iyileşme), REJECT_SIGNAL (iddia ya da sinyal geçmiş verilerle desteklenmiyor), ANALYSIS_UNSAFE (veri ya da kalite sorunu, analiz güvenli değil).",
+ "tool_calls": [
+  {
+   "name": "rank_sector_relative_strength",
+   "arguments": "{\"sector\": \"Perakende\", \"horizon\": 1, \"date\": \"2026-09-10\", \"tickers\": [\"BIMAS\", \"MGROS\", \"MAVI\"]}",
+   "ok": false,
+   "error": "Error executing tool rank_sector_relative_strength: horizon 5, 10 ya da 20 olmalı",
+   "output": null,
+   "args": {
+    "sector": "Perakende",
+    "horizon": 1,
+    "date": "2026-09-10",
+    "tickers": [
+     "BIMAS",
+     "MGROS",
+     "MAVI"
+    ]
+   }
+  },
+  {
+   "name": "run_backtest",
+   "arguments": "{\"strategy\": \"catch_up\", \"start\": \"2024-01-01\", \"end\": \"2026-09-10\", \"sector\": \"Perakende\", \"ticker\": \"BIMAS\", \"lookback\": 5, \"threshold\": 0.05}",
+   "ok": true,
+   "error": null,
+   "output": {
+    "cost_one_way": 0.0015,
+    "current_lag": 0.0224,
+    "end": "2026-09-10",
+    "group": {
+     "by_horizon": [
+      {
+       "full_close_rate": 0.0449,
+       "hit_rate": 0.5506,
+       "horizon_days": 5,
+       "mean_rel": -0.0006,
+       "mean_rel_after_cost": -0.0036,
+       "median_rel": 0.0031,
+       "n": 89,
+       "n_incomplete": 1
+      },
+      {
+       "full_close_rate": 0.2159,
+       "hit_rate": 0.5341,
+       "horizon_days": 10,
+       "mean_rel": 0.0066,
+       "mean_rel_after_cost": 0.0036,
+       "median_rel": 0.0101,
+       "n": 88,
+       "n_incomplete": 2
+      },
+      {
+       "full_close_rate": 0.2414,
+       "hit_rate": 0.5517,
+       "horizon_days": 20,
+       "mean_rel": 0.0139,
+       "mean_rel_after_cost": 0.0109,
+       "median_rel": 0.0136,
+       "n": 87,
+       "n_incomplete": 3
+      }
+     ],
+     "false_positive_rate_20": 0.4483,
+     "false_positives": [
+      {
+       "date": "2025-10-24",
+       "lag": -0.0679,
+       "rel_20": -0.0994,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2025-12-18",
+       "lag": -0.0757,
+       "rel_20": -0.0057,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2026-01-06",
+       "lag": -0.059,
+       "rel_20": -0.0822,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-02-04",
+       "lag": -0.0614,
+       "rel_20": -0.055,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-03-02",
+       "lag": -0.0582,
+       "rel_20": -0.0466,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-04-13",
+       "lag": -0.0515,
+       "rel_20": -0.0464,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-06-02",
+       "lag": -0.0526,
+       "rel_20": -0.0139,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2026-06-12",
+       "lag": -0.0516,
+       "rel_20": -0.0429,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-07-02",
+       "lag": -0.0833,
+       "rel_20": -0.098,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2026-08-12",
+       "lag": -0.0981,
+       "rel_20": -0.0291,
+       "ticker": "MGROS"
+      }
+     ],
+     "false_positives_note": "20 satırın son 10 tanesi gösterildi",
+     "n_events": 90,
+     "n_false_positives": 39
+    },
+    "lookback": 5,
+    "members": [
+     "BIMAS",
+     "MGROS",
+     "MAVI",
+     "CCOLA"
+    ],
+    "note": "Olay: 5 günlük getiri - kendisi hariç akran ortancası ilk kez -threshold ya da altına indiği gün (aynı hissede en az 10 gün arayla). rel_h: olay günü kapanışından h gün sonrasına hisse getirisi - kendisi hariç akran ortancası. hit_rate: rel_h > 0 (akranlarını geçti); full_close_rate: rel_h olay günündeki farkı tamamen kapattı; yanlış pozitif: 20 gün sonra hâlâ geride (rel_20 <= 0). n_incomplete: penceresi analiz tarihini aştığı için henüz bilinmeyen ve istatistiğe katılmayan olaylar. mean_rel_after_cost: gidiş-dönüş maliyet düşülmüş. Oranlar (0.05 = 5 puan). Geçmiş sonuç gelecek garantisi değildir.",
+    "sector": "Retail & Consumer",
+    "start": "2024-01-01",
+    "stock": {
+     "by_horizon": [
+      {
+       "full_close_rate": 0.0,
+       "hit_rate": 0.7059,
+       "horizon_days": 5,
+       "mean_rel": -0.0023,
+       "mean_rel_after_cost": -0.0053,
+       "median_rel": 0.0064,
+       "n": 17,
+       "n_incomplete": 0
+      },
+      {
+       "full_close_rate": 0.2353,
+       "hit_rate": 0.6471,
+       "horizon_days": 10,
+       "mean_rel": 0.0199,
+       "mean_rel_after_cost": 0.0169,
+       "median_rel": 0.0166,
+       "n": 17,
+       "n_incomplete": 0
+      },
+      {
+       "full_close_rate": 0.1176,
+       "hit_rate": 0.5882,
+       "horizon_days": 20,
+       "mean_rel": 0.0117,
+       "mean_rel_after_cost": 0.0087,
+       "median_rel": 0.0152,
+       "n": 17,
+       "n_incomplete": 0
+      }
+     ],
+     "false_positive_rate_20": 0.4118,
+     "false_positives": [
+      {
+       "date": "2024-02-06",
+       "lag": -0.059,
+       "rel_20": -0.0755,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2024-03-22",
+       "lag": -0.056,
+       "rel_20": -0.1173,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2024-11-12",
+       "lag": -0.0506,
+       "rel_20": -0.0243,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2025-03-13",
+       "lag": -0.0545,
+       "rel_20": -0.0247,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2025-10-20",
+       "lag": -0.0679,
+       "rel_20": -0.0842,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2025-12-18",
+       "lag": -0.0757,
+       "rel_20": -0.0057,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2026-06-02",
+       "lag": -0.0526,
+       "rel_20": -0.0139,
+       "ticker": "BIMAS"
+      }
+     ],
+     "n_events": 17,
+     "n_false_positives": 7
+    },
+    "strategy": "catch_up",
+    "threshold": 0.05,
+    "threshold_source": "istekte verilen",
+    "ticker": "BIMAS",
+    "warnings": [],
+    "data_ceiling": "2026-09-10",
+    "date_warnings": [],
+    "recent_trades": []
+   },
+   "args": {
+    "strategy": "catch_up",
+    "start": "2024-01-01",
+    "end": "2026-09-10",
+    "sector": "Perakende",
+    "ticker": "BIMAS",
+    "lookback": 5,
+    "threshold": 0.05
+   }
+  },
+  {
+   "name": "run_backtest",
+   "arguments": "{\"strategy\": \"catch_up\", \"start\": \"2024-01-01\", \"end\": \"2026-09-10\", \"sector\": \"Perakende\", \"ticker\": \"MGROS\", \"lookback\": 5, \"threshold\": 0.05}",
+   "ok": true,
+   "error": null,
+   "output": {
+    "cost_one_way": 0.0015,
+    "current_lag": 0.031,
+    "end": "2026-09-10",
+    "group": {
+     "by_horizon": [
+      {
+       "full_close_rate": 0.0449,
+       "hit_rate": 0.5506,
+       "horizon_days": 5,
+       "mean_rel": -0.0006,
+       "mean_rel_after_cost": -0.0036,
+       "median_rel": 0.0031,
+       "n": 89,
+       "n_incomplete": 1
+      },
+      {
+       "full_close_rate": 0.2159,
+       "hit_rate": 0.5341,
+       "horizon_days": 10,
+       "mean_rel": 0.0066,
+       "mean_rel_after_cost": 0.0036,
+       "median_rel": 0.0101,
+       "n": 88,
+       "n_incomplete": 2
+      },
+      {
+       "full_close_rate": 0.2414,
+       "hit_rate": 0.5517,
+       "horizon_days": 20,
+       "mean_rel": 0.0139,
+       "mean_rel_after_cost": 0.0109,
+       "median_rel": 0.0136,
+       "n": 87,
+       "n_incomplete": 3
+      }
+     ],
+     "false_positive_rate_20": 0.4483,
+     "false_positives": [
+      {
+       "date": "2025-10-24",
+       "lag": -0.0679,
+       "rel_20": -0.0994,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2025-12-18",
+       "lag": -0.0757,
+       "rel_20": -0.0057,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2026-01-06",
+       "lag": -0.059,
+       "rel_20": -0.0822,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-02-04",
+       "lag": -0.0614,
+       "rel_20": -0.055,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-03-02",
+       "lag": -0.0582,
+       "rel_20": -0.0466,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-04-13",
+       "lag": -0.0515,
+       "rel_20": -0.0464,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-06-02",
+       "lag": -0.0526,
+       "rel_20": -0.0139,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2026-06-12",
+       "lag": -0.0516,
+       "rel_20": -0.0429,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-07-02",
+       "lag": -0.0833,
+       "rel_20": -0.098,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2026-08-12",
+       "lag": -0.0981,
+       "rel_20": -0.0291,
+       "ticker": "MGROS"
+      }
+     ],
+     "false_positives_note": "20 satırın son 10 tanesi gösterildi",
+     "n_events": 90,
+     "n_false_positives": 39
+    },
+    "lookback": 5,
+    "members": [
+     "BIMAS",
+     "MGROS",
+     "MAVI",
+     "CCOLA"
+    ],
+    "note": "Olay: 5 günlük getiri - kendisi hariç akran ortancası ilk kez -threshold ya da altına indiği gün (aynı hissede en az 10 gün arayla). rel_h: olay günü kapanışından h gün sonrasına hisse getirisi - kendisi hariç akran ortancası. hit_rate: rel_h > 0 (akranlarını geçti); full_close_rate: rel_h olay günündeki farkı tamamen kapattı; yanlış pozitif: 20 gün sonra hâlâ geride (rel_20 <= 0). n_incomplete: penceresi analiz tarihini aştığı için henüz bilinmeyen ve istatistiğe katılmayan olaylar. mean_rel_after_cost: gidiş-dönüş maliyet düşülmüş. Oranlar (0.05 = 5 puan). Geçmiş sonuç gelecek garantisi değildir.",
+    "sector": "Retail & Consumer",
+    "start": "2024-01-01",
+    "stock": {
+     "by_horizon": [
+      {
+       "full_close_rate": 0.0,
+       "hit_rate": 0.45,
+       "horizon_days": 5,
+       "mean_rel": -0.0021,
+       "mean_rel_after_cost": -0.0051,
+       "median_rel": -0.0033,
+       "n": 20,
+       "n_incomplete": 0
+      },
+      {
+       "full_close_rate": 0.1579,
+       "hit_rate": 0.4211,
+       "horizon_days": 10,
+       "mean_rel": -0.0061,
+       "mean_rel_after_cost": -0.0091,
+       "median_rel": -0.0087,
+       "n": 19,
+       "n_incomplete": 1
+      },
+      {
+       "full_close_rate": 0.3158,
+       "hit_rate": 0.4737,
+       "horizon_days": 20,
+       "mean_rel": 0.0064,
+       "mean_rel_after_cost": 0.0034,
+       "median_rel": -0.0001,
+       "n": 19,
+       "n_incomplete": 1
+      }
+     ],
+     "false_positive_rate_20": 0.5263,
+     "false_positives": [
+      {
+       "date": "2024-03-20",
+       "lag": -0.0613,
+       "rel_20": -0.1649,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2024-04-08",
+       "lag": -0.0849,
+       "rel_20": -0.0402,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2024-05-24",
+       "lag": -0.0548,
+       "rel_20": -0.0617,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2024-06-14",
+       "lag": -0.0729,
+       "rel_20": -0.0003,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2024-11-28",
+       "lag": -0.0573,
+       "rel_20": -0.0017,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2025-03-07",
+       "lag": -0.0883,
+       "rel_20": -0.0819,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2025-08-15",
+       "lag": -0.0689,
+       "rel_20": -0.0826,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2025-09-01",
+       "lag": -0.0507,
+       "rel_20": -0.0001,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2026-07-02",
+       "lag": -0.0833,
+       "rel_20": -0.098,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2026-08-12",
+       "lag": -0.0981,
+       "rel_20": -0.0291,
+       "ticker": "MGROS"
+      }
+     ],
+     "n_events": 20,
+     "n_false_positives": 10
+    },
+    "strategy": "catch_up",
+    "threshold": 0.05,
+    "threshold_source": "istekte verilen",
+    "ticker": "MGROS",
+    "warnings": [],
+    "data_ceiling": "2026-09-10",
+    "date_warnings": [],
+    "recent_trades": []
+   },
+   "args": {
+    "strategy": "catch_up",
+    "start": "2024-01-01",
+    "end": "2026-09-10",
+    "sector": "Perakende",
+    "ticker": "MGROS",
+    "lookback": 5,
+    "threshold": 0.05
+   }
+  },
+  {
+   "name": "run_backtest",
+   "arguments": "{\"strategy\": \"catch_up\", \"start\": \"2024-01-01\", \"end\": \"2026-09-10\", \"sector\": \"Perakende\", \"ticker\": \"MAVI\", \"lookback\": 5, \"threshold\": 0.05}",
+   "ok": true,
+   "error": null,
+   "output": {
+    "cost_one_way": 0.0015,
+    "current_lag": -0.0224,
+    "end": "2026-09-10",
+    "group": {
+     "by_horizon": [
+      {
+       "full_close_rate": 0.0449,
+       "hit_rate": 0.5506,
+       "horizon_days": 5,
+       "mean_rel": -0.0006,
+       "mean_rel_after_cost": -0.0036,
+       "median_rel": 0.0031,
+       "n": 89,
+       "n_incomplete": 1
+      },
+      {
+       "full_close_rate": 0.2159,
+       "hit_rate": 0.5341,
+       "horizon_days": 10,
+       "mean_rel": 0.0066,
+       "mean_rel_after_cost": 0.0036,
+       "median_rel": 0.0101,
+       "n": 88,
+       "n_incomplete": 2
+      },
+      {
+       "full_close_rate": 0.2414,
+       "hit_rate": 0.5517,
+       "horizon_days": 20,
+       "mean_rel": 0.0139,
+       "mean_rel_after_cost": 0.0109,
+       "median_rel": 0.0136,
+       "n": 87,
+       "n_incomplete": 3
+      }
+     ],
+     "false_positive_rate_20": 0.4483,
+     "false_positives": [
+      {
+       "date": "2025-10-24",
+       "lag": -0.0679,
+       "rel_20": -0.0994,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2025-12-18",
+       "lag": -0.0757,
+       "rel_20": -0.0057,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2026-01-06",
+       "lag": -0.059,
+       "rel_20": -0.0822,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-02-04",
+       "lag": -0.0614,
+       "rel_20": -0.055,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-03-02",
+       "lag": -0.0582,
+       "rel_20": -0.0466,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-04-13",
+       "lag": -0.0515,
+       "rel_20": -0.0464,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-06-02",
+       "lag": -0.0526,
+       "rel_20": -0.0139,
+       "ticker": "BIMAS"
+      },
+      {
+       "date": "2026-06-12",
+       "lag": -0.0516,
+       "rel_20": -0.0429,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-07-02",
+       "lag": -0.0833,
+       "rel_20": -0.098,
+       "ticker": "MGROS"
+      },
+      {
+       "date": "2026-08-12",
+       "lag": -0.0981,
+       "rel_20": -0.0291,
+       "ticker": "MGROS"
+      }
+     ],
+     "false_positives_note": "20 satırın son 10 tanesi gösterildi",
+     "n_events": 90,
+     "n_false_positives": 39
+    },
+    "lookback": 5,
+    "members": [
+     "BIMAS",
+     "MGROS",
+     "MAVI",
+     "CCOLA"
+    ],
+    "note": "Olay: 5 günlük getiri - kendisi hariç akran ortancası ilk kez -threshold ya da altına indiği gün (aynı hissede en az 10 gün arayla). rel_h: olay günü kapanışından h gün sonrasına hisse getirisi - kendisi hariç akran ortancası. hit_rate: rel_h > 0 (akranlarını geçti); full_close_rate: rel_h olay günündeki farkı tamamen kapattı; yanlış pozitif: 20 gün sonra hâlâ geride (rel_20 <= 0). n_incomplete: penceresi analiz tarihini aştığı için henüz bilinmeyen ve istatistiğe katılmayan olaylar. mean_rel_after_cost: gidiş-dönüş maliyet düşülmüş. Oranlar (0.05 = 5 puan). Geçmiş sonuç gelecek garantisi değildir.",
+    "sector": "Retail & Consumer",
+    "start": "2024-01-01",
+    "stock": {
+     "by_horizon": [
+      {
+       "full_close_rate": 0.04,
+       "hit_rate": 0.56,
+       "horizon_days": 5,
+       "mean_rel": -0.0068,
+       "mean_rel_after_cost": -0.0098,
+       "median_rel": 0.0019,
+       "n": 25,
+       "n_incomplete": 1
+      },
+      {
+       "full_close_rate": 0.2,
+       "hit_rate": 0.44,
+       "horizon_days": 10,
+       "mean_rel": 0.0009,
+       "mean_rel_after_cost": -0.0021,
+       "median_rel": -0.0057,
+       "n": 25,
+       "n_incomplete": 1
+      },
+      {
+       "full_close_rate": 0.2,
+       "hit_rate": 0.44,
+       "horizon_days": 20,
+       "mean_rel": 0.0036,
+       "mean_rel_after_cost": 0.0006,
+       "median_rel": -0.0311,
+       "n": 25,
+       "n_incomplete": 1
+      }
+     ],
+     "false_positive_rate_20": 0.56,
+     "false_positives": [
+      {
+       "date": "2024-10-09",
+       "lag": -0.0562,
+       "rel_20": -0.0392,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2025-01-08",
+       "lag": -0.0611,
+       "rel_20": -0.1236,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2025-07-22",
+       "lag": -0.0541,
+       "rel_20": -0.0203,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2025-09-18",
+       "lag": -0.0769,
+       "rel_20": -0.0325,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2025-10-24",
+       "lag": -0.0679,
+       "rel_20": -0.0994,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-01-06",
+       "lag": -0.059,
+       "rel_20": -0.0822,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-02-04",
+       "lag": -0.0614,
+       "rel_20": -0.055,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-03-02",
+       "lag": -0.0582,
+       "rel_20": -0.0466,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-04-13",
+       "lag": -0.0515,
+       "rel_20": -0.0464,
+       "ticker": "MAVI"
+      },
+      {
+       "date": "2026-06-12",
+       "lag": -0.0516,
+       "rel_20": -0.0429,
+       "ticker": "MAVI"
+      }
+     ],
+     "n_events": 26,
+     "n_false_positives": 14,
+     "false_positives_note": "14 satırın son 10 tanesi gösterildi"
+    },
+    "strategy": "catch_up",
+    "threshold": 0.05,
+    "threshold_source": "istekte verilen",
+    "ticker": "MAVI",
+    "warnings": [],
+    "data_ceiling": "2026-09-10",
+    "date_warnings": [],
+    "recent_trades": []
+   },
+   "args": {
+    "strategy": "catch_up",
+    "start": "2024-01-01",
+    "end": "2026-09-10",
+    "sector": "Perakende",
+    "ticker": "MAVI",
+    "lookback": 5,
+    "threshold": 0.05
+   }
+  }
+ ],
+ "validation": {
+  "numbers": {
+   "n_numbers": 25,
+   "unsupported": [],
+   "rounding": [],
+   "rate": 0.0,
+   "rounding_rate": 0.0
+  },
+  "advice": [],
+  "action": "INVESTIGATE",
+  "action_valid": true,
+  "problems": []
+ },
+ "retries": 0,
+ "invalid_tool_calls": 1,
+ "llm_calls": 2,
+ "error": null,
+ "latency": 116.1,
+ "states": [
+  "START",
+  "SET_CEILING",
+  "CALL_TOOLS",
+  "ANSWER",
+  "VALIDATE",
+  "LOG_AND_CLOSE"
+ ],
+ "qid": "fa16f22bc325"
+}

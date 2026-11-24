@@ -78,6 +78,8 @@ def test_action_outside_allowed_set_becomes_unsafe():
 def test_answer_without_any_tool_is_unsafe():
     res, _ = run([{"content": "Genel olarak perakende güçlü.\nANALİTİK DURUM: WATCH"}])
     assert res["action"] == "ANALYSIS_UNSAFE" and res["action_source"].startswith("kural: başarılı araç")
+    assert res["status"] == "no_evidence" and "perakende güçlü" not in res["answer"]      # kanıtsız metin gösterilmez
+    assert "perakende güçlü" in res["answer_raw"]
 
 
 def test_invalid_calls_reported_back_and_counted():
@@ -139,3 +141,8 @@ def test_model_error_does_not_crash_and_is_logged(tmp_path):
     res = QM.run_question(Q1, ASOF, llm, db=tmp_path / "q.sqlite")
     assert res["status"] == "llm_error" and res["action"] == "ANALYSIS_UNSAFE" and "404" in res["answer"]
     assert res["tool_calls"][0]["ok"] and QM.load_question(res["qid"], tmp_path / "q.sqlite")["status"] == "llm_error"
+
+
+def test_text_after_action_line_is_trimmed():
+    res, _ = run([{"tool_calls": [RANK]}, {"content": GOOD + "\nİzinli eylemler: HOLD (...), WATCH (...)"}])
+    assert res["answer"].endswith("ANALİTİK DURUM: WATCH") and "İzinli eylemler" in res["answer_raw"]

@@ -103,7 +103,7 @@ class GeminiLLM:
 
 
 LOCAL_URL = "http://127.0.0.1:8080/v1"
-LOCAL_MODEL = "models/Qwen3-4B-Instruct-2507"
+LOCAL_MODEL = "models/Qwen3-4B-Instruct-2507-4bit"   # yerelde üretilen 4-bit (mlx_lm.convert -q, 4,5 bit/ağırlık)
 
 
 class LocalLLM:

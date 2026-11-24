@@ -14,7 +14,7 @@ Kullanıcı kararları (24 Kasım 2026): 1a eylemi model seçer, harness denetle
 3a çıktılar modele kısaltılmış verilir (uzun satır listeleri atılır, 4 ondalık); 4a uydurma sayı -> bir düzeltme
 denemesi, yine olursa ANALYSIS_UNSAFE.
 
-Çalıştırma (önce yerel sunucu: venv-llm/bin/mlx_lm.server --model models/Qwen3-4B-Instruct-2507 --port 8080):
+Çalıştırma (önce yerel sunucu: venv-llm/bin/mlx_lm.server --model models/Qwen3-4B-Instruct-2507-4bit --port 8080):
   python -m src.harness.question_mode --asof 2026-09-10 "Perakende sektöründe (BIMAS, MGROS, MAVI) ..."
 """
 import argparse
@@ -160,6 +160,15 @@ def parse_action(text: str):
     return m[-1].upper() if m else None
 
 
+def trim_after_action(text: str) -> str:
+    """Son 'ANALİTİK DURUM' satırından sonrasını atar (temel model istemdeki eylem listesini kopyalıyordu)."""
+    ms = list(ACTION_RE.finditer(text or ""))
+    if not ms:
+        return text
+    end = (text.find("\n", ms[-1].end()) + 1) or len(text)
+    return text[:end].rstrip()
+
+
 def advice_hits(text: str) -> list:
     return [m.group(0) for p in ADVICE_RE for m in p.finditer(text or "")]
 
@@ -284,10 +293,15 @@ async def _run(question: str, asof: str, llm) -> dict:
         action, source, status = "ANALYSIS_UNSAFE", "kural: denetim iki kez geçmedi", "withheld"
         answer = ("Cevap denetimden geçmediği için gösterilmiyor (" + "; ".join(v["problems"]) + ").\n"
                   "ANALİTİK DURUM: ANALYSIS_UNSAFE")
-    elif not ok_calls:
-        action, source = "ANALYSIS_UNSAFE", "kural: başarılı araç çağrısı yok, cevap kanıta dayanmıyor"
+    elif not ok_calls:                           # kanıt yok: metin de gösterilmez (temel model "0 örüntü" uydurdu)
+        action, source, status = "ANALYSIS_UNSAFE", "kural: başarılı araç çağrısı yok, cevap kanıta dayanmıyor", \
+            "no_evidence"
+        answer = ("Hiçbir araç çağrısı başarılı olmadığı için kanıta dayalı bir cevap verilemiyor.\n"
+                  "ANALİTİK DURUM: ANALYSIS_UNSAFE")
     elif hard_block(outputs):
         action, source = "ANALYSIS_UNSAFE", "kural: kalite kapısı HARD_BLOCK"
+    if status == "ok":
+        answer = trim_after_action(answer)
     return dict(question=question, asof=asof, model=getattr(llm, "name", "?"), action=action, action_source=source,
                 status=status, answer=answer, answer_raw=raw, tool_calls=outputs, validation=v, retries=retries,
                 invalid_tool_calls=sum(not o["ok"] for o in outputs), llm_calls=llm.calls, error=error,

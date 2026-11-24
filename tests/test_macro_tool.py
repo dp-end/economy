@@ -97,3 +97,10 @@ def test_macro_errors():
         T.get_macro_context(start="2024-01-01", ticker="YOKBOYLE")
     out = T.get_macro_context(start="2026-11-04", end="2026-11-06")                    # ticker yok: ilişki bloğu yok
     assert "fx_relation" not in out and out["summary"]["start"] == "2026-11-04"
+
+
+def test_fx_relation_short_range_warns_instead_of_crashing():
+    """Soru modu bulgusu (24 Kasım): model 2 günlük aralıkla ticker verdi, OLS çöktü."""
+    with T.data_ceiling(CEIL):
+        out = T.get_macro_context(start="2026-09-09", end=CEIL, ticker="EREGL")
+    assert "en az 60 işlem günü" in out["fx_relation"]["warning"] and out["summary"]["end"] == CEIL

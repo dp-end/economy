@@ -122,7 +122,7 @@ python -m src.harness.decision_log
 
 # Question mode (local model, no cloud API): free-form question -> model calls MCP tools -> harness checks
 #   1) start the local model server (separate venv-llm, offline):
-#      HF_HUB_OFFLINE=1 venv-llm/bin/mlx_lm.server --model models/Qwen3-4B-Instruct-2507 --port 8080
+#      HF_HUB_OFFLINE=1 venv-llm/bin/mlx_lm.server --model models/Qwen3-4B-Instruct-2507-4bit --port 8080
 #   2) ask (analysis-date ceiling, max 6 tool calls, number/advice/action checks, log reports/question_log.sqlite):
 python -m src.harness.question_mode --asof 2026-09-10 "Perakende sektöründe (BIMAS, MGROS, MAVI) ..."
 python -m src.harness.question_mode --replay <qid>     # re-run the logged tool calls, compare outputs

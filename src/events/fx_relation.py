@@ -13,6 +13,7 @@ import pandas as pd
 import statsmodels.api as sm
 
 HAC_LAGS = 5
+MIN_DAYS = 60          # bundan kısa dönemde ilişki hesaplanmaz (soru modu bulgusu: 2 günlük aralıkta OLS çöktü)
 
 
 def monthly_changes(s: pd.Series) -> pd.Series:
@@ -27,6 +28,9 @@ def fx_relation(close: pd.Series, xu: pd.Series, usdtry: pd.Series) -> dict:
     d = pd.DataFrame({"r": close.pct_change() * 100, "x": xu.reindex(idx).pct_change() * 100,
                       "du": usdtry.pct_change() * 100}).dropna()
     d["ex"] = d["r"] - d["x"]
+    if len(d) < MIN_DAYS:
+        return dict(warning=f"kur-hisse ilişkisi için en az {MIN_DAYS} işlem günü gerekli, bu dönemde {len(d)} var; "
+                            "daha uzun bir dönem isteyin", n_days=int(len(d)))
     daily = {}
     for name, y in (("excess_vs_xu100", "ex"), ("raw", "r")):
         res = sm.OLS(d[y], sm.add_constant(d["du"])).fit(cov_type="HAC", cov_kwds={"maxlags": HAC_LAGS})

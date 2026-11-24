@@ -28,6 +28,44 @@ PIT_COLS = ["net_income", "net_income_prev", "ni_yoy", "ni_qoq", "loss", "net_in
             "era_flow", "era_stock", "unit_flow", "unit_stock", "pit_dropped"]
 
 
+REACTION_H = (1, 5, 20)   # Yerel model 1.5 (örnek soru S4): açıklama sonrası 1, 5 ve 20 günlük tepki
+
+
+@lru_cache(maxsize=1)
+def _reaction_panel() -> tuple:
+    from src.data.universe import build_sector_peer_groups
+    idx = get_index_history("XU100").index
+    groups, _ = build_sector_peer_groups()
+    tickers = [t for m in groups.values() for t in m]
+    px = pd.DataFrame({t: get_stock_history(t)["Close"] for t in tickers}).reindex(idx)
+    return idx, px, get_index_history("XU100")["Close"].reindex(idx), groups
+
+
+def reaction_windows(ticker: str, event_day, upto, horizons=REACTION_H) -> dict:
+    """Bilanço açıklaması sonrası [0, h-1] penceresi: tepki günü (event_day) dahil, açıklamadan önceki kapanıştan
+    başlar (1 gün = yalnızca tepki günü; d0 ve d0_4 ile aynı pencereler). Yüzde olarak ham getiri, XU100'e göre fark
+    ve akran sepetine göre fark (aynı gruptaki diğer hisseler, eşit ağırlık; R4 sector_abnormal ile aynı).
+    Penceresi 'upto' gününden sonra kapanan ufuk boş döner (complete_h False): o gün henüz bilinmez."""
+    idx, px, xu, groups = _reaction_panel()
+    peers = [p for m in groups.values() if ticker in m for p in m if p != ticker]
+    last = idx.searchsorted(pd.Timestamp(upto), side="right") - 1
+    pos = idx.get_loc(pd.Timestamp(event_day)) if pd.notna(event_day) and pd.Timestamp(event_day) in idx else None
+    out = {}
+    for h in horizons:
+        ok = pos is not None and pos >= 1 and pos + h - 1 <= last
+        out[f"complete_{h}"] = bool(ok)
+        ret = ab_xu = ab_sec = None
+        if ok:
+            lo, hi = idx[pos - 1], idx[pos + h - 1]
+            r = px.loc[hi] / px.loc[lo] - 1
+            ret = float(r[ticker]) * 100
+            ab_xu = (float(r[ticker]) - float(xu[hi] / xu[lo] - 1)) * 100
+            ab_sec = (float(r[ticker]) - float(r[peers].mean())) * 100 if peers else None
+        out[f"ret_{h}_pct"], out[f"ab_xu100_{h}_pct"], out[f"ab_sector_{h}_pct"] = ret, ab_xu, ab_sec
+        out[f"window_end_{h}"] = str(idx[pos + h - 1].date()) if ok else None   # pencerenin kapandığı gün
+    return out
+
+
 def car(close: pd.Series, xu: pd.Series, pos: int, a: int, b: int) -> float:
     """[a, b] penceresinde hisse getirisi eksi XU100 getirisi. Pencere veride yoksa NaN."""
     lo, hi = pos + a - 1, pos + b                 # lo: pencereden önceki son kapanış

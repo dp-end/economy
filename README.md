@@ -136,6 +136,9 @@ BIST_DATA_CEILING=2026-09-10 python -m src.mcp_server.server
 #   detect_reversal_events(ticker="ASELS", event="bb_lower_touch", start="2024-01-01",
 #                          conditions=["rsi_dip+hacim_yuksek", "st_asagi+bulut_alti"])
 #   (touch = intraday Low <= lower band, first day of a run, 5 days apart; computed per call, not in R1's table)
+# Quarterly changes for every statement disclosed in a period + 1/5/20-day reaction vs XU100 and the peer basket:
+#   calculate_fundamental_change(ticker="TUPRS", start="2024-01-01", end="2026-09-10")
+#   (selected by KAP reaction day; windows not closed by the analysis date stay empty; improving = R4 §8 measures)
 
 # Rebuild the research reports and the PDF (needs Google Chrome for the PDF step)
 python -m src.reports.build_reports

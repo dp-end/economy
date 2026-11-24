@@ -31,6 +31,7 @@ from src.data.speech_features import get_speech_features as _speech, load_speech
 from src.data.universe import load_universe
 from src.events.technical_events import DIRECTION, HARNESS_EVENTS, TOUCH_DIRECTION, touch_table
 from src.events.calendar_patterns import WEEKDAYS, _data as _calendar_data, welch
+from src.events.earnings_reaction import REACTION_H, reaction_windows
 from src.events.sector_catchup import catchup_history, catchup_summary
 from src.indicators.relative import sector_lag
 from src.harness.decision_log import dumps, load_analysis
@@ -616,23 +617,83 @@ def get_fundamental_metrics(ticker: str, period: str = None, asof: str = None) -
     return to_json(out)
 
 
+REACTION_NOTE = ("Tepki (reaction): KAP açıklamasından sonraki ilk işlem günü (event_day, tepki günü) dahil; pencere "
+                 "açıklamadan önceki kapanıştan başlar: 1 gün = tepki günü, 5 gün = tepki günü + 4, 20 gün = tepki "
+                 "günü + 19 işlem günü. ret = ham getiri, ab_xu100 = hisse - XU100, ab_sector = hisse - aynı akran "
+                 "grubundaki diğer hisselerin eşit ağırlıklı ortalaması (yüzde; R4 ile aynı). complete_h false: pencere "
+                 "analiz tarihinden sonra kapanır, getiri verilmez ve özete katılmaz; window_end_h pencerenin kapandığı "
+                 "gün. ebitda_margin_chg = çeyreklik FAVÖK marjı - geçen yılın aynı çeyreği; deleveraging = geçen yılın "
+                 "aynı çeyreğindeki Net Borç/FAVÖK - bugünkü (+ = düştü); nd_ebitda negatifse şirket net nakitte. "
+                 "improving = FAVÖK marjı yıllık arttı VE Net Borç/FAVÖK yıllık düştü (R4 §8 ölçüleri); biri "
+                 "bilinmiyorsa null.")
+
+
+def _reaction_summary(rows: list) -> list:
+    out = []
+    for name, flag in (("iyilesen", True), ("diger", False), ("bilinmiyor", None)):
+        g = [r for r in rows if r["improving"] is flag]
+        item = dict(group=name, n_quarters=len(g))
+        if flag is not None:
+            item["horizons"] = []
+            for h in REACTION_H:
+                done = [r["reaction"] for r in g if r["reaction"][f"complete_{h}"]]
+                m = lambda k: float(np.mean([x[k] for x in done if x[k] is not None])) if done else None
+                item["horizons"].append(dict(horizon_days=h, n=len(done), mean_ab_xu100_pct=m(f"ab_xu100_{h}_pct"),
+                                             mean_ab_sector_pct=m(f"ab_sector_{h}_pct")))
+        out.append(item)
+    return out
+
+
 @_guarded
-def calculate_fundamental_change(ticker: str, periods: int = 4, asof: str = None) -> dict:
-    """Son 'periods' açıklanmış çeyreğin çeyreklik ve yıllık değişimleri (yalnızca analiz gününde görünür olanlar)."""
+def calculate_fundamental_change(ticker: str, periods: int = 4, asof: str = None, start: str = None,
+                                 end: str = None) -> dict:
+    """Açıklanmış çeyreklerin çeyreklik/yıllık değişimleri (FAVÖK marjı, Net Borç/FAVÖK, net kâr, ROE...) ve her
+    açıklama sonrası 1/5/20 günlük fiyat tepkisi (XU100'e ve sektöre göre). start/end verilirse KAP açıklama
+    (tepki) günü bu aralıkta olan bütün çeyrekler, yoksa son 'periods' çeyrek. Yalnızca analiz gününde görünür olanlar;
+    penceresi kapanmamış tepki boş kalır. iyileşen / diğer çeyreklerin ortalama tepkisi reaction_summary'de."""
     t = _ticker(ticker, core_only=True)
     if not 1 <= int(periods) <= 20:
         raise ToolError("periods 1 ile 20 arasında olmalı")
-    d = _asof(asof)
-    q = _visible_quarters(t, d).tail(int(periods))
+    d = _asof(asof) if asof else _asof(end, "end")
+    q = _visible_quarters(t, d)
     if q.empty:
         raise ToolError(f"{t} için {d.date()} itibarıyla açıklanmış bilanço yok")
+    # Değişimler bütün görünür çeyrekler üzerinden (seçilen ilk çeyreğin de önceki çeyreği bilinir)
     q = q.assign(roe_change=q["roe_q"].diff(), margin_change=q["net_margin"].diff() if "net_margin" in q else np.nan)
-    cols = ["period_end", "event_day", "net_income", "ni_yoy", "ni_qoq", "roe_q", "roe_change", "net_margin",
-            "margin_change", "leverage", "loss", "tercile",
-            "ebitda", "ebitda_yoy", "ebitda_margin_q", "nd_ebitda", "current_ratio", "cash_conversion", "roa",
-            "unit_flow", "unit_stock", "pit_dropped"]
-    return to_json(dict(ticker=t, asof=str(d.date()), quarters=q[[c for c in cols if c in q]].to_dict("records"),
-                        note=FUND_NOTE))
+    if start or end:
+        s = _date(start, "start", "2021-11-01")
+        e = min(_date(end, "end", d), d)
+        if s > e:
+            raise ToolError(f"start ({s.date()}) end'den ({e.date()}) sonra olamaz")
+        q = q[q["event_day"].between(s, e)]
+        selection = f"KAP tepki günü {s.date()} - {e.date()} arasında açıklanan {len(q)} çeyrek"
+    else:
+        q = q.tail(int(periods))
+        selection = f"son {len(q)} çeyrek"
+    cols = ["period_end", "publish_time", "event_day", "net_income", "ni_yoy", "ni_qoq", "roe_q", "roe_change",
+            "net_margin", "margin_change", "leverage", "loss", "tercile",
+            "ebitda", "ebitda_yoy", "ebitda_margin_q", "ebitda_margin_ttm", "ebitda_margin_chg", "nd_ebitda",
+            "deleveraging", "current_ratio", "cash_conversion", "roa", "unit_flow", "unit_stock", "pit_dropped"]
+    rows = to_json(q[[c for c in cols if c in q]].to_dict("records"))
+    for row, (_, r) in zip(rows, q.iterrows()):
+        mu, nd = r.get("ebitda_margin_chg"), r.get("deleveraging")
+        row["improving"] = None if pd.isna(mu) or pd.isna(nd) else bool(mu > 0 and nd > 0)
+        row["reaction"] = to_json(reaction_windows(t, r["event_day"], d))
+    summary = _reaction_summary(rows)
+    warnings = ["İlişki nedensellik değildir: 'iyi bilanço = fiyat artar' denemez; tepki aynı günkü piyasa ve "
+                "sektör haberlerini de içerir."]
+    small = [f"{x['group']} {x['n_quarters']}" for x in summary[:2] if x["n_quarters"] < MIN_EVENTS]
+    if small:
+        warnings.append(f"Az çeyrek ({', '.join(small)} < {MIN_EVENTS}); karşılaştırma yalnızca betimleyici.")
+    if "ebitda_margin_q" not in q or q["ebitda_margin_q"].isna().all():
+        warnings.append("Bu şirkette FAVÖK ve net borç hesaplanmaz (banka, sigorta, aracı kurum, KCHOL); iyileşme "
+                        "ölçüsü yok, net kâr ve ROE değişimine bakın.")
+    open_ = [r["period_end"][:10] for r in rows if not r["reaction"]["complete_20"]]
+    if open_:
+        warnings.append(f"20 günlük penceresi analiz tarihinde henüz kapanmamış çeyrek: {', '.join(open_)} "
+                        "(boş bırakıldı, özete katılmadı).")
+    return to_json(dict(ticker=t, asof=str(d.date()), selection=selection, quarters=rows,
+                        reaction_summary=summary, warnings=warnings, reaction_note=REACTION_NOTE, note=FUND_NOTE))
 
 
 # ---------- 10-12: makro, haber, konuşma ----------

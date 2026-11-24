@@ -260,7 +260,7 @@ reaches the agent. All dates are point-in-time (see the data dictionary).
 | `rank_sector_relative_strength` | sector, horizon, date, tickers | peer returns, lag vs peer median (self excluded), rank | RUN_SECTOR_RELATIVE_ANALYSIS, RUN_PATTERN_AND_REVERSAL_ANALYSIS |
 | `test_weekday_pattern` | ticker, pattern, start, end, oos_start | weekday or streak pattern vs unconditional returns, half-sample stability, cost note | RUN_PATTERN_AND_REVERSAL_ANALYSIS |
 | `get_fundamental_metrics` | ticker, period, asof | latest statement public on `asof`, with publication time | LOAD_FUNDAMENTALS, LOAD_MACRO_CONTEXT |
-| `calculate_fundamental_change` | ticker, periods, asof | QoQ / YoY changes of statements visible on `asof` | LOAD_FUNDAMENTALS, LOAD_MACRO_CONTEXT |
+| `calculate_fundamental_change` | ticker, periods, asof, start, end | QoQ / YoY changes of statements visible on `asof` | LOAD_FUNDAMENTALS, LOAD_MACRO_CONTEXT |
 | `get_macro_context` | start, end | FX, policy rate, CPI, Fed range as published on each day | LOAD_MACRO_CONTEXT |
 | `get_news_events` | ticker, topic, start, end, asof | KAP/RSS headline metadata, source link and timestamp | LOAD_NEWS_AND_SPEECH_CONTEXT |
 | `get_speech_features` | source_id | topics, stance, uncertainty, verified vs unverified claims of a speech | LOAD_NEWS_AND_SPEECH_CONTEXT |

@@ -34,12 +34,16 @@ from src.events.technical_events import DIRECTION, TOUCH_DIRECTION
 from src.finetune import templates as TP
 from src.harness import question_mode as QM
 from src.mcp_server.server import build_server
+from src.mcp_server import tools as TOOLS
 from src.mcp_server.tools import data_ceiling
 
 OUT = Path("data/finetune")
 SEED = 20261124
 DATE_MIN, DATE_MAX = "2024-03-01", "2026-11-06"
-COUNTS = dict(s1=80, s2=80, s3=80, s4=80, s5=60, other=60, error=30)
+COUNTS = dict(s1=80, s2=80, s3=80, s4=80, s5=60, other=60, error=30, s1_cand=20, s3_cand=20)
+# s1_cand / s3_cand (kullanıcı kararı a): kurallar aynı; yalnızca kuralın sağlandığı hisse/tarihler aranır, çünkü
+# rastgele örneklemede POTENTIAL_CATCH_UP_CANDIDATE 5, TECHNICAL_REVERSAL_CANDIDATE 6 örnekte kalıyordu.
+CAND_TRIES = 4000
 VALID_SHARE = 0.10
 BANKS = ("AKBNK", "TURSG", "ISMEN", "KCHOL")
 BAD_TICKERS = ("XYZAB", "TSLA", "GARANX", "SISE", "VESTL", "KOZAL", "APPLE", "THYAOO")
@@ -227,9 +231,9 @@ class Sampler:
     def pick(self, xs):
         return self.rng.choice(list(xs))
 
-    def s1(self) -> dict:
+    def s1(self, variant: str = None) -> dict:
         r = self.rng
-        variant = r.choices(["rank", "hist", "full"], [0.25, 0.35, 0.40])[0]
+        variant = variant or r.choices(["rank", "hist", "full"], [0.25, 0.35, 0.40])[0]
         grp = self.pick(self.groups)
         members = self.groups[grp]
         tickers = sorted(r.sample(members, r.randint(3, len(members)))) if len(members) > 3 and r.random() < 0.5 else members
@@ -267,18 +271,79 @@ class Sampler:
                                                     yon_gen="düşüşün" if down else "yükselişin", **slots)
         return dict(cat="s2", kind=kind, T=T, pattern=pattern, is_start=is_start, oos_start=oos, asof=asof, question=q)
 
-    def s3(self) -> dict:
+    def s3(self, T: str = None, ev: str = None, start: str = None, asof: str = None) -> dict:
         r = self.rng
-        ev = r.choices(list(TP.EVENT_TR), [6, 3] + [1] * (len(TP.EVENT_TR) - 2))[0]
+        ev = ev or r.choices(list(TP.EVENT_TR), [6, 3] + [1] * (len(TP.EVENT_TR) - 2))[0]
         d = TOUCH_DIRECTION.get(ev, DIRECTION.get(ev))
-        start = self.pick(["2022-01-01", "2023-01-01", "2024-01-01", "2025-01-01"])
-        asof = self.asof(start, 200)
+        start = start or self.pick(["2022-01-01", "2023-01-01", "2024-01-01", "2025-01-01"])
+        asof = asof or self.asof(start, 200)
         cond_q, conds = self.pick(COND_SETS[d])
-        T = self.pick(self.core)
+        T = T or self.pick(self.core)
         q = self.pick(TP.Q["s3"]).format(T=T, start=self.dfmt(start), asof=self.dfmt(asof), event_tr=TP.EVENT_TR[ev],
                                          yon="yükseldi" if d > 0 else "düştü", cond_q=cond_q).strip()
         return dict(cat="s3", T=T, event=ev, direction=d, start=start, asof=asof, conditions=conds, question=q,
                     days=self.days)
+
+    # ---- hedefli örnekleme: kural ön kontrolü doğrudan araç fonksiyonlarıyla, aynı tavan altında
+    def s1_cand(self) -> dict:
+        for _ in range(CAND_TRIES):
+            sp = self.s1(variant=self.pick(["hist", "full"]))
+            g = ({"tickers": sp["tickers"]} if sp["tickers"] else {}) | ({"sector": sp["sector_arg"]} if sp["sector_arg"] else {})
+            try:
+                with data_ceiling(sp["asof"]):
+                    rk = TOOLS.rank_sector_relative_strength(**g, horizon=sp["h"], date=sp["asof"])
+                    t = rk["most_behind"]
+                    lag = {m["ticker"]: m["lag"] for m in rk["members"]}[t]
+                    if not rk["sector_median"] > 0 or lag is None or lag >= -0.005:
+                        continue
+                    if sp["variant"] == "full" and t not in self.core:
+                        continue
+                    bt = TOOLS.run_backtest(strategy="catch_up", **g, ticker=t, lookback=sp["h"], start=sp["start"],
+                                            end=sp["asof"])
+            except TOOLS.ToolError:
+                continue
+            h20 = next(x for x in bt["stock"]["by_horizon"] if x["horizon_days"] == 20)
+            fp = bt["stock"]["false_positive_rate_20"]
+            if h20["n"] >= 10 and (h20["hit_rate"] or 0) >= 0.60 and fp is not None and fp <= 0.40:
+                return dict(sp, targeted=True)
+        raise RuntimeError("s1_cand: kuralı sağlayan örnek bulunamadı")
+
+    def s3_cand(self) -> dict:
+        te = self._events()
+        for _ in range(CAND_TRIES):
+            T, ev = self.pick(self.core), self.rng.choices(list(TP.EVENT_TR), [6, 3] + [1] * (len(TP.EVENT_TR) - 2))[0]
+            dates = te.get((T, ev), [])
+            start = self.pick(["2022-01-01", "2023-01-01", "2024-01-01"])
+            dates = [x for x in dates if x >= str(date.fromisoformat(start) + timedelta(days=300)) and x <= DATE_MAX]
+            if not dates:
+                continue
+            d0 = self.pick(dates)
+            pos = self.tdays.index(d0) if d0 in self.tdays else None
+            if pos is None:
+                continue
+            asof = self.tdays[min(pos + self.rng.randint(0, 2), len(self.tdays) - 1)]   # olaydan 0-2 işlem günü sonra
+            try:
+                with data_ceiling(asof):
+                    o = TOOLS.detect_reversal_events(ticker=T, event=ev, start=start, end=asof)
+            except TOOLS.ToolError:
+                continue
+            h5 = next(x for x in next(g for g in o["by_condition"] if g["condition"] == "hepsi")["horizons"]
+                      if x["horizon_days"] == 5)
+            if h5["n"] >= 10 and h5["success"] / h5["n"] >= 0.60:
+                return dict(self.s3(T=T, ev=ev, start=start, asof=asof), targeted=True)
+        raise RuntimeError("s3_cand: kuralı sağlayan örnek bulunamadı")
+
+    def _events(self) -> dict:
+        if not hasattr(self, "_ev"):
+            import pandas as pd
+            from src.events.technical_events import touch_table
+            te = pd.read_parquet("reports/technical_events.parquet")
+            self._ev = {(t, e): sorted(g["date"].dt.strftime("%Y-%m-%d")) for (t, e), g in te.groupby(["ticker", "event"])}
+            for t in self.core:
+                tt = touch_table(t)[0]
+                for e, g in tt.groupby("event"):
+                    self._ev[(t, e)] = sorted(g.index.strftime("%Y-%m-%d"))
+        return self._ev
 
     def s4(self) -> dict:
         bank = self.rng.random() < 0.15
@@ -340,7 +405,10 @@ async def run_spec(client, tools, names, sp: dict) -> dict:
     if v["problems"] or v["action"] != action:
         raise AssertionError(f"şablon cevabı denetimden geçmedi ({sp['cat']}): {v['problems']} | {text[:300]}")
     c.messages.append(dict(role="assistant", content=text))
-    meta = {k: sp[k] for k in ("cat", "variant", "kind", "T", "asof", "question") if k in sp}
+    want = {"s1": "POTENTIAL_CATCH_UP_CANDIDATE", "s3": "TECHNICAL_REVERSAL_CANDIDATE"}.get(sp["cat"])
+    if sp.get("targeted") and action != want:
+        raise Skip(f"hedefli örnek beklenen eylemi vermedi ({action})")
+    meta = {k: sp[k] for k in ("cat", "variant", "kind", "T", "asof", "question", "targeted") if k in sp}
     cid = hashlib.sha256(json.dumps(c.messages, ensure_ascii=False).encode()).hexdigest()[:12]
     return dict(id=cid, **meta, action=action, n_calls=len(c.outputs), n_tool_errors=sum(not o["ok"] for o in c.outputs),
                 messages=c.messages)
@@ -384,7 +452,8 @@ async def build(counts: dict, seed: int = SEED, out: Path = OUT) -> dict:
     valid, per_cat = set(), Counter()
     for i in order:
         cv = convs[i]
-        if not cv["teacher"] and per_cat[cv["cat"]] < round(counts.get(cv["cat"], 0) * VALID_SHARE):
+        n_cat = counts.get(cv["cat"], 0) + counts.get(f"{cv['cat']}_cand", 0)
+        if not cv["teacher"] and per_cat[cv["cat"]] < round(n_cat * VALID_SHARE):
             valid.add(i)
             per_cat[cv["cat"]] += 1
     out.mkdir(parents=True, exist_ok=True)
@@ -402,6 +471,8 @@ async def build(counts: dict, seed: int = SEED, out: Path = OUT) -> dict:
                  by_category=dict(Counter(c["cat"] for c in convs)),
                  by_action=dict(Counter(c["action"] for c in convs)),
                  by_split=dict(Counter(c["split"] for c in convs)),
+                 targeted=sum(bool(c.get("targeted")) for c in convs),
+                 valid_by_action=dict(Counter(c["action"] for c in convs if c["split"] == "valid")),
                  turn_examples={k: len(v) for k, v in rows.items()},
                  tool_calls=dict(Counter(tc["function"]["name"] for c in convs for m in c["messages"]
                                          if m["role"] == "assistant" for tc in (m.get("tool_calls") or []))),
@@ -412,6 +483,63 @@ async def build(counts: dict, seed: int = SEED, out: Path = OUT) -> dict:
     return stats
 
 
+CARD = Path("reports/local_llm/dataset_card.md")
+
+
+def write_card(stats: dict, counts: dict, path: Path = CARD):
+    """Raporun 'veri nasıl hazırlandı, kaç örnek' sorusu için veri seti kartı (İngilizce, raporlar gibi)."""
+    row = lambda d: "\n".join(f"| {k} | {v} |" for k, v in sorted(d.items(), key=lambda x: -x[1]))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"""# Fine-tuning dataset card
+
+Generated by `python -m src.finetune.build_dataset` (seed {stats['seed']}); files in `data/finetune/` (not in git,
+rebuilt in about a minute). No cloud LLM was used at any point.
+
+**How a record is made.** Each record is a complete question-mode conversation, produced by the same code the live
+system runs (`src/harness/question_mode.py`): the same system prompt (rules and allowed actions), the same 15 MCP
+tool definitions, real tool outputs under the analysis-date ceiling, shown in the same compact view. Questions come
+from hand-written Turkish phrasings filled with sampled tickers, sectors, periods and analysis dates (2024-03 to
+2026-11). The gold tool calls are fixed by the question; the answer is written by Python templates
+(`src/finetune/templates.py`) from the tool outputs, and its action follows the pre-written rules. Every answer must
+pass the system's own checks (no number outside tool outputs, no advice/target price, allowed action) or it is not
+kept. A test replays every conversation through question mode and gets the same tool outputs, checks and action.
+
+**Coverage.** Four mandatory scenarios (sector laggard / catch-up, weekday and multi-day patterns, technical
+reversals, quarterly fundamentals and price reaction), safety questions (advice, target price, "it will surely
+rise" claims), single uses of the other tools, and error cases (unknown ticker / index / sector, questions about
+dates after the analysis date). The instructor's five sample questions are included verbatim in training, so the
+evaluation uses separate held-out questions. Random sampling gave only 5 catch-up and 6 technical-reversal
+candidates, so {stats['targeted']} targeted examples were added: same rules, only stocks and dates where the rule
+holds were searched.
+
+**Training format.** MLX `chat` format (`{{"messages": [...], "tools": [...]}}`). MLX with `mask_prompt` learns only
+the last assistant message, so each conversation is split into one example per assistant turn (tool-call turns and
+the final answer).
+
+| | count |
+|---|---|
+| conversations | {stats['conversations']} (train {stats['by_split'].get('train', 0)}, valid {stats['by_split'].get('valid', 0)}) |
+| turn examples | train {stats['turn_examples']['train']}, valid {stats['turn_examples']['valid']} |
+| instructor sample questions | {stats['teacher']} (train) |
+| targeted candidate examples | {stats['targeted']} |
+
+| category | conversations |
+|---|---|
+{row(stats['by_category'])}
+
+| action (gold) | conversations |
+|---|---|
+{row(stats['by_action'])}
+
+| tool (gold calls) | calls |
+|---|---|
+{row(stats['tool_calls'])}
+
+Analysis-date years: {', '.join(f'{k}: {v}' for k, v in sorted(stats['asof_years'].items()))}.
+Requested sizes: {', '.join(f'{k} {v}' for k, v in counts.items())}.
+""")
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="İnce ayar veri seti (soru modu konuşmaları)")
     ap.add_argument("--scale", type=float, default=1.0, help="kategori sayılarının çarpanı (hızlı deneme için 0.05)")
@@ -419,4 +547,7 @@ if __name__ == "__main__":
     ap.add_argument("--out", default=str(OUT))
     a = ap.parse_args()
     counts = {k: max(1, round(v * a.scale)) for k, v in COUNTS.items()}
-    print(json.dumps(asyncio.run(build(counts, a.seed, Path(a.out))), ensure_ascii=False, indent=1))
+    stats = asyncio.run(build(counts, a.seed, Path(a.out)))
+    if Path(a.out) == OUT and a.scale == 1.0:
+        write_card(stats, counts)
+    print(json.dumps(stats, ensure_ascii=False, indent=1))

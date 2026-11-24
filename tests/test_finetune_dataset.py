@@ -10,7 +10,7 @@ from src.agents.llm import ScriptLLM
 from src.finetune import build_dataset as B
 from src.harness import question_mode as QM
 
-SMALL = dict(s1=3, s2=2, s3=2, s4=2, s5=2, other=3, error=2)
+SMALL = dict(s1=3, s2=2, s3=2, s4=2, s5=2, other=3, error=2, s1_cand=1, s3_cand=1)
 
 
 @pytest.fixture(scope="module")
@@ -88,3 +88,14 @@ def test_build_is_reproducible(small, tmp_path):
     sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
     assert sha(out / "conversations.jsonl") == sha(tmp_path / "conversations.jsonl")
     assert sha(out / "train.jsonl") == sha(tmp_path / "train.jsonl")
+
+
+def test_targeted_examples_meet_candidate_rules(small):
+    """Hedefli örnekleme (karar a): kurallar aynı, yalnızca kuralı sağlayan hisse/tarih aranır."""
+    _, stats, convs = small
+    t = [c for c in convs if c.get("targeted")]
+    assert stats["targeted"] == len(t) == 2
+    assert {(c["cat"], c["action"]) for c in t} == {("s1", "POTENTIAL_CATCH_UP_CANDIDATE"),
+                                                    ("s3", "TECHNICAL_REVERSAL_CANDIDATE")}
+    s3 = next(c for c in t if c["cat"] == "s3")
+    assert "Son 3 işlem gününde yeni olay var." in s3["messages"][-1]["content"]

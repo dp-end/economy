@@ -78,6 +78,56 @@ def sector_events() -> pd.DataFrame:
     return out
 
 
+def catchup_history(panel: pd.DataFrame, lookback: int, thr: float, start, end, horizons=FWD_H,
+                    gap: int = EVENT_GAP) -> pd.DataFrame:
+    """Verilen akran grubunda geçmiş geride kalma olayları ve sonraki toparlanma (Brief §11, §31; MCP run_backtest
+    strategy='catch_up'). Aynı yapı taşları R2 ile ortak: sector_lag (kendisi hariç akran ortancası) ve dedupe.
+
+    panel : grubun kapanışları (sütun = hisse). 'end' sonrası kesilir, yani sonuç 'end' sonrasını hiç görmez.
+    Olay  : 'lookback' günlük geride kalma ilk kez <= -thr olan gün (aynı hissede en az `gap` gün arayla), [start, end].
+    rel_h : olay günü kapanışından h gün sonrasına kadar hisse getirisi - kendisi hariç akran ortancası getirisi.
+            Penceresi 'end' sonrasına taşan olayda boş (NaN): henüz bilinmiyor.
+    quake : Şubat 2023 deprem penceresi (R2 gibi istatistik dışında tutulur).
+    """
+    panel = panel.loc[:pd.Timestamp(end)]
+    lag = sector_lag(panel, {"grup": list(panel.columns)}, lookback)
+    quake = quake_flags_wide(panel.index)
+    rows = []
+    for t in panel.columns:
+        cond = lag[t] <= -thr
+        first = cond & ~cond.shift(1, fill_value=False)
+        idx = first.index[dedupe(first, gap).to_numpy()]
+        idx = idx[(idx >= pd.Timestamp(start)) & (idx <= pd.Timestamp(end))]
+        for d in idx:
+            k = panel.index.get_loc(d)
+            row = dict(date=d, ticker=t, lag=float(lag.at[d, t]), quake=bool(quake.loc[d]))
+            for h in horizons:
+                if k + h >= len(panel):
+                    row[f"rel_{h}"] = np.nan
+                    continue
+                r = panel.iloc[k + h] / panel.iloc[k] - 1
+                row[f"rel_{h}"] = float(r[t] - r.drop(t).median())
+            rows.append(row)
+    cols = ["date", "ticker", "lag", "quake"] + [f"rel_{h}" for h in horizons]
+    return pd.DataFrame(rows, columns=cols).sort_values(["date", "ticker"]).reset_index(drop=True)
+
+
+def catchup_summary(ev: pd.DataFrame, horizons=FWD_H, cost_round_trip: float = 0.0) -> list:
+    """Ufuk başına (sıralı liste): tamamlanmış olay sayısı, henüz kapanmamış pencere, isabet (fark > 0), tam kapanma
+    (fark >= olay günündeki geride kalma), ortanca/ortalama toparlanma, maliyet sonrası ortalama."""
+    out = []
+    for h in horizons:
+        s = ev[f"rel_{h}"].dropna()
+        need = -ev.loc[s.index, "lag"]
+        out.append(dict(horizon_days=h, n=int(len(s)), n_incomplete=int(ev[f"rel_{h}"].isna().sum()),
+                        hit_rate=float((s > 0).mean()) if len(s) else None,
+                        full_close_rate=float((s >= need).mean()) if len(s) else None,
+                        median_rel=float(s.median()) if len(s) else None,
+                        mean_rel=float(s.mean()) if len(s) else None,
+                        mean_rel_after_cost=float(s.mean() - cost_round_trip) if len(s) else None))
+    return out
+
+
 def baseline() -> pd.DataFrame:
     """Uygun hisselerin olaysız herhangi bir günü: ortalama getiri (%). Deprem hariç."""
     c = _context()

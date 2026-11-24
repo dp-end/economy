@@ -30,6 +30,8 @@ from src.data.speech_features import get_speech_features as _speech, load_speech
 from src.data.universe import load_universe
 from src.events.technical_events import HARNESS_EVENTS
 from src.events.calendar_patterns import WEEKDAYS, _data as _calendar_data, welch
+from src.events.sector_catchup import catchup_history, catchup_summary
+from src.indicators.relative import sector_lag
 from src.harness.decision_log import dumps, load_analysis
 from src.harness.evidence import _variants, analysis_day, run_analysis, speech_known_day
 from src.indicators.features import full_features
@@ -252,29 +254,72 @@ def find_support_resistance(ticker: str, date: str = None, tolerance: float = 0.
 
 
 # ---------- 6-7: sektör ve takvim ----------
-@_guarded
-def rank_sector_relative_strength(sector: str, horizon: int = 10, date: str = None) -> dict:
-    """Akran grubu içinde getiri, akran ortancasına göre gecikme (kendisi hariç) ve sıra."""
+# Türkçe sektör adları (soru Türkçe sorulur). Karşılaştırma büyük/küçük harf ve Türkçe karaktere duyarsız.
+SECTOR_ALIASES = {
+    "Automotive & Durables": ["otomotiv", "dayanıklı tüketim", "beyaz eşya"],
+    "Banking": ["banka", "bankalar", "bankacılık"],
+    "Chemicals & Energy": ["kimya", "petrokimya", "rafineri", "kimya ve enerji"],
+    "Construction RE & Utilities": ["inşaat", "gayrimenkul", "gyo", "elektrik", "kamu hizmetleri"],
+    "Healthcare": ["sağlık", "ilaç"],
+    "Metals & Mining": ["metal", "demir çelik", "çelik", "madencilik", "maden", "metal ve madencilik"],
+    "Other Financials": ["holding", "sigorta", "aracı kurum", "diğer finansal"],
+    "Retail & Consumer": ["perakende", "tüketim", "gıda", "gıda ve içecek"],
+    "Tech Telecom & Defense": ["teknoloji", "telekom", "telekomünikasyon", "savunma"],
+    "Transportation": ["ulaştırma", "ulaşım", "havayolu", "havacılık"],
+}
+
+
+def _fold(s: str) -> str:
+    s = str(s).strip().replace("İ", "i").replace("I", "ı").lower()
+    return s.translate(str.maketrans("çğıöşü", "cgiosu"))
+
+
+def _peer_group(sector: str = None, tickers: list = None) -> tuple:
+    """(grup adı, hisseler). tickers verilirse o liste (en az 2 hisse) grup olur; yoksa sektör adı (İngilizce ya da
+    Türkçe) çözülür."""
     u = load_universe()
+    if tickers:
+        members = list(dict.fromkeys(_ticker(t) for t in tickers))
+        if len(members) < 2:
+            raise ToolError("tickers en az 2 farklı hisse olmalı")
+        return (str(sector).strip() if sector else "özel grup: " + ", ".join(members)), members
+    if not sector:
+        raise ToolError("sector ya da tickers gerekli")
     groups = sorted(u["peer_group"].unique())
-    match = [g for g in groups if g.lower() == str(sector).strip().lower()]
-    if not match:
-        raise ToolError(f"bilinmeyen sektör grubu: '{sector}'. Geçerli: {', '.join(groups)}")
+    names = {_fold(g): g for g in groups}
+    names.update({_fold(a): g for g, al in SECTOR_ALIASES.items() for a in al})
+    g = names.get(_fold(sector))
+    if g is None:
+        raise ToolError(f"bilinmeyen sektör grubu: '{sector}'. Geçerli: {', '.join(groups)} "
+                        f"(Türkçe adlar da olur, ör. perakende, banka) ya da tickers=[...] verin")
+    return g, u[u["peer_group"] == g]["ticker"].tolist()
+
+
+@_guarded
+def rank_sector_relative_strength(sector: str = None, horizon: int = 10, date: str = None,
+                                  tickers: list[str] = None) -> dict:
+    """Akran grubu içinde h günlük getiri ve sıra. lag = getiri - kendisi HARİÇ akran ortancası (ana ölçü);
+    gap_to_sector_median = getiri - grubun tümünün (kendisi dahil) ortancası. Grup: sector (Türkçe ad da olur)
+    ya da tickers=[...] listesi."""
+    g, members = _peer_group(sector, tickers)
     if int(horizon) not in (5, 10, 20):
         raise ToolError("horizon 5, 10 ya da 20 olmalı")
-    g, h, d = match[0], int(horizon), _asof(date, "date")
-    members = u[u["peer_group"] == g]["ticker"].tolist()
+    h, d = int(horizon), _asof(date, "date")
+    core = load_universe().set_index("ticker")["is_core"]
     ret = pd.Series({m: _stock(m)["Close"].loc[:d].pipe(lambda s: s.iloc[-1] / s.iloc[-1 - h] - 1) for m in members})
     rows = []
     for m in members:
         peers = ret.drop(m)
         lag = ret[m] - peers.median() if len(peers) else None
-        rows.append(dict(ticker=m, core=bool(u.set_index("ticker").loc[m, "is_core"]), ret=ret[m], lag=lag))
+        rows.append(dict(ticker=m, core=bool(core.loc[m]), ret=ret[m], lag=lag,
+                         gap_to_sector_median=ret[m] - ret.median()))
     out = pd.DataFrame(rows).sort_values("ret", ascending=False)
     out["rank"] = range(1, len(out) + 1)
     warn = f"grup küçük ({len(members)} hisse), ortanca zayıf" if len(members) < 3 else ""
     return to_json(dict(sector=g, horizon=h, date=str(d.date()), sector_median=ret.median(),
-                        members=out.to_dict("records"), warning=warn))
+                        most_behind=out.iloc[-1]["ticker"], members=out.to_dict("records"), warning=warn,
+                        note="lag: kendisi hariç akran ortancasına fark (R2 araştırmasıyla aynı tanım). "
+                             "gap_to_sector_median: kendisi dahil grup ortancasına fark. Oranlar (0.05 = %5)."))
 
 
 @_guarded
@@ -470,13 +515,21 @@ def get_speech_features(source_id: str = None) -> dict:
 
 # ---------- 13-15: backtest, kalite, kanıt ----------
 @_guarded
-def run_backtest(strategy: str, start: str = None, end: str = None, cost: float = COST_ONE_WAY) -> dict:
-    """Strateji varyantının dönem performansı (sinyal 1 gün kaydırılır, maliyet dahil) ve işlem özeti."""
+def run_backtest(strategy: str, start: str = None, end: str = None, cost: float = COST_ONE_WAY,
+                 sector: str = None, tickers: list[str] = None, ticker: str = None, lookback: int = 20,
+                 threshold: float = None) -> dict:
+    """Strateji varyantının dönem performansı (sinyal 1 gün kaydırılır, maliyet dahil) ve işlem özeti.
+    strategy='catch_up': akran grubunda (sector ya da tickers) geçmiş geride kalmaların 5/10/20 günde kapanıp
+    kapanmadığı; ticker = incelenen hisse (verilmezse en geride olan), threshold verilmezse hissenin bugünkü farkı."""
     variants = _variants()
-    if strategy not in variants:
-        raise ToolError(f"bilinmeyen strateji: '{strategy}'. Geçerli: {', '.join(variants)}")
+    if strategy != "catch_up" and strategy not in variants:
+        raise ToolError(f"bilinmeyen strateji: '{strategy}'. Geçerli: {', '.join(list(variants) + ['catch_up'])}")
     if not 0 <= float(cost) <= 0.01:
         raise ToolError("cost (tek yön) 0 ile 0,01 arasında olmalı")
+    if strategy == "catch_up":
+        return _catch_up(start, end, float(cost), sector, tickers, ticker, int(lookback), threshold)
+    if sector or tickers or ticker or threshold is not None or int(lookback) != 20:
+        raise ToolError("sector, tickers, ticker, lookback ve threshold yalnızca strategy='catch_up' için")
     s, e = _range(start, end)
     ret = load_returns().iloc[WARMUP:].loc[s:e]
     if len(ret) < 20:
@@ -499,6 +552,64 @@ def run_backtest(strategy: str, start: str = None, end: str = None, cost: float 
                              "Getiriler oran (2.41 = %241). esit_agirlik = 30 hissenin eşit ağırlıklı al-tut kıyası. "
                              "sektor_kiyas = stratejinin sektör ağırlıklarıyla, sektör içinde eşit ağırlıklı kıyas "
                              "(fark = sektör içi hisse seçimi). islem_* = kapanmış işlemler (giriş-çıkış, maliyet dahil)."))
+
+
+MIN_EVENTS = 10        # bundan az olayda örneklem küçük uyarısı
+MAX_FP_ROWS = 20
+
+
+def _catch_up(start, end, cost, sector, tickers, ticker, lookback, threshold) -> dict:
+    """run_backtest(strategy='catch_up') gövdesi. Olay tanımı ve sonuç: src/events/sector_catchup.catchup_history."""
+    if lookback not in (5, 10, 20):
+        raise ToolError("lookback 5, 10 ya da 20 olmalı")
+    g, members = _peer_group(sector, tickers)
+    s, e = _range(start, end)
+    panel = pd.DataFrame({m: _stock(m)["Close"] for m in members}).loc[:e]
+    lag_now = sector_lag(panel, {"grup": members}, lookback).iloc[-1]
+    focus = _ticker(ticker) if ticker else lag_now.idxmin()
+    if focus not in members:
+        raise ToolError(f"ticker '{focus}' grupta yok: {', '.join(members)}")
+    if threshold is None:
+        if not lag_now[focus] < 0:
+            raise ToolError(f"{focus} {e.date()} itibarıyla akranlarının gerisinde değil "
+                            f"(fark {lag_now[focus]:+.4f}); threshold verin")
+        thr, thr_src = float(-lag_now[focus]), "hissenin bugünkü farkı"
+    else:
+        thr, thr_src = float(threshold), "istekte verilen"
+        if not 0.005 <= thr <= 0.5:
+            raise ToolError("threshold 0,005 ile 0,5 arasında olmalı (oran; 0.10 = 10 puan geride)")
+    ev = catchup_history(panel, lookback, thr, s, e)
+    quake = int(ev["quake"].sum())
+    ev = ev[~ev["quake"]]
+    rt = 2 * cost
+
+    def scope(x):
+        out = dict(n_events=int(len(x)), by_horizon=catchup_summary(x, cost_round_trip=rt))
+        done = x["rel_20"].dropna()
+        out["false_positive_rate_20"] = float((done <= 0).mean()) if len(done) else None
+        fp = x[x["rel_20"] <= 0]
+        out["false_positives"] = to_json(fp.assign(date=pd.to_datetime(fp["date"]).dt.strftime("%Y-%m-%d"))
+                                         [["date", "ticker", "lag", "rel_20"]].tail(MAX_FP_ROWS).to_dict("records"))
+        if len(fp) > MAX_FP_ROWS:
+            out["false_positives_note"] = f"{len(fp)} yanlış pozitiften son {MAX_FP_ROWS} tanesi"
+        return out
+
+    stock, group = scope(ev[ev["ticker"] == focus]), scope(ev)
+    warnings = [f"{name}: yalnızca {x['n_events']} olay (< {MIN_EVENTS}); sonuç zayıf"
+                for name, x in (("hisse", stock), ("grup", group)) if x["n_events"] < MIN_EVENTS]
+    if quake:
+        warnings.append(f"Şubat 2023 deprem penceresindeki {quake} olay istatistik dışı (R2 ile aynı)")
+    return to_json(dict(
+        strategy="catch_up", sector=g, members=members, start=str(s.date()), end=str(e.date()), ticker=focus,
+        lookback=lookback, current_lag=float(lag_now[focus]), threshold=thr, threshold_source=thr_src,
+        cost_one_way=cost, stock=stock, group=group, warnings=warnings,
+        note=(f"Olay: {lookback} günlük getiri - kendisi hariç akran ortancası ilk kez -threshold ya da altına "
+              "indiği gün (aynı hissede en az 10 gün arayla). rel_h: olay günü kapanışından h gün sonrasına "
+              "hisse getirisi - kendisi hariç akran ortancası. hit_rate: rel_h > 0 (akranlarını geçti); "
+              "full_close_rate: rel_h olay günündeki farkı tamamen kapattı; yanlış pozitif: 20 gün sonra hâlâ "
+              "geride (rel_20 <= 0). n_incomplete: penceresi analiz tarihini aştığı için henüz bilinmeyen ve "
+              "istatistiğe katılmayan olaylar. mean_rel_after_cost: gidiş-dönüş maliyet düşülmüş. Oranlar "
+              "(0.05 = 5 puan). Geçmiş sonuç gelecek garantisi değildir.")))
 
 
 @_guarded

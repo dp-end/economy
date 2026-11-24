@@ -145,9 +145,36 @@ def quake_flags(index: pd.DatetimeIndex, max_h: int = max(HORIZONS)) -> pd.Serie
 
 def event_table(ticker: str, xu: pd.Series = None) -> pd.DataFrame:
     f = full_features(ticker)
+    return _event_rows(ticker, f, detect_events(f), DIRECTION, xu)
+
+
+# Yerel model 1.4 (örnek soru S3 "alt banda kaç kez dokunuldu"): gün içi en düşük ≤ alt bant / en yüksek ≥ üst bant.
+# R1'in 20 türüne ve reports/technical_events.parquet'e girmez (araştırma sonuçları değişmesin); MCP aracı her
+# çağrıda hesaplar. Sayım R1 gibi: art arda dokunulan günlerin ilki, olaylar arası en az DEDUPE_GAP gün.
+TOUCH_DIRECTION = {"bb_lower_touch": 1, "bb_upper_touch": -1}
+
+
+def touch_masks(f: pd.DataFrame, px: pd.DataFrame) -> pd.DataFrame:
+    """Her gün için banda dokunuldu mu (gün içi Low/High; yalnızca o günün verisi)."""
+    low, high = px["Low"].reindex(f.index), px["High"].reindex(f.index)
+    return pd.DataFrame({"bb_lower_touch": low <= f["bb_lower"], "bb_upper_touch": high >= f["bb_upper"]})
+
+
+@lru_cache(maxsize=64)
+def touch_table(ticker: str) -> tuple:
+    """(olaylar, günlük dokunuş maskesi). Olay = dokunuş serisinin ilk günü (en az DEDUPE_GAP gün arayla).
+    Sütunlar parquet'teki olaylarla aynı (durumlar, birleşik koşullar, ileri getiriler)."""
+    f = full_features(ticker)
+    days = touch_masks(f, get_stock_history(ticker))
+    starts = days & ~days.shift(1, fill_value=False)
+    ev = _event_rows(ticker, f, starts, TOUCH_DIRECTION)
+    return ev, days
+
+
+def _event_rows(ticker: str, f: pd.DataFrame, ev: pd.DataFrame, directions: dict, xu: pd.Series = None) -> pd.DataFrame:
+    """Olay maskelerinden (sütun = olay türü) olay satırları: dedupe, olay anındaki durumlar, ileri getiriler."""
     xu = get_index_history()["Close"] if xu is None else xu
     c = f["Close"]
-    ev = detect_events(f)
     reg, q, vc = regime(f), quake_flags(f.index), f["vol_z_20"] > 1
     stt = states(f)
     fwd = {h: c.shift(-h) / c - 1 for h in HORIZONS}
@@ -160,16 +187,18 @@ def event_table(ticker: str, xu: pd.Series = None) -> pd.DataFrame:
         if len(idx) == 0:
             continue
         p = pd.DataFrame({
-            "ticker": ticker, "event": name, "direction": DIRECTION[name],
+            "ticker": ticker, "event": name, "direction": directions[name],
             "regime": reg.loc[idx].to_numpy(),
             "vol_confirm": vc.loc[idx].to_numpy(),
             "quake_window": q.loc[idx].to_numpy(),
         }, index=idx)
-        p = p.join(stt.loc[idx]).join(combined(DIRECTION[name], stt.loc[idx]))
+        p = p.join(stt.loc[idx]).join(combined(directions[name], stt.loc[idx]))
         for h in HORIZONS:
             p[f"fwd_{h}"] = fwd[h].loc[idx].to_numpy()
             p[f"exc_{h}"] = exc[h].loc[idx].to_numpy()
         parts.append(p)
+    if not parts:                        # hiç olay yok (ör. banda hiç dokunulmamış): boş ama aynı sütunlar
+        return pd.DataFrame(columns=["ticker", "event", "direction"]).rename_axis("date")
     out = pd.concat(parts)
     out.index.name = "date"
     return out

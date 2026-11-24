@@ -29,7 +29,7 @@ from src.data.prices import get_index_history as _index, get_stock_history as _s
 from src.data.speech import SOURCES
 from src.data.speech_features import get_speech_features as _speech, load_speech_features
 from src.data.universe import load_universe
-from src.events.technical_events import HARNESS_EVENTS
+from src.events.technical_events import DIRECTION, HARNESS_EVENTS, TOUCH_DIRECTION, touch_table
 from src.events.calendar_patterns import WEEKDAYS, _data as _calendar_data, welch
 from src.events.sector_catchup import catchup_history, catchup_summary
 from src.indicators.relative import sector_lag
@@ -45,6 +45,7 @@ INDICATORS = ["sma_20", "sma_50", "sma_200", "ema_20", "ema_50", "rsi_14", "macd
               "supertrend", "st_dir", "st_flip", "tenkan", "kijun", "cloud_top", "cloud_bottom", "cloud_state",
               "vol_z_20", "ret_1d", "ret_5d", "vol_20d"]
 HORIZONS = (1, 3, 5, 10)
+MIN_EVENTS = 10        # bundan az olayda örneklem küçük uyarısı (catch-up ve olay koşul özeti)
 CEILING_ENV = "BIST_DATA_CEILING"
 
 
@@ -207,21 +208,83 @@ def calculate_indicators(ticker: str, start: str = None, end: str = None, indica
     return dict(meta=dict(ticker=t, indicators=list(cols)), **_rows(df))
 
 
+# Koşul dili (olay günü kapanışındaki durum, src/events/technical_events.states ile aynı tanımlar). '+' = ve.
+COND_TOKENS = {
+    "rsi_dip": ("rsi_state", "dip"), "rsi_tepe": ("rsi_state", "tepe"), "rsi_notr": ("rsi_state", "notr"),
+    "hacim_yuksek": ("vol_recent", True), "hacim_normal": ("vol_recent", False),
+    "st_yukari": ("st_state", "yukari"), "st_asagi": ("st_state", "asagi"),
+    "bulut_ustu": ("cloud_pos", "ustunde"), "bulut_alti": ("cloud_pos", "altinda"), "bulut_ici": ("cloud_pos", "icinde"),
+    "kama_yukselen": ("kama_state", "yukselen"), "kama_dusen": ("kama_state", "dusen"), "kama_yatay": ("kama_state", "yatay"),
+    "trend_yukari": ("regime", "uptrend"), "trend_asagi": ("regime", "downtrend"),
+}
+DEFAULT_CONDITIONS = {1: ["rsi_dip", "hacim_yuksek", "rsi_dip+hacim_yuksek", "st_asagi", "bulut_alti", "st_asagi+bulut_alti"],
+                      -1: ["rsi_tepe", "hacim_yuksek", "rsi_tepe+hacim_yuksek", "st_yukari", "bulut_ustu",
+                           "st_yukari+bulut_ustu"]}
+COND_NOTE = ("Koşullar olay günü kapanışındaki durum: rsi_dip/rsi_tepe = son 3 günde RSI(14) ≤ 35 / ≥ 65; hacim_yuksek = "
+             "son 3 günde hacim z-skoru > 1; st_* = Supertrend yönü; bulut_* = fiyatın Ichimoku bulutuna göre yeri; "
+             "kama_* = 5 günlük KAMA değişimi > +%0,5 / < −%0,5 / arası; trend_* = kapanış SMA200 üstünde/altında. "
+             "success: h. gün kapanışı olay günü kapanışından yüksek (yükseliş olayı; düşüş olayında düşük). "
+             "mean_pct/median_pct ham getiri, mean_exc_pct XU100'e göre fazla getiri (yüzde). n_incomplete: penceresi "
+             "analiz tarihini aşan, henüz bilinmediği için istatistiğe katılmayan olaylar.")
+
+
+def _cond_mask(ev: pd.DataFrame, cond: str) -> pd.Series:
+    m = pd.Series(True, index=ev.index)
+    for tok in str(cond).split("+"):
+        tok = tok.strip().lower()
+        if tok not in COND_TOKENS:
+            raise ToolError(f"bilinmeyen koşul: '{tok}'. Geçerli: {', '.join(COND_TOKENS)} ('+' ile birleştirilir)")
+        col, val = COND_TOKENS[tok]
+        m &= ev[col] == val
+    return m
+
+
+def _by_condition(ev: pd.DataFrame, direction: int, conditions: list) -> list:
+    """Her koşul grubu için ufuk başına başarı/başarısızlık sayısı ve ortalama/medyan dönüş gücü (yüzde)."""
+    groups = [("hepsi", pd.Series(True, index=ev.index))] + [(c, _cond_mask(ev, c)) for c in conditions]
+    out = []
+    for name, m in groups:
+        g, hs = ev[m], []
+        for h in HORIZONS:
+            x, xe = g[f"fwd_{h}"].dropna().astype(float), g[f"exc_{h}"].dropna().astype(float)
+            ok = int((direction * x > 0).sum())
+            hs.append(dict(horizon_days=h, n=int(len(x)), n_incomplete=int(g[f"fwd_{h}"].isna().sum()),
+                           success=ok, failure=int(len(x)) - ok,
+                           mean_pct=x.mean() * 100 if len(x) else None, median_pct=x.median() * 100 if len(x) else None,
+                           mean_exc_pct=xe.mean() * 100 if len(xe) else None))
+        row = dict(condition=name, n_events=int(len(g)), horizons=hs)
+        n5 = hs[HORIZONS.index(5)]["n"]
+        if n5 < MIN_EVENTS:
+            row["warning"] = f"5 günlük penceresi tamamlanmış yalnızca {n5} olay (< {MIN_EVENTS}); sonuç zayıf"
+        out.append(row)
+    return out
+
+
 @_guarded
 def detect_reversal_events(ticker: str, start: str = None, end: str = None, event: str = None,
-                           event_set: str = "all") -> dict:
+                           event_set: str = "all", conditions: list[str] = None) -> dict:
     """Zaman damgalı teknik olaylar ve olay anındaki gösterge durumları. İleri getiri yalnızca penceresi 'end'
-    tarihine kadar kapanmışsa verilir. event_set='harness' yalnızca harness'ın kullandığı 12 türü döndürür."""
+    tarihine kadar kapanmışsa verilir. event_set='harness' yalnızca harness'ın kullandığı 12 türü döndürür.
+    event='bb_lower_touch'/'bb_upper_touch': gün içinde banda dokunma (seri başı, en az 5 gün arayla). Tek bir event
+    verilince by_condition: tekli ve birleşik koşullara göre başarı sayısı ve 1/3/5/10 günlük dönüş gücü;
+    conditions ör. ['rsi_dip+hacim_yuksek', 'st_asagi+bulut_alti'] (verilmezse varsayılan set)."""
     t = _ticker(ticker, core_only=True)
     s, e = _range(start, end)
-    te = pd.read_parquet("reports/technical_events.parquet")
     if event_set not in ("all", "harness"):
         raise ToolError("event_set 'all' ya da 'harness' olmalı")
+    te = pd.read_parquet("reports/technical_events.parquet")
+    known = set(te["event"]) | (set(TOUCH_DIRECTION) if event_set == "all" else set())
     if event_set == "harness":
-        te = te[te["event"].isin(HARNESS_EVENTS)]
-    if event and event not in set(te["event"]):
-        raise ToolError(f"bilinmeyen olay: '{event}'. Geçerli: {', '.join(sorted(te['event'].unique()))}")
-    ev = te[(te["ticker"] == t) & te["date"].between(s, e) & ((te["event"] == event) if event else True)].copy()
+        known &= set(HARNESS_EVENTS)
+    if event and event not in known:
+        raise ToolError(f"bilinmeyen olay: '{event}'. Geçerli: {', '.join(sorted(known))}")
+    if conditions and not event:
+        raise ToolError("conditions için tek bir event verin (ör. event='bb_lower_touch')")
+    te = te[(te["ticker"] == t) & te["event"].isin(known)]
+    touches, touch_days = touch_table(t)
+    if event_set == "all":
+        te = pd.concat([te, touches.reset_index()], ignore_index=True)
+    ev = te[te["date"].between(s, e) & ((te["event"] == event) if event else True)].copy()
     days = _index("XU100").index
     for h in HORIZONS:
         closes = days[np.minimum(days.searchsorted(ev["date"]) + h, len(days) - 1)]
@@ -231,10 +294,20 @@ def detect_reversal_events(ticker: str, start: str = None, end: str = None, even
                                        hit_5=("exc_5", lambda x: (x.dropna() > 0).mean() if x.notna().any() else None),
                                        mean_exc_5=("exc_5", "mean"))
                .reset_index().to_dict("records"))
+    meta = dict(ticker=t, start=str(s.date()), end=str(e.date()), event_set=event_set,
+                note="exc_h = h gün sonra XU100'e göre fazla getiri")
+    extra = {}
+    if event:
+        direction = TOUCH_DIRECTION.get(event, DIRECTION.get(event))
+        extra["by_condition"] = to_json(_by_condition(ev, direction, conditions or DEFAULT_CONDITIONS[direction]))
+        extra["condition_note"] = COND_NOTE
+        if event in TOUCH_DIRECTION:
+            meta["touch_days"] = int(touch_days.loc[s:e, event].sum())     # bilgi: her gün ayrı sayılsaydı
+            meta["touch_rule"] = ("dokunuş: gün içi en düşük ≤ alt bant (üst: en yüksek ≥ üst bant); olay = art arda "
+                                  "dokunulan günlerin ilki, olaylar arası en az 5 işlem günü")
     ev["date"] = ev["date"].dt.strftime("%Y-%m-%d")
-    return dict(meta=dict(ticker=t, start=str(s.date()), end=str(e.date()), event_set=event_set,
-                          note="exc_h = h gün sonra XU100'e göre fazla getiri"),
-                events=to_json(ev.tail(MAX_ROWS).to_dict("records")), summary=to_json(summary), n_events=len(ev))
+    return dict(meta=meta, events=to_json(ev.tail(MAX_ROWS).to_dict("records")), summary=to_json(summary),
+                n_events=len(ev), **extra)
 
 
 @_guarded
@@ -658,7 +731,6 @@ def run_backtest(strategy: str, start: str = None, end: str = None, cost: float 
                              "(fark = sektör içi hisse seçimi). islem_* = kapanmış işlemler (giriş-çıkış, maliyet dahil)."))
 
 
-MIN_EVENTS = 10        # bundan az olayda örneklem küçük uyarısı
 MAX_FP_ROWS = 20
 
 

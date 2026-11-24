@@ -132,6 +132,10 @@ BIST_DATA_CEILING=2026-09-10 python -m src.mcp_server.server
 # Weekly sequences with an in-sample / out-of-sample split and a rule-based stability verdict:
 #   test_weekday_pattern(ticker="THYAO", pattern="week:DDD-UU", start="2024-01-01", oos_start="2026-01-01")
 #   (D down, U up, . any; the dash splits condition days from outcome days; stable = IS p<0.05 AND same sign OOS AND n>=10)
+# Band touches and condition comparison (single vs combined states at the event):
+#   detect_reversal_events(ticker="ASELS", event="bb_lower_touch", start="2024-01-01",
+#                          conditions=["rsi_dip+hacim_yuksek", "st_asagi+bulut_alti"])
+#   (touch = intraday Low <= lower band, first day of a run, 5 days apart; computed per call, not in R1's table)
 
 # Rebuild the research reports and the PDF (needs Google Chrome for the PDF step)
 python -m src.reports.build_reports

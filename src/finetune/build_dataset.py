@@ -463,6 +463,7 @@ async def build(counts: dict, seed: int = SEED, out: Path = OUT) -> dict:
             cv["split"] = "valid" if i in valid else "train"
             f.write(json.dumps(cv, ensure_ascii=False) + "\n")
             rows[cv["split"]] += split_turns(cv, tools)
+    (out / "tools.json").write_text(json.dumps(tools, ensure_ascii=False))     # eğitim betiği (konuşma başına) için
     for name, rs in rows.items():
         with open(out / f"{name}.jsonl", "w") as f:
             for r in rs:

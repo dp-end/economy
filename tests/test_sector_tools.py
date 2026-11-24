@@ -104,7 +104,7 @@ def test_catch_up_matches_independent_recount():
         assert row["mean_rel_after_cost"] == pytest.approx(a.mean() - 2 * b["cost_one_way"])
     fp = [d.strftime("%Y-%m-%d") for d, v, _ in rel[20] if v <= 0]
     assert [f["date"] for f in st["false_positives"]] == fp
-    assert st["false_positive_rate_20"] == pytest.approx(len(fp) / len(rel[20]))
+    assert st["false_positive_rate_20"] == pytest.approx(len(fp) / len(rel[20])) and st["n_false_positives"] == len(fp)
     # Eşik istekte verilirse o kullanılır (R2 kuralı: 20 günde 10 puan)
     assert b10["threshold_source"] == "istekte verilen"
     assert b10["stock"]["n_events"] == len(_recount(p, "MAVI", 0.10, "2024-01-01")[0])

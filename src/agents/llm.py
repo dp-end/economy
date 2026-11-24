@@ -28,9 +28,9 @@ def clean_schema(x):
     return x
 
 
-def tool_schemas(tools) -> list:
-    """MCP araç tanımlarını OpenAI 'tools' biçimine çevirir."""
-    return [dict(type="function", function=dict(name=t.name, description=(t.description or "")[:500],
+def tool_schemas(tools, max_desc: int = 500) -> list:
+    """MCP araç tanımlarını OpenAI 'tools' biçimine çevirir. max_desc: açıklama sınırı (Gemini 500; yerel model None)."""
+    return [dict(type="function", function=dict(name=t.name, description=(t.description or "")[:max_desc],
                                                 parameters=clean_schema(t.input_schema))) for t in tools]
 
 
@@ -100,6 +100,58 @@ class GeminiLLM:
         self.cache.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(out, ensure_ascii=False))
         return {**out, "cached": False, "latency": round(time.time() - t0 - waited, 2)}
+
+
+LOCAL_URL = "http://127.0.0.1:8080/v1"
+LOCAL_MODEL = "models/Qwen3-4B-Instruct-2507"
+
+
+class LocalLLM:
+    """Yerel model (internet yok, anahtar yok): OpenAI uyumlu yerel sunucu (mlx_lm.server, Ollama, llama.cpp).
+    Sıcaklık 0 = açgözlü çözme, aynı istem aynı cevabı verir. Önbellek yok: her cevap modelden gelir."""
+
+    def __init__(self, model: str = None, base_url: str = None, temperature: float = 0.0, max_tokens: int = 900):
+        from openai import OpenAI
+        self.model = model or os.environ.get("LOCAL_MODEL", LOCAL_MODEL)
+        self.base_url = base_url or os.environ.get("LOCAL_URL", LOCAL_URL)
+        self.name = f"local:{self.model}"
+        self.client = OpenAI(api_key="yerel", base_url=self.base_url, timeout=600)
+        self.temperature, self.max_tokens = temperature, max_tokens
+        self.calls = self.cache_hits = 0
+
+    def chat(self, messages: list, tools: list = None) -> dict:
+        t0 = time.time()
+        kwargs = dict(model=self.model, messages=messages, temperature=self.temperature, max_tokens=self.max_tokens)
+        if tools:
+            kwargs["tools"] = tools
+        resp = self.client.chat.completions.create(**kwargs)
+        msg = resp.choices[0].message
+        self.calls += 1
+        usage = getattr(resp, "usage", None)
+        return dict(content=msg.content or "",
+                    tool_calls=[dict(id=c.id or f"c{i}", name=c.function.name, arguments=c.function.arguments or "{}")
+                                for i, c in enumerate(msg.tool_calls or [])],
+                    cached=False, latency=round(time.time() - t0, 2),
+                    prompt_tokens=getattr(usage, "prompt_tokens", None), completion_tokens=getattr(usage, "completion_tokens", None))
+
+
+class ScriptLLM:
+    """Önceden yazılmış cevapları sırayla veren sahte model (soru modu testleri ve modelsiz demo).
+    Her adım: {'tool_calls': [(ad, argümanlar), ...]}, {'content': '...'} ya da {'raise': 'hata'}."""
+    name = "script"
+
+    def __init__(self, steps: list):
+        self.steps, self.calls, self.cache_hits, self.log = list(steps), 0, 0, []
+
+    def chat(self, messages: list, tools: list = None) -> dict:
+        self.log.append(dict(messages=[dict(m) for m in messages], tools=[t["function"]["name"] for t in tools or []]))
+        step = self.steps[min(self.calls, len(self.steps) - 1)]
+        self.calls += 1
+        if "raise" in step:                                  # sunucu hatası benzetimi (ör. bellek yetmedi, 404)
+            raise RuntimeError(step["raise"])
+        calls = [dict(id=f"c{self.calls}_{i}", name=n, arguments=json.dumps(a, ensure_ascii=False))
+                 for i, (n, a) in enumerate(step.get("tool_calls", []))]
+        return dict(content=step.get("content", ""), tool_calls=calls, cached=False, latency=0.0)
 
 
 class MockLLM:

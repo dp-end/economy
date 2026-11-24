@@ -865,6 +865,7 @@ def _catch_up(start, end, cost, sector, tickers, ticker, lookback, threshold) ->
         done = x["rel_20"].dropna()
         out["false_positive_rate_20"] = float((done <= 0).mean()) if len(done) else None
         fp = x[x["rel_20"] <= 0]
+        out["n_false_positives"] = int(len(fp))           # liste kısaltılsa da sayı açık (soru modu bulgusu)
         out["false_positives"] = to_json(fp.assign(date=pd.to_datetime(fp["date"]).dt.strftime("%Y-%m-%d"))
                                          [["date", "ticker", "lag", "rel_20"]].tail(MAX_FP_ROWS).to_dict("records"))
         if len(fp) > MAX_FP_ROWS:

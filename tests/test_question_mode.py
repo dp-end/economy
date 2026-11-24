@@ -146,3 +146,13 @@ def test_model_error_does_not_crash_and_is_logged(tmp_path):
 def test_text_after_action_line_is_trimmed():
     res, _ = run([{"tool_calls": [RANK]}, {"content": GOOD + "\nİzinli eylemler: HOLD (...), WATCH (...)"}])
     assert res["answer"].endswith("ANALİTİK DURUM: WATCH") and "İzinli eylemler" in res["answer_raw"]
+
+
+def test_tool_error_explained_as_unsafe_is_shown():
+    """Araç hatası (bilinmeyen hisse) + ANALYSIS_UNSAFE açıklaması gösterilir; başka eylemle kanıtsız cevap gizlenir."""
+    bad = ("get_stock_history", dict(ticker="XYZAB", start="2026-08-01", end=ASOF))
+    text = "- Araç hatası: bilinmeyen hisse kodu: 'XYZAB'.\n- Analiz yapılamadı.\nANALİTİK DURUM: ANALYSIS_UNSAFE"
+    res, _ = run([{"tool_calls": [bad]}, {"content": text}])
+    assert res["status"] == "ok" and res["answer"] == text and res["action"] == "ANALYSIS_UNSAFE"
+    res, _ = run([{"tool_calls": [bad]}, {"content": "- Örüntü yok.\nANALİTİK DURUM: REJECT_SIGNAL"}])
+    assert res["status"] == "no_evidence" and res["action"] == "ANALYSIS_UNSAFE" and "Örüntü yok" not in res["answer"]

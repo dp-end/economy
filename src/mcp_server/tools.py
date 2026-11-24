@@ -332,22 +332,24 @@ def find_support_resistance(ticker: str, date: str = None, tolerance: float = 0.
 # ---------- 6-7: sektör ve takvim ----------
 # Türkçe sektör adları (soru Türkçe sorulur). Karşılaştırma büyük/küçük harf ve Türkçe karaktere duyarsız.
 SECTOR_ALIASES = {
-    "Automotive & Durables": ["otomotiv", "dayanıklı tüketim", "beyaz eşya"],
+    "Automotive & Durables": ["otomotiv", "dayanıklı tüketim", "beyaz eşya", "otomotiv ve dayanıklı tüketim"],
     "Banking": ["banka", "bankalar", "bankacılık"],
     "Chemicals & Energy": ["kimya", "petrokimya", "rafineri", "kimya ve enerji"],
-    "Construction RE & Utilities": ["inşaat", "gayrimenkul", "gyo", "elektrik", "kamu hizmetleri"],
+    "Construction RE & Utilities": ["inşaat", "gayrimenkul", "gyo", "elektrik", "kamu hizmetleri",
+                                    "inşaat gyo ve elektrik"],
     "Healthcare": ["sağlık", "ilaç"],
     "Metals & Mining": ["metal", "demir çelik", "çelik", "madencilik", "maden", "metal ve madencilik"],
-    "Other Financials": ["holding", "sigorta", "aracı kurum", "diğer finansal"],
+    "Other Financials": ["holding", "sigorta", "aracı kurum", "diğer finansal", "holding sigorta ve aracı kurum"],
     "Retail & Consumer": ["perakende", "tüketim", "gıda", "gıda ve içecek"],
-    "Tech Telecom & Defense": ["teknoloji", "telekom", "telekomünikasyon", "savunma"],
+    "Tech Telecom & Defense": ["teknoloji", "telekom", "telekomünikasyon", "savunma", "teknoloji telekom ve savunma"],
     "Transportation": ["ulaştırma", "ulaşım", "havayolu", "havacılık"],
 }
 
 
 def _fold(s: str) -> str:
     s = str(s).strip().replace("İ", "i").replace("I", "ı").lower()
-    return s.translate(str.maketrans("çğıöşü", "cgiosu"))
+    s = re.sub(r"[,&/]+", " ", s)                       # "Teknoloji, telekom ve savunma" = "teknoloji telekom ve savunma"
+    return " ".join(s.translate(str.maketrans("çğıöşü", "cgiosu")).split())
 
 
 def _peer_group(sector: str = None, tickers: list = None) -> tuple:

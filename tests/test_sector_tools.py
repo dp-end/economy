@@ -49,7 +49,8 @@ def test_rank_with_ticker_list_matches_direct_calculation():
 @pytest.mark.parametrize("name, group", [("Perakende", "Retail & Consumer"), ("BANKACILIK", "Banking"),
                                          ("sağlık", "Healthcare"), ("saglik", "Healthcare"),
                                          ("Demir Çelik", "Metals & Mining"), ("İnşaat", "Construction RE & Utilities"),
-                                         ("Banking", "Banking")])
+                                         ("Banking", "Banking"), ("Teknoloji, telekom ve savunma", "Tech Telecom & Defense"),
+                                         ("Automotive & Durables", "Automotive & Durables")])
 def test_sector_names_in_turkish(name, group):
     assert T.rank_sector_relative_strength(sector=name, date=CEIL)["sector"] == group
 

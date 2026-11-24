@@ -60,10 +60,20 @@ Kurallar:
 4. Penceresi analiz tarihinde kapanmamış olayları (complete=false, n_incomplete) istatistiğe katma ve bunu söyle.
    Olay sayısı azsa uyar. Nedensellik iddia etme. Birçok desen denendiyse çoklu test riskini belirt.
 5. Oranları yüzde olarak yaz (0.1126 = %11,26). Sayıları araç çıktısındaki gibi doğru yuvarla.
-6. Cevabı Türkçe, kısa ve maddeli yaz: önce bulgular, sonra sınırlamalar. Son satır tam olarak şöyle olsun:
+6. Cevabı Türkçe, kısa ve maddeli yaz: önce bulgular, sonra sınırlamalar, sonra eylem gerekçesi. Son satır tam olarak:
    ANALİTİK DURUM: <eylem>
    İzinli eylemler: {actions}.
-   Kanıt yetersizse INVESTIGATE, veri sorunu varsa ANALYSIS_UNSAFE seç.""".strip()
+7. Eylem kuralları:
+   - Geride kalma: sektör ortancası > 0, hissede en az 10 tamamlanmış olay, 20 günde isabet en az %60 ve yanlış
+     pozitif en fazla %40 ise POTENTIAL_CATCH_UP_CANDIDATE; olay 10'dan azsa INVESTIGATE; aksi WATCH. Geçmiş test
+     edilmediyse WATCH.
+   - Takvim deseni: araç 'kararsız' dediyse ya da maliyet sonrası sonuç sıfır ya da altındaysa REJECT_SIGNAL; aksi WATCH.
+   - Teknik olay: en az 10 olay, 5 günde başarı en az %60 ve son 3 işlem gününde yeni olay varsa
+     TECHNICAL_REVERSAL_CANDIDATE; olay 10'dan azsa INVESTIGATE; başarı en fazla %50 ise REJECT_SIGNAL; aksi WATCH.
+   - Bilanço: son çeyrek iyileşen ve son 63 işlem gününde açıklandıysa FUNDAMENTAL_IMPROVEMENT_CANDIDATE; iyileşme
+     bilinmiyorsa INVESTIGATE; aksi HOLD.
+   - Tavsiye ya da iddia: iddia verilerle desteklenmiyorsa INVESTIGATE, destekleniyorsa WATCH.
+   - Betimleyici sorular HOLD; araç hatası ya da analiz tarihinden sonraya ait istek ANALYSIS_UNSAFE.""".strip()
 ACTION_RE = re.compile(r"ANAL[İIı]T[İIı]K\s+DURUM\s*:\s*\**\s*([A-Za-z_]+)", re.I)
 ADVICE_RE = [re.compile(p, re.I) for p in (
     r"hedef\s+fiyat\w*\s*(?:[:=]|olarak|yaklaşık|civarı)?\s*[-~]?\s*\d",     # hedef fiyat + sayı
@@ -186,8 +196,20 @@ def hard_block(outputs: list) -> bool:
     return any(walk(o["output"]) for o in outputs if o["ok"])
 
 
+def system_prompt(asof: str) -> str:
+    return SYSTEM.format(asof=asof, actions=", ".join(f"{a} ({h})" for a, h in ACTION_HELP.items()))
+
+
+def first_messages(question: str, asof: str) -> list:
+    """Soru modunun ve ince ayar veri setinin ortak başlangıcı (sistem + kullanıcı)."""
+    return [dict(role="system", content=system_prompt(asof)),
+            dict(role="user", content=f"Analiz tarihi: {asof}\n\n{question}")]
+
+
 def validate_answer(text: str, question: str, outputs: list) -> dict:
-    nums = check_numbers(text, question, *[o["output"] for o in outputs if o["ok"]])
+    """Bağlam = soru + modelin gördüğü araç çıktıları + araç hata mesajları + kural eşikleri (sistem metni)."""
+    ctx = [o["output"] for o in outputs if o["ok"]] + [o["error"] for o in outputs if not o["ok"] and o.get("error")]
+    nums = check_numbers(text, question, system_prompt(""), *ctx)
     action = parse_action(text)
     adv = advice_hits(text)
     problems = []
@@ -229,16 +251,18 @@ async def _call_tool(client, names: set, call: dict) -> dict:
     return rec
 
 
+async def list_tools(client) -> tuple:
+    mcp_tools = (await client.list_tools()).tools
+    return tool_schemas(mcp_tools, max_desc=None), {t.name for t in mcp_tools}
+
+
 async def _converse(question: str, asof: str, llm, outputs: list) -> tuple:
     """CALL_TOOLS -> ANSWER -> VALIDATE (+ bir düzeltme). (cevap, ham cevap, düzeltme sayısı, denetim, son durum)."""
-    messages = [dict(role="system", content=SYSTEM.format(asof=asof, actions=", ".join(
-                    f"{a} ({h})" for a, h in ACTION_HELP.items()))),
-                dict(role="user", content=f"Analiz tarihi: {asof}\n\n{question}")]
+    messages = first_messages(question, asof)
     answer = None
     with data_ceiling(asof):
         async with Client(build_server()) as client:
-            mcp_tools = (await client.list_tools()).tools
-            tools, names = tool_schemas(mcp_tools, max_desc=None), {t.name for t in mcp_tools}
+            tools, names = await list_tools(client)
             for _ in range(MAX_CALLS + 2):                             # CALL_TOOLS: model araç çağırabilir
                 r = llm.chat(messages, tools=tools)
                 if not r["tool_calls"]:
@@ -293,6 +317,8 @@ async def _run(question: str, asof: str, llm) -> dict:
         action, source, status = "ANALYSIS_UNSAFE", "kural: denetim iki kez geçmedi", "withheld"
         answer = ("Cevap denetimden geçmediği için gösterilmiyor (" + "; ".join(v["problems"]) + ").\n"
                   "ANALİTİK DURUM: ANALYSIS_UNSAFE")
+    elif not ok_calls and outputs and v["action"] == "ANALYSIS_UNSAFE":
+        source = "kural: başarılı araç çağrısı yok; model araç hatasını açıkladı"   # ör. bilinmeyen hisse: metin kalır
     elif not ok_calls:                           # kanıt yok: metin de gösterilmez (temel model "0 örüntü" uydurdu)
         action, source, status = "ANALYSIS_UNSAFE", "kural: başarılı araç çağrısı yok, cevap kanıta dayanmıyor", \
             "no_evidence"

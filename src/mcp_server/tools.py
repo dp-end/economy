@@ -32,6 +32,7 @@ from src.data.universe import load_universe
 from src.events.technical_events import DIRECTION, HARNESS_EVENTS, TOUCH_DIRECTION, touch_table
 from src.events.calendar_patterns import WEEKDAYS, _data as _calendar_data, welch
 from src.events.earnings_reaction import REACTION_H, reaction_windows
+from src.events.fx_relation import fx_relation, monthly_changes
 from src.events.sector_catchup import catchup_history, catchup_summary
 from src.indicators.relative import sector_lag
 from src.harness.decision_log import dumps, load_analysis
@@ -697,15 +698,54 @@ def calculate_fundamental_change(ticker: str, periods: int = 4, asof: str = None
 
 
 # ---------- 10-12: makro, haber, konuşma ----------
+DAILY_MAX = 60        # bundan uzun aralıkta ay sonu satırları döner (özet her zaman var)
+
+
+def _macro_summary(df: pd.DataFrame) -> dict:
+    """Dönem özeti: kur başı/sonu ve değişim, ay ay kur yönü, TCMB kararları, TÜFE ve Fed (yayın günlerine göre)."""
+    a, b = df.iloc[0], df.iloc[-1]
+    usd_m = monthly_changes(df["usdtry"])
+    fed = df[df["fed_lower"].diff().fillna(0) != 0]
+    fmt = lambda r: f"{r['fed_lower']:.2f}-{r['fed_upper']:.2f}"
+    return dict(
+        start=str(df.index[0].date()), end=str(df.index[-1].date()),
+        usdtry=dict(start=a["usdtry"], end=b["usdtry"], change_pct=(b["usdtry"] / a["usdtry"] - 1) * 100,
+                    months_up=int((usd_m > 0).sum()), months_down=int((usd_m < 0).sum())),
+        eurtry=dict(start=a["eurtry"], end=b["eurtry"], change_pct=(b["eurtry"] / a["eurtry"] - 1) * 100),
+        policy_rate=dict(start=a["policy_rate"], end=b["policy_rate"],
+                         decisions=[dict(date=str(d.date()), change_pt=r["rate_change"], new_rate=r["policy_rate"])
+                                    for d, r in df[df["rate_change"] != 0].iterrows()]),
+        cpi_yoy=dict(start=a["cpi_yoy"], start_month=a["cpi_month"], end=b["cpi_yoy"], end_month=b["cpi_month"]),
+        real_rate_end=b["real_rate"],
+        fed_range=dict(start=fmt(a), end=fmt(b), changes=[dict(date=str(d.date()), new_range=fmt(r))
+                                                          for d, r in fed.iterrows()]))
+
+
 @_guarded
-def get_macro_context(start: str = None, end: str = None) -> dict:
-    """Kur, faiz, enflasyon ve Fed aralığı; her gün yalnızca o gün yayınlanmış değerler."""
+def get_macro_context(start: str = None, end: str = None, ticker: str = None) -> dict:
+    """Kur, TCMB politika faizi, TÜFE ve Fed aralığı; her gün yalnızca o gün yayınlanmış değerler. Her zaman dönem
+    özeti (başı/sonu, TCMB kararları, Fed değişiklikleri); 60 işlem gününden uzun aralıkta ay sonu satırları.
+    ticker verilirse fx_relation: hissenin USD/TRY ile geçmiş ilişkisi (günlük beta ve kurun hızlı arttığı aylar)."""
     s, e = _range(start, end)
     df = _macro(s, e)
+    t = _ticker(ticker) if ticker else None
     meta = dict(source="TCMB EVDS (USD/TRY, EUR/TRY, politika faizi, TÜFE), Federal Reserve (hedef aralık)",
                 publication=f"TÜFE izleyen ayın {CPI_RELEASE_DAY}'ünde görünür; kur ve faiz kendi gününde; "
-                            "Fed kararı ertesi gün görünür")
-    return dict(meta=meta, **_rows(df))
+                            "Fed kararı ertesi gün görünür",
+                frequency="günlük" if len(df) <= DAILY_MAX else "ay sonu (son ay kısmi olabilir)",
+                note="Kur değişimleri ve oranlar yüzde; cpi_yoy yıllık TÜFE %, policy_rate %, real_rate = politika faizi "
+                     "- yıllık TÜFE.")
+    rows = df if len(df) <= DAILY_MAX else df.groupby(df.index.to_period("M")).tail(1)
+    out = dict(meta=meta, summary=to_json(_macro_summary(df)), **_rows(rows))
+    if t:
+        rel = fx_relation(_stock(t)["Close"].loc[s:e], _index("XU100")["Close"].loc[s:e], df["usdtry"])
+        out["fx_relation"] = to_json(dict(ticker=t, **rel))
+        out["fx_note"] = ("daily.excess_vs_xu100.beta: USD/TRY %1 arttığı gün hissenin XU100'e göre ortalama farkı "
+                          "(puan); p Newey-West (5 gecikme), R5 ile aynı yöntem. monthly: USD/TRY'nin dönem medyanından "
+                          "hızlı arttığı aylar (fast_fx_months) ile diğer aylar. TL dönemde çoğu ay değer kaybettiyse "
+                          "'kur yükseliyor' koşulu neredeyse her zaman doğrudur; tek başına bilgi taşımaz. Geçmiş ilişki "
+                          "nedensellik ya da gelecek getiri garantisi değildir; şirketin ihracat payı bu veride yoktur.")
+    return out
 
 
 @_guarded

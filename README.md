@@ -139,6 +139,9 @@ BIST_DATA_CEILING=2026-09-10 python -m src.mcp_server.server
 # Quarterly changes for every statement disclosed in a period + 1/5/20-day reaction vs XU100 and the peer basket:
 #   calculate_fundamental_change(ticker="TUPRS", start="2024-01-01", end="2026-09-10")
 #   (selected by KAP reaction day; windows not closed by the analysis date stay empty; improving = R4 §8 measures)
+# Macro period summary (FX, TCMB decisions, CPI, Fed) + a stock's historical USD/TRY relation:
+#   get_macro_context(start="2024-01-01", end="2026-09-10", ticker="EREGL")
+#   (month-end rows above 60 trading days; daily HAC beta as in R5 + fast-FX months vs other months)
 
 # Rebuild the research reports and the PDF (needs Google Chrome for the PDF step)
 python -m src.reports.build_reports

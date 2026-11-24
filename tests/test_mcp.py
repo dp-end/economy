@@ -1,13 +1,15 @@
 import asyncio
 import json
+import re
 
 import pandas as pd
 from mcp import Client
 
-from src.data.prices import get_stock_history
+from src.data.prices import get_index_history, get_stock_history
 from src.harness.evidence import run_analysis
 from src.mcp_server.client_demo import DEMO_CALLS
 from src.mcp_server.server import build_server
+from src.mcp_server.tools import CEILING_ENV, data_ceiling
 
 SPEC_TOOLS = {"get_stock_history", "get_index_history", "calculate_indicators", "detect_reversal_events",
               "find_support_resistance", "rank_sector_relative_strength", "test_weekday_pattern",
@@ -96,3 +98,98 @@ def test_reversal_event_set_filter():
     assert "rsi_state" in a["events"][0] and "k1_confirmed" in a["events"][0]
     err, _ = call("detect_reversal_events", dict(args, event_set="hepsi"))
     assert err
+
+
+# ---------- tarih tavanı: yerel model soruları "analiz tarihi 10.09.2026" der, sonrası hiç görünmemeli ----------
+CEIL, LATER = "2026-09-10", "2026-11-06"
+CEILING_CALLS = {        # her araç: (varsayılanlarla, tavandan sonrasını isteyerek)
+    "get_stock_history": [dict(ticker="ASELS", start="2026-08-01"), dict(ticker="ASELS", start="2026-08-01", end=LATER)],
+    "get_index_history": [dict(start="2026-08-01"), dict(start="2026-08-01", end=LATER)],
+    "calculate_indicators": [dict(ticker="ASELS", start="2026-08-01"),
+                             dict(ticker="ASELS", start="2026-08-01", end=LATER)],
+    "detect_reversal_events": [dict(ticker="ASELS", start="2026-06-01"),
+                               dict(ticker="ASELS", start="2026-06-01", end=LATER)],
+    "find_support_resistance": [dict(ticker="ASELS"), dict(ticker="ASELS", date=LATER)],
+    "rank_sector_relative_strength": [dict(sector="Retail & Consumer", horizon=20),
+                                      dict(sector="Retail & Consumer", horizon=20, date=LATER)],
+    "test_weekday_pattern": [dict(ticker="THYAO", start="2026-01-01"), dict(ticker="THYAO", start="2026-01-01", end=LATER)],
+    "get_fundamental_metrics": [dict(ticker="TUPRS"), dict(ticker="TUPRS", asof=LATER)],
+    "calculate_fundamental_change": [dict(ticker="TUPRS", periods=4), dict(ticker="TUPRS", periods=4, asof=LATER)],
+    "get_macro_context": [dict(start="2026-08-01"), dict(start="2026-08-01", end=LATER)],
+    "get_news_events": [dict(ticker="EREGL", start="2026-08-01"),
+                        dict(ticker="EREGL", start="2026-08-01", end=LATER, asof=LATER)],
+    "get_speech_features": [dict()],                          # kaynak kimliğiyle istek ayrı testte
+    "run_backtest": [dict(strategy="B_sektor", start="2026-01-01"),
+                     dict(strategy="B_sektor", start="2026-01-01", end=LATER)],
+    "check_data_quality": [dict(ticker="EREGL"), dict(ticker="EREGL", asof=LATER)],
+    "build_evidence_bundle": [dict(ticker="EREGL"), dict(ticker="EREGL", asof=LATER)],
+}
+
+
+def test_ceiling_covers_every_tool_and_hides_later_dates():
+    assert set(CEILING_CALLS) == SPEC_TOOLS               # yeni araç eklenirse bu teste de girmek zorunda
+
+    async def go(c):
+        out = {}
+        for name, arglist in CEILING_CALLS.items():
+            for i, args in enumerate(arglist):
+                r = await c.call_tool(name, args)
+                out[name, i] = (r.is_error, "".join(getattr(x, "text", "") for x in r.content))
+        return out
+    with data_ceiling(CEIL):
+        res = run(_session(go))
+    for (name, i), (err, text) in res.items():
+        assert not err, (name, text[:200])
+        out = json.loads(text)
+        assert out["data_ceiling"] == CEIL, name
+        assert max(re.findall(r"\d{4}-\d{2}-\d{2}", text)) <= CEIL, name      # tavandan sonraki hiçbir tarih yok
+        assert bool(out["date_warnings"]) == (i == 1), (name, out["date_warnings"])  # kırpıldıysa söylendi
+
+
+def test_ceiling_clamp_equals_explicit_end_and_masks_forward_returns():
+    with data_ceiling(CEIL):
+        _, clamped = call("get_stock_history", dict(ticker="ASELS", start="2026-08-01", end=LATER))
+        err, text = call("get_stock_history", dict(ticker="ASELS", start="2026-10-01"))
+        assert err and "analiz tarihinden" in text                             # tümüyle tavandan sonraki dönem
+    _, explicit = call("get_stock_history", dict(ticker="ASELS", start="2026-08-01", end=CEIL))
+    assert json.loads(clamped)["rows"] == json.loads(explicit)["rows"]
+    # Tavana 10 işlem gününden yakın olayların 10 günlük penceresi henüz kapanmadı: tavan varken boş, yokken dolu
+    days = get_index_history("XU100").index
+    first = days[days.get_loc(pd.Timestamp(CEIL)) - 9]
+    te = pd.read_parquet("reports/technical_events.parquet")
+    ticker = te[te["date"].between(first, CEIL)]["ticker"].iloc[0]
+    args = dict(ticker=ticker, start=str(first.date()))
+    with data_ceiling(CEIL):
+        _, a = call("detect_reversal_events", args)
+    _, b = call("detect_reversal_events", args)
+    ea = json.loads(a)["events"]
+    eb = [e for e in json.loads(b)["events"] if e["date"] <= CEIL]
+    assert ea and len(ea) == len(eb)
+    assert all(e["exc_10"] is None for e in ea) and all(e["exc_10"] is not None for e in eb)
+
+
+def test_ceiling_hides_later_speech_sources_and_log_records():
+    def ids(text):
+        return [s["source_id"] for s in json.loads(text)["sources"]]
+    with data_ceiling("2026-10-28"):            # Fed 28.10.2026 21:30 (kapanış sonrası); 29 Ekim tatil -> 30 Ekim
+        _, text = call("get_speech_features", {})
+        assert "fed_20261028" not in ids(text)
+        err, text = call("get_speech_features", dict(source_id="fed_20261028"))
+        assert err and "bilinmeyen" in text
+    with data_ceiling("2026-10-30"):
+        _, text = call("get_speech_features", {})
+        assert ids(text) == ["fed_20261028"]                                    # TCMB 12.11.2026 henüz yok
+    with data_ceiling(CEIL):
+        err, text = call("build_evidence_bundle", dict(analysis_id="2f8d0f98ef03"))      # kayıt asof 2026-11-06
+        assert err and "analiz tarihinden sonraki" in text
+        err, text = call("build_evidence_bundle", dict(analysis_id="9b89c803932e"))      # kayıt asof 2026-01-09
+        assert not err and json.loads(text)["asof"].startswith("2026-01-09")
+
+
+def test_ceiling_from_env_var_and_unchanged_without_ceiling(monkeypatch):
+    monkeypatch.setenv(CEILING_ENV, CEIL)                  # ayrı süreçteki MCP sunucusu bu yolla ayarlanır
+    out = json.loads(call("get_index_history", dict(start="2026-09-01"))[1])
+    assert out["data_ceiling"] == CEIL and out["rows"][-1]["date"] == CEIL
+    monkeypatch.delenv(CEILING_ENV)
+    out = json.loads(call("get_index_history", dict(start="2026-09-01"))[1])
+    assert "data_ceiling" not in out and out["rows"][-1]["date"] == LATER    # tavan yoksa eski davranış

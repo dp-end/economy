@@ -4,9 +4,14 @@ Her araç:
   - girişi doğrular, geçersiz girişte ToolError ile anlaşılır Türkçe hata verir (çökmez),
   - yalnızca deterministik modül fonksiyonlarını çağırır (LLM hesap yapmaz),
   - 'asof' / 'end' sonrasındaki veriyi döndürmez (geleceğe bakma yok),
+  - harness bir tarih tavanı koyduysa (analiz tarihi) o günden sonrasını hiç göstermez; daha ileri bir tarih
+    istenirse tavana kırpar ve çıktıya 'date_warnings' yazar. Tavanı model değiştiremez (araç parametresi değil),
   - JSON'a çevrilebilir sözlük döndürür (tarihler 'YYYY-MM-DD', boş değer None).
 """
+import functools
 import json
+import os
+from contextlib import contextmanager
 from functools import lru_cache
 
 import numpy as np
@@ -26,7 +31,7 @@ from src.data.universe import load_universe
 from src.events.technical_events import HARNESS_EVENTS
 from src.events.calendar_patterns import WEEKDAYS, _data as _calendar_data, welch
 from src.harness.decision_log import dumps, load_analysis
-from src.harness.evidence import _variants, analysis_day, run_analysis
+from src.harness.evidence import _variants, analysis_day, run_analysis, speech_known_day
 from src.indicators.features import full_features
 from src.indicators.support_resistance import sr_features
 
@@ -37,6 +42,61 @@ INDICATORS = ["sma_20", "sma_50", "sma_200", "ema_20", "ema_50", "rsi_14", "macd
               "supertrend", "st_dir", "st_flip", "tenkan", "kijun", "cloud_top", "cloud_bottom", "cloud_state",
               "vol_z_20", "ret_1d", "ret_5d", "vol_20d"]
 HORIZONS = (1, 3, 5, 10)
+CEILING_ENV = "BIST_DATA_CEILING"
+
+
+# ---------- tarih tavanı (analiz tarihi) ----------
+_CEILING = None        # with data_ceiling(...) ile konur; süreç içi tek analiz olduğu için düz değişken yeterli
+_NOTES = []            # o anki araç çağrısının tarih uyarıları
+
+
+@contextmanager
+def data_ceiling(day):
+    """Harness'ın tavanı: bu blok içinde hiçbir araç 'day' sonrasındaki veriyi göstermez.
+    Örnek: with data_ceiling("2026-09-10"): ...  (ayrı süreçteki MCP sunucusu için BIST_DATA_CEILING)."""
+    global _CEILING
+    old, _CEILING = _CEILING, (pd.Timestamp(day).normalize() if day else None)
+    try:
+        yield
+    finally:
+        _CEILING = old
+
+
+def _active_ceiling():
+    """Konulmuş tavan (takvim günü) ya da None. Öncelik: data_ceiling bloğu > ortam değişkeni."""
+    if _CEILING is not None:
+        return _CEILING
+    env = os.environ.get(CEILING_ENV, "").strip()
+    return pd.Timestamp(env).normalize() if env else None
+
+
+def ceiling() -> pd.Timestamp:
+    """Araçların görebileceği son işlem günü: tavan varsa ondan önceki son işlem günü, yoksa son veri günü."""
+    last = _index("XU100").index[-1]
+    c = _active_ceiling()
+    if c is None or c >= last:
+        return last
+    try:
+        return analysis_day(c)
+    except ValueError as e:
+        raise ToolError(str(e))
+
+
+def _note(msg: str):
+    _NOTES.append(msg)
+
+
+def _guarded(fn):
+    """Her aracın sarmalı: uyarıları sıfırlar; tavan varsa çıktıya data_ceiling ve date_warnings ekler.
+    Tavan yoksa çıktı eskisiyle aynıdır."""
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        _NOTES.clear()
+        out = fn(*args, **kwargs)
+        if _active_ceiling() is not None and isinstance(out, dict):
+            out = dict(out, data_ceiling=str(ceiling().date()), date_warnings=list(_NOTES))
+        return out
+    return wrapper
 
 
 # ---------- ortak doğrulama ----------
@@ -66,19 +126,28 @@ def _date(d, name: str, default=None) -> pd.Timestamp:
 
 
 def _range(start, end):
-    last = _index("XU100").index[-1]
+    top = ceiling()
     s = _date(start, "start", "2021-11-01")
-    e = min(_date(end, "end", last), last)
+    e = _date(end, "end", top)
+    if e > top:
+        if _active_ceiling() is not None:
+            _note(f"istenen 'end' analiz tarihinden sonraydı; {top.date()} tarihine kırpıldı")
+        e = top
     if s > e:
+        if _active_ceiling() is not None and s > top:
+            raise ToolError(f"start ({s.date()}) analiz tarihinden ({top.date()}) sonra; bu dönemin verisi yok")
         raise ToolError(f"start ({s.date()}) end'den ({e.date()}) sonra olamaz")
     return s, e
 
 
-def _asof(asof):
-    last = _index("XU100").index[-1]
-    d = _date(asof, "asof", last)
-    if d > last:
-        raise ToolError(f"asof ({d.date()}) son veri gününden ({last.date()}) sonra; gelecek verisi yok")
+def _asof(asof, name: str = "asof"):
+    top = ceiling()
+    d = _date(asof, name, top)
+    if d > top:
+        if _active_ceiling() is None:
+            raise ToolError(f"{name} ({d.date()}) son veri gününden ({top.date()}) sonra; gelecek verisi yok")
+        _note(f"istenen '{name}' analiz tarihinden sonraydı; {top.date()} tarihine kırpıldı")
+        d = top
     try:
         return analysis_day(d)
     except ValueError as e:
@@ -98,6 +167,7 @@ def _rows(df: pd.DataFrame) -> dict:
 
 
 # ---------- 1-2: fiyat ----------
+@_guarded
 def get_stock_history(ticker: str, start: str = None, end: str = None) -> dict:
     """Günlük High/Low/Close/Volume/Turnover_TL ve kaynak bilgisi."""
     t = _ticker(ticker)
@@ -110,6 +180,7 @@ def get_stock_history(ticker: str, start: str = None, end: str = None) -> dict:
     return dict(meta=meta, **_rows(df))
 
 
+@_guarded
 def get_index_history(index: str = "XU100", start: str = None, end: str = None) -> dict:
     """Kıyas endeksi kapanışı (yalnızca XU100)."""
     if str(index).upper() != "XU100":
@@ -120,6 +191,7 @@ def get_index_history(index: str = "XU100", start: str = None, end: str = None) 
 
 
 # ---------- 3-5: teknik ----------
+@_guarded
 def calculate_indicators(ticker: str, start: str = None, end: str = None, indicators: list[str] = None) -> dict:
     """Seçilen göstergelerin günlük değerleri (varsayılan: hepsi). Göstergeler yalnızca geçmiş veriden hesaplanır."""
     t = _ticker(ticker, core_only=True)
@@ -132,6 +204,7 @@ def calculate_indicators(ticker: str, start: str = None, end: str = None, indica
     return dict(meta=dict(ticker=t, indicators=list(cols)), **_rows(df))
 
 
+@_guarded
 def detect_reversal_events(ticker: str, start: str = None, end: str = None, event: str = None,
                            event_set: str = "all") -> dict:
     """Zaman damgalı teknik olaylar ve olay anındaki gösterge durumları. İleri getiri yalnızca penceresi 'end'
@@ -161,12 +234,13 @@ def detect_reversal_events(ticker: str, start: str = None, end: str = None, even
                 events=to_json(ev.tail(MAX_ROWS).to_dict("records")), summary=to_json(summary), n_events=len(ev))
 
 
+@_guarded
 def find_support_resistance(ticker: str, date: str = None, tolerance: float = 0.015) -> dict:
     """Analiz gününde (o güne kadar onaylanmış pivotlardan) en yakın destek/direnç, dokunuş sayısı ve yaş."""
     t = _ticker(ticker, core_only=True)
     if not 0.001 <= float(tolerance) <= 0.1:
         raise ToolError("tolerance 0,001 ile 0,1 arasında olmalı")
-    d = _asof(date)
+    d = _asof(date, "date")
     df = _stock(t).loc[:d]
     sr = sr_features(df, tol=float(tolerance)).iloc[-1]
     close = float(df["Close"].iloc[-1])
@@ -178,6 +252,7 @@ def find_support_resistance(ticker: str, date: str = None, tolerance: float = 0.
 
 
 # ---------- 6-7: sektör ve takvim ----------
+@_guarded
 def rank_sector_relative_strength(sector: str, horizon: int = 10, date: str = None) -> dict:
     """Akran grubu içinde getiri, akran ortancasına göre gecikme (kendisi hariç) ve sıra."""
     u = load_universe()
@@ -187,7 +262,7 @@ def rank_sector_relative_strength(sector: str, horizon: int = 10, date: str = No
         raise ToolError(f"bilinmeyen sektör grubu: '{sector}'. Geçerli: {', '.join(groups)}")
     if int(horizon) not in (5, 10, 20):
         raise ToolError("horizon 5, 10 ya da 20 olmalı")
-    g, h, d = match[0], int(horizon), _asof(date)
+    g, h, d = match[0], int(horizon), _asof(date, "date")
     members = u[u["peer_group"] == g]["ticker"].tolist()
     ret = pd.Series({m: _stock(m)["Close"].loc[:d].pipe(lambda s: s.iloc[-1] / s.iloc[-1 - h] - 1) for m in members})
     rows = []
@@ -202,6 +277,7 @@ def rank_sector_relative_strength(sector: str, horizon: int = 10, date: str = No
                         members=out.to_dict("records"), warning=warn))
 
 
+@_guarded
 def test_weekday_pattern(ticker: str, pattern: str = "weekday", start: str = None, end: str = None) -> dict:
     """Haftanın günü ya da art arda düşüş/yükseliş sonrası getiri. Koşulsuz getiriyle karşılaştırma,
     Welch t testi, ilk/ikinci yarı tutarlılığı ve maliyet notu. pattern: 'weekday', 'down_streak:3', 'up_streak:2'."""
@@ -283,6 +359,7 @@ def _visible_quarters(t: str, d: pd.Timestamp) -> pd.DataFrame:
     return q.merge(ev, on="period_end", how="left").sort_values("period_end").reset_index(drop=True)
 
 
+@_guarded
 def get_fundamental_metrics(ticker: str, period: str = None, asof: str = None) -> dict:
     """Analiz gününde kamuya açık olan son bilanço (ya da istenen dönem) ve yayın zamanı."""
     t = _ticker(ticker, core_only=True)
@@ -317,6 +394,7 @@ def get_fundamental_metrics(ticker: str, period: str = None, asof: str = None) -
     return to_json(out)
 
 
+@_guarded
 def calculate_fundamental_change(ticker: str, periods: int = 4, asof: str = None) -> dict:
     """Son 'periods' açıklanmış çeyreğin çeyreklik ve yıllık değişimleri (yalnızca analiz gününde görünür olanlar)."""
     t = _ticker(ticker, core_only=True)
@@ -336,6 +414,7 @@ def calculate_fundamental_change(ticker: str, periods: int = 4, asof: str = None
 
 
 # ---------- 10-12: makro, haber, konuşma ----------
+@_guarded
 def get_macro_context(start: str = None, end: str = None) -> dict:
     """Kur, faiz, enflasyon ve Fed aralığı; her gün yalnızca o gün yayınlanmış değerler."""
     s, e = _range(start, end)
@@ -346,6 +425,7 @@ def get_macro_context(start: str = None, end: str = None) -> dict:
     return dict(meta=meta, **_rows(df))
 
 
+@_guarded
 def get_news_events(ticker: str = None, topic: str = None, start: str = None, end: str = None,
                     asof: str = None) -> dict:
     """KAP ve RSS haber olayları (yalnızca başlık/özet, kaynak bağlantısı ve zaman)."""
@@ -353,8 +433,16 @@ def get_news_events(ticker: str = None, topic: str = None, start: str = None, en
     if topic and topic not in CATEGORY_RULES and topic != "diger":
         raise ToolError(f"bilinmeyen konu: '{topic}'. Geçerli: {', '.join(list(CATEGORY_RULES) + ['diger'])}")
     s = _date(start, "start", "2021-11-01")
-    e = _date(end, "end", pd.Timestamp.today().normalize())
-    a = _asof(asof) if asof else None
+    if _active_ceiling() is None:
+        e = _date(end, "end", pd.Timestamp.today().normalize())
+        a = _asof(asof) if asof else None
+    else:                                   # tavan varsa: en geç tavan günü, yalnızca o gün kapanışında bilinenler
+        top = ceiling()
+        e = _date(end, "end", top)
+        if e > top:
+            _note(f"istenen 'end' analiz tarihinden sonraydı; {top.date()} tarihine kırpıldı")
+            e = top
+        a = _asof(asof) if asof else top
     n = _news_query(load_news_events(), ticker=t, topic=topic, start=s, end=e, asof=a)
     total = len(n)
     n = n.tail(MAX_NEWS)
@@ -364,17 +452,24 @@ def get_news_events(ticker: str = None, topic: str = None, start: str = None, en
                         warning="haber kapsamı seyrek" if total < 3 else ""))
 
 
+@_guarded
 def get_speech_features(source_id: str = None) -> dict:
     """Konuşma kaynağının konu, duruş, belirsizlik ve doğrulanmış/doğrulanmamış iddiaları. source_id yoksa liste."""
+    sp = load_speech_features()
+    visible = list(SOURCES)
+    if _active_ceiling() is not None:       # analiz tarihinde henüz bilinmeyen kaynak hiç yokmuş gibi davranılır
+        known = set(sp.loc[speech_known_day(sp) <= ceiling(), "source_id"])
+        visible = [k for k in SOURCES if k in known]
     if not source_id:
-        return dict(sources=[dict(source_id=k, speaker=v["speaker"], publish_time=v["publish_time"], kind=v["kind"])
-                             for k, v in SOURCES.items()])
-    if source_id not in SOURCES:
-        raise ToolError(f"bilinmeyen konuşma kaynağı: '{source_id}'. Geçerli: {', '.join(SOURCES)}")
-    return to_json(_speech(load_speech_features(), source_id))
+        return dict(sources=[dict(source_id=k, speaker=SOURCES[k]["speaker"], publish_time=SOURCES[k]["publish_time"],
+                                  kind=SOURCES[k]["kind"]) for k in visible])
+    if source_id not in visible:
+        raise ToolError(f"bilinmeyen konuşma kaynağı: '{source_id}'. Geçerli: {', '.join(visible) or '(yok)'}")
+    return to_json(_speech(sp, source_id))
 
 
 # ---------- 13-15: backtest, kalite, kanıt ----------
+@_guarded
 def run_backtest(strategy: str, start: str = None, end: str = None, cost: float = COST_ONE_WAY) -> dict:
     """Strateji varyantının dönem performansı (sinyal 1 gün kaydırılır, maliyet dahil) ve işlem özeti."""
     variants = _variants()
@@ -406,6 +501,7 @@ def run_backtest(strategy: str, start: str = None, end: str = None, cost: float 
                              "(fark = sektör içi hisse seçimi). islem_* = kapanmış işlemler (giriş-çıkış, maliyet dahil)."))
 
 
+@_guarded
 def check_data_quality(ticker: str, asof: str = None) -> dict:
     """Analiz paketi için kalite kapısı: kesin engeller, güvensiz durumlar, yumuşak uyarılar."""
     t = str(ticker or "").strip().upper()
@@ -414,6 +510,7 @@ def check_data_quality(ticker: str, asof: str = None) -> dict:
     return to_json(dict(ticker=t, asof=str(d.date()), **r["gate"]))
 
 
+@_guarded
 def build_evidence_bundle(ticker: str = None, asof: str = None, analysis_id: str = None) -> dict:
     """Tam gözlem seti + committed evidence + kurallı eylem + kapı. analysis_id verilirse günlükten okunur."""
     if analysis_id:
@@ -421,6 +518,8 @@ def build_evidence_bundle(ticker: str = None, asof: str = None, analysis_id: str
             a = load_analysis(analysis_id)
         except ValueError as e:
             raise ToolError(str(e))
+        if _active_ceiling() is not None and pd.Timestamp(a["asof"]) > ceiling():
+            raise ToolError("bu analiz kaydı analiz tarihinden sonraki bir güne ait; o tarihte yoktu")
         return to_json(dict(analysis_id=analysis_id, ticker=a["ticker"], asof=a["asof"], action=a["action"],
                             secondary=a["secondary"], gate=a["gate"], committed=a["committed"],
                             observed=a["observed"], from_log=True))

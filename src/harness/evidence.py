@@ -80,6 +80,14 @@ def _variants() -> dict:
 
 
 # ---------- gözlenen bağlam ----------
+def speech_known_day(sp: pd.DataFrame) -> pd.Series:
+    """Konuşma satırının bilinebildiği ilk işlem günü. Piyasa kapanışından sonra yayınlanan konuşma ancak
+    event_day'den itibaren bilinir (Adım 15'te bulunan hata: takvim günü karşılaştırması 21:30'daki Fed
+    konuşmasını aynı günün analizine sokuyordu). MCP aracı da aynı kuralı kullanır."""
+    return sp["event_day"].where(sp["event_day"].notna(),
+                                 sp["publish_time"].where(sp["publish_time"].dt.hour < 18).dt.normalize())
+
+
 def observe(ticker: str, day: pd.Timestamp) -> tuple:
     """(observed, source_dates). source_dates: kullanılan her kaynağın en geç tarihi (kapı kontrol eder)."""
     t = _tables()
@@ -162,11 +170,7 @@ def observe(ticker: str, day: pd.Timestamp) -> tuple:
     src["haber"] = win["event_day"].max() if len(win) else None
 
     sp = t["speech"]
-    # Piyasa kapanışından sonra yayınlanan konuşma ancak event_day'den itibaren bilinir (Adım 15'te bulunan hata:
-    # takvim günü karşılaştırması 21:30'daki Fed konuşmasını aynı günün analizine sokuyordu).
-    known = sp["event_day"].where(sp["event_day"].notna(),
-                                  sp["publish_time"].where(sp["publish_time"].dt.hour < 18).dt.normalize())
-    sp = sp[(known <= day) & (sp["publish_time"] >= day - pd.Timedelta(days=SPEECH_DAYS))]
+    sp = sp[(speech_known_day(sp) <= day) & (sp["publish_time"] >= day - pd.Timedelta(days=SPEECH_DAYS))]
     speech = dict(sources=[], warnings=[])
     if len(sp):
         from src.data.speech_features import get_speech_features

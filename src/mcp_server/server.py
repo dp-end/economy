@@ -1,6 +1,8 @@
 """BIST harness MCP sunucusu (mcp 2.x MCPServer, eski adıyla FastMCP). 15 deterministik araç.
 
 Çalıştırma (stdio):  python -m src.mcp_server.server
+Analiz tarihi tavanı:  BIST_DATA_CEILING=2026-09-10 python -m src.mcp_server.server  (o günden sonrası hiçbir
+araçta görünmez; daha ileri tarih istenirse tavana kırpılır ve 'date_warnings' alanında söylenir).
 Araç gövdeleri src/mcp_server/tools.py içinde; burada yalnızca kaydedilir. Hiçbir araç emir göndermez,
 broker'a bağlanmaz ya da veri yazmaz (yalnızca okuma).
 """

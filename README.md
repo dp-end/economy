@@ -122,6 +122,9 @@ python -m src.harness.decision_log
 
 # MCP: start the server as a subprocess (stdio), list the 15 tools, call each once
 python -m src.mcp_server.client_demo
+# Analysis-date ceiling: no tool shows data after this day; later end/asof/date requests are clamped and
+# reported in 'date_warnings' (in code: with data_ceiling("2026-09-10"): ...)
+BIST_DATA_CEILING=2026-09-10 python -m src.mcp_server.server
 
 # Rebuild the research reports and the PDF (needs Google Chrome for the PDF step)
 python -m src.reports.build_reports

@@ -348,13 +348,18 @@ def ans_s3(spec: dict, outs: list) -> tuple:
         "; ama son 3 işlem gününde yeni olay yok." if rate >= 0.60 else "; başarı %60'ın altında."))
 
 
+def table_rows(t: dict) -> list:
+    """Soru modunun çeyrek tablosu ({'columns', 'rows'}) -> satır başına sözlük (question_mode.quarter_table'ın tersi)."""
+    return [dict(zip(t["columns"], r)) for r in t["rows"]]
+
+
 def ans_s4(spec: dict, outs: list) -> tuple:
     fm, ch = outs[0]["output"], outs[1]["output"]
-    qs = ch["quarters"]
+    qs = table_rows(ch["quarters"])                    # tepki alanları satırda (r = q)
     bank = all(q.get("ebitda_margin_q") is None for q in qs)
     lines = [f"- {ch['selection']}."]
     for q in qs:
-        r = q["reaction"]
+        r = q
         r20x = pv(r["ab_xu100_20_pct"]) if r["complete_20"] else "pencere kapanmadı"
         r20s = pv(r["ab_sector_20_pct"]) if r["complete_20"] else "pencere kapanmadı"
         head = f"- {per(q['period_end'])} (KAP {dtr(q['publish_time'])}): "
@@ -362,12 +367,12 @@ def ans_s4(spec: dict, outs: list) -> tuple:
             body = f"yıllık net kâr değişimi {pct(q.get('ni_yoy'))}, çeyreklik ROE {pct(q.get('roe_q'))}"
         else:
             chg, dl = q.get("ebitda_margin_chg"), q.get("deleveraging")
-            body = (f"FAVÖK marjı {pct(q.get('ebitda_margin_q'))} (geçen yılın aynı çeyreğine göre "
-                    + ("bilinmiyor" if chg is None else f"{num(chg * 100)} puan") + f"), Net Borç/FAVÖK {num(q.get('nd_ebitda'))}"
+            body = (f"FAVÖK marjı {pct(q.get('ebitda_margin_q'))} (yıllık "
+                    + ("fark bilinmiyor" if chg is None else f"{num(chg * 100)} puan") + f"), Net Borç/FAVÖK {num(q.get('nd_ebitda'))}"
                     + ("" if dl is None else f" (yıllık {num(abs(dl))} {'düştü' if dl > 0 else 'arttı'})"))
             body += {True: ", iyileşen", False: "", None: ", iyileşme bilinmiyor"}[q.get("improving")]
-        lines.append(head + body + f"; tepki XU100'e göre 1/5/20 gün {pv(r['ab_xu100_1_pct'])} / {pv(r['ab_xu100_5_pct'])}"
-                     f" / {r20x}, sektöre göre {pv(r['ab_sector_1_pct'])} / {pv(r['ab_sector_5_pct'])} / {r20s}.")
+        lines.append(head + body + f"; 1/5/20 gün XU100'e göre {pv(r['ab_xu100_1_pct'])} / {pv(r['ab_xu100_5_pct'])}"
+                     f" / {r20x}, sektöre {pv(r['ab_sector_1_pct'])} / {pv(r['ab_sector_5_pct'])} / {r20s}.")
     summ = {g["group"]: g for g in ch["reaction_summary"]}
     for name, lab in (("iyilesen", "İyileşen"), ("diger", "Diğer")):
         g = summ[name]
@@ -382,7 +387,7 @@ def ans_s4(spec: dict, outs: list) -> tuple:
         lines.append("- Net Borç/FAVÖK negatif olan çeyreklerde şirket net nakit pozisyonunda.")
     last = qs[-1] if qs else None
     if last:
-        r = last["reaction"]
+        r = last
         lines.append(f"- Son çeyreğin ({per(last['period_end'])}) 20 günlük penceresi " +
                      (f"{dtr(r['window_end_20'])} tarihinde kapandı; veri tamam." if r["complete_20"] else
                       "analiz tarihinde henüz kapanmadı; boş bırakıldı."))

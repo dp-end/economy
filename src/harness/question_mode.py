@@ -129,6 +129,29 @@ QUARTER_COLS = ("period_end", "publish_time", "event_day", "ni_yoy", "roe_q", "e
 REACTION_COLS = ("complete_20", "window_end_20", "ab_xu100_1_pct", "ab_xu100_5_pct", "ab_xu100_20_pct",
                  "ab_sector_1_pct", "ab_sector_5_pct", "ab_sector_20_pct")
 NEWS_COLS = ("publish_time", "event_day", "source", "ticker", "category", "title")
+FIN_ONLY = ("ni_yoy", "roe_q")                     # banka/sigorta: FAVÖK yok, cevap bunları kullanır
+NONFIN_ONLY = ("ebitda_margin_q", "ebitda_margin_chg", "nd_ebitda", "deleveraging")
+
+
+def quarter_table(quarters: list) -> dict:
+    """Çeyrek listesi -> {'columns': [...], 'rows': [[...], ...]} (S4 kısaltması, 25 Kasım 2026).
+
+    Alan adları her çeyrekte tekrar yazılmaz; tepki alanları satıra düzleşir. Yeni sayı üretmez, yalnızca:
+    FAVÖK'lü şirkette ni_yoy/roe_q, bankada (FAVÖK hep boş) FAVÖK sütunları çıkar; *_pct tepkileri 2 ondalığa
+    yuvarlanır (cevapta da 2 ondalık yazılır); window_end_20 yalnızca son çeyrekte kalır (cevap yalnız onu kullanır)."""
+    bank = all(q.get("ebitda_margin_q") is None for q in quarters)
+    drop = set(NONFIN_ONLY if bank else FIN_ONLY)
+    flat = []
+    for i, q in enumerate(quarters):
+        d = {k: v for k, v in q.items() if k != "reaction" and k not in drop}
+        for k in REACTION_COLS:
+            v = (q.get("reaction") or {}).get(k)
+            if k == "window_end_20" and i < len(quarters) - 1:
+                continue
+            d[k] = round(v, 2) if isinstance(v, float) and k.endswith("_pct") else v
+        flat.append(d)
+    cols = list(dict.fromkeys(c for d in flat for c in d))
+    return dict(columns=cols, rows=[[d.get(c) for c in cols] for d in flat])
 
 
 def compact(name: str, out: dict) -> dict:
@@ -147,9 +170,10 @@ def compact(name: str, out: dict) -> dict:
             _tail(o, "events", cols=EVENT_COLS)
     elif name == "calculate_fundamental_change":
         _tail(o, "quarters", cols=QUARTER_COLS)
-        for q in o["quarters"]:
-            q["reaction"] = {k: q["reaction"].get(k) for k in REACTION_COLS}
+        o["quarters"] = quarter_table(o["quarters"])
         o.pop("note", None)                      # FUND_NOTE get_fundamental_metrics'te de var; reaction_note kalır
+    elif name == "get_fundamental_metrics":
+        o.pop("note", None)                      # uzun tanım notu (~580 token) günlükte kalır, modele gitmez
     elif name == "get_macro_context":
         if o.get("meta", {}).get("frequency") != "günlük":
             _tail(o, "rows", n=3)               # uzun dönemde özet yeterli; son 3 ay sonu satırı kalır

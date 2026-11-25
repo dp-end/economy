@@ -158,7 +158,7 @@ async def r_s4(c: Conv, sp: dict):
     fm, ch = await c.turn(("get_fundamental_metrics", dict(ticker=sp["T"], asof=sp["asof"])),
                           ("calculate_fundamental_change", dict(ticker=sp["T"], start=sp["start"], end=sp["asof"])))
     _ok(fm), _ok(ch)
-    qs = ch["output"]["quarters"]
+    qs = TP.table_rows(ch["output"]["quarters"])
     if len(qs) < 2:
         raise Skip("dönemde 2'den az çeyrek")
     days = sp["days"]

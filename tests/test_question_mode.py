@@ -126,10 +126,20 @@ def test_compact_view_only_selects_and_rounds():
         full = T.to_json(T.calculate_fundamental_change(ticker="TUPRS", start="2024-01-01"))
         ev = T.to_json(T.detect_reversal_events(ticker="ASELS", event="bb_lower_touch", start="2024-01-01"))
     c = QM.compact("calculate_fundamental_change", full)
-    assert len(c["quarters"]) == len(full["quarters"]) == 11
-    for a, b in zip(c["quarters"], full["quarters"]):
+    rows = [dict(zip(c["quarters"]["columns"], r)) for r in c["quarters"]["rows"]]
+    assert len(rows) == len(full["quarters"]) == 11
+    for a, b in zip(rows, full["quarters"]):
         assert a["ebitda_margin_q"] == round(b["ebitda_margin_q"], 4) and a["event_day"] == b["event_day"][:10]
-        assert a["reaction"]["ab_xu100_20_pct"] == round(b["reaction"]["ab_xu100_20_pct"], 4)
+        assert a["ab_xu100_20_pct"] == round(b["reaction"]["ab_xu100_20_pct"], 2)     # tepkiler 2 ondalık
+        assert "ni_yoy" not in a and "roe_q" not in a                                 # FAVÖK'lü şirket
+    assert rows[-1]["window_end_20"] == full["quarters"][-1]["reaction"]["window_end_20"][:10]
+    assert all(r["window_end_20"] is None for r in rows[:-1])
+    with T.data_ceiling(ASOF):
+        bank = T.to_json(T.calculate_fundamental_change(ticker="AKBNK", start="2024-01-01"))
+        fm = T.to_json(T.get_fundamental_metrics(ticker="TUPRS"))
+    bc = QM.compact("calculate_fundamental_change", bank)["quarters"]["columns"]
+    assert "ni_yoy" in bc and "roe_q" in bc and "ebitda_margin_q" not in bc         # banka: FAVÖK sütunu yok
+    assert "note" in fm and "note" not in QM.compact("get_fundamental_metrics", fm)
     e = QM.compact("detect_reversal_events", ev)
     assert e["by_condition"] == QM._round(ev["by_condition"]) and len(e["events"]) == 5 and "events_note" in e
     assert len(json.dumps(c, ensure_ascii=False)) < 8000 and len(json.dumps(e, ensure_ascii=False)) < 8000

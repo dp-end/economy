@@ -106,7 +106,7 @@ LOCAL_URL = "http://127.0.0.1:8080/v1"
 LOCAL_MODEL = "models/Qwen3-4B-Instruct-2507-4bit"   # yerelde üretilen 4-bit (mlx_lm.convert -q, 4,5 bit/ağırlık)
 LOCAL_ADAPTER = "models/adapters/bist-qwen3-4b-v1"   # 4. adımda eğitilen LoRA adaptörü (src/finetune/train_mlx.py)
 BASE = "none"                                        # adaptörsüz taban model (karşılaştırma için)
-LOCAL_MAX_TOKENS = 900                               # cevap başına en fazla üretilen token
+LOCAL_MAX_TOKENS = 3072                              # cevap başına en fazla üretilen token (S4 cevabı 2.000+)
 
 
 class LocalLLM:

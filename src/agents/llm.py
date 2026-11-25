@@ -106,6 +106,7 @@ LOCAL_URL = "http://127.0.0.1:8080/v1"
 LOCAL_MODEL = "models/Qwen3-4B-Instruct-2507-4bit"   # yerelde üretilen 4-bit (mlx_lm.convert -q, 4,5 bit/ağırlık)
 LOCAL_ADAPTER = "models/adapters/bist-qwen3-4b-v1"   # 4. adımda eğitilen LoRA adaptörü (src/finetune/train_mlx.py)
 BASE = "none"                                        # adaptörsüz taban model (karşılaştırma için)
+LOCAL_MAX_TOKENS = 900                               # cevap başına en fazla üretilen token
 
 
 class LocalLLM:
@@ -119,8 +120,8 @@ class LocalLLM:
     adapter: None -> LOCAL_ADAPTER ortam değişkeni ya da varsayılan v1; 'none' -> taban model.
     """
 
-    def __init__(self, model: str = None, base_url: str = None, temperature: float = 0.0, max_tokens: int = 900,
-                 adapter: str = None):
+    def __init__(self, model: str = None, base_url: str = None, temperature: float = 0.0,
+                 max_tokens: int = LOCAL_MAX_TOKENS, adapter: str = None):
         from openai import OpenAI
         self.model = model or os.environ.get("LOCAL_MODEL", LOCAL_MODEL)
         self.base_url = base_url or os.environ.get("LOCAL_URL", LOCAL_URL)

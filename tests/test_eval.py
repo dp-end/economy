@@ -148,3 +148,14 @@ def test_run_one_and_summary_without_server(tmp_path):
     assert res["replay_same_outputs"]["v1"] == 1.0
     assert "action accuracy" in (tmp_path / "summary.md").read_text()
     assert "THYAO hissesi" in (tmp_path / "per_question.csv").read_text()
+
+
+def test_eval_setups_base_shares_v2_weights_and_two_switches():
+    """Karar 1a (26 Kasım 2026): taban, v2 ile aynı 8-bit dosyada; v1 kendi 4-bit dosyasında. Sırada dosya 2 kez değişir."""
+    assert E.MODELS["base"] == (E.MODEL_8BIT, "none")
+    assert E.MODELS["v2"][0] == E.MODEL_8BIT and E.MODELS["v1"][0] == E.MODEL_4BIT
+    qs = [dict(hid=f"q{i}", cat=c) for i, c in enumerate(E.CATS * 2)]
+    plan = E.run_plan(qs)
+    assert [(m, k) for m, k, _ in plan] == [("v1", 1), ("base", 1), ("v2", 1), ("v2", 2), ("base", 2), ("v1", 2)]
+    files = [E.MODELS[m][0] for m, _, items in plan for _ in items]
+    assert sum(a != b for a, b in zip(files, files[1:])) == 2

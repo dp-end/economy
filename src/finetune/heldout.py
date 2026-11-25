@@ -11,7 +11,7 @@ Altın cevap, eğitim verisini üreten kodla aynı yoldan çıkar (build_dataset
 sunucusunda aynı tavanla çalışır, eylem aynı kurallarla seçilir. Bu yüzden ölçüm modelin kuralları yeni ifadelere
 doğru uygulayıp uygulamadığıdır; kuralların ekonomik doğruluğu araştırma katmanının konusudur.
 
-Çıktı: reports/local_llm/eval_v1/heldout.jsonl (soru, analiz tarihi, altın çağrılar, altın eylem).
+Çıktı: reports/local_llm/eval/heldout.jsonl (soru, analiz tarihi, altın çağrılar, altın eylem).
 Çalıştırma: python -m src.finetune.heldout
 """
 import argparse
@@ -31,7 +31,7 @@ from src.mcp_server import tools as TOOLS
 from src.mcp_server.server import build_server
 
 SEED_EVAL = 20261125
-OUT = Path("reports/local_llm/eval_v1")
+OUT = Path("reports/local_llm/eval")
 HELDOUT = OUT / "heldout.jsonl"
 TRAIN = B.OUT / "conversations.jsonl"
 MAX_TRIES = 30

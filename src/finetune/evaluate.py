@@ -1,10 +1,16 @@
-"""Yerel model 5. adım: taban model ile ince ayarlı model (v1) görülmemiş sorularda karşılaştırılır.
+"""Yerel model 5. adım: taban model ile ince ayarlı modeller (v1, v2) görülmemiş sorularda karşılaştırılır.
 
 Kullanıcı kararları (25 Kasım 2026): 1a/2a soru seti src/finetune/heldout.py (40 soru, yeni ifadeler, eğitimde olmayan
 hisse/tarih); 3a bir araç çağrısı, araç adı ve ana parametreleri (hisse/sektör, olay/örüntü/strateji, ufuk, koşullar,
 soruda geçen tarihler) altınla aynıysa doğru sayılır, fazladan geçerli parametre sorun değildir (soruda geçmeyen tarih,
 ör. gösterge için geriye 14 gün, serbesttir); 4a her modelde 10 soru ikinci kez çalışır ve kayıtlı bütün araç
 çağrıları yeniden oynatılır.
+Kullanıcı kararları (26 Kasım 2026): üç kurulum, tek model (Qwen3-4B-Instruct-2507), adaptör ve dosya farklı:
+  v1   = 4-bit dosya + v1 adaptörü (v1 MLX QLoRA ile bu 4-bit dosyanın üstünde eğitildi)
+  base = 8-bit dosya, adaptörsüz (1a: teslim edilecek v2 ile aynı dosya; base-v2 farkı yalnızca adaptör)
+  v2   = 8-bit dosya + v2 adaptörü (v2 GPU'da tam hassasiyetli ağırlıklarla eğitildi; 4-bit dosyada kaybı belirgin
+         artıyor, 8-bit dosyada GPU'daki değerine iniyor)
+  2a: canlı soru modunun varsayılanı (llm.LOCAL_MODEL/LOCAL_ADAPTER) bu değerlendirmeden sonra seçilir.
 
 Metrikler (PDF §30 + hocanın duyurusu), her model için toplam ve kategori bazında:
   doğru eylem oranı (son eylem = altın eylem; tersi desteklenmeyen sonuç oranı), geçersiz araç çağrısı oranı (hata
@@ -12,15 +18,16 @@ Metrikler (PDF §30 + hocanın duyurusu), her model için toplam ve kategori baz
   oranı) ve tam kanıtlı soru oranı, backtest çağrısı doğruluğu, sayı uydurma oranı (ilk cevapta, denetimden önce),
   tavsiye/hedef fiyat (ilk cevapta yakalanan ve kullanıcıya ulaşan), tekrarlanabilirlik, araç çağrısı, süre.
 
-Sıra: sunucu adaptörsüz açılır, adaptörü LocalLLM her istekle gönderir; taban 40, v1 40, v1 tekrar 10, taban tekrar 10
-(yalnızca iki model değişimi). Yarıda kalırsa kaldığı yerden sürer. Ayarlar canlı sistemle aynıdır (LocalLLM
+Sıra: sunucu adaptörsüz açılır; model dosyasını ve adaptörü LocalLLM her istekle gönderir (sunucu istenen dosyayı
+yükler). v1 40, taban 40, v2 40, sonra tekrarlar ters sırada (v2 10, taban 10, v1 10): model dosyası yalnızca iki kez
+değişir. Yarıda kalırsa kaldığı yerden sürer. Ayarlar canlı sistemle aynıdır (LocalLLM
 varsayılanları, sıcaklık 0, en fazla 6 araç çağrısı, bir düzeltme).
 
-Çıktı (reports/local_llm/eval_v1/): heldout.jsonl, raw.jsonl (her çalıştırma), question_log.sqlite (soru modu günlüğü,
+Çıktı (reports/local_llm/eval/): heldout.jsonl, raw.jsonl (her çalıştırma), question_log.sqlite (soru modu günlüğü,
 araç çıktılarıyla), replay.jsonl, per_question.csv, summary.md.
 Çalıştırma (proje kökü, ana venv; mlx_lm.server'ı kendisi başlatır ve kapatır):
   python -m src.finetune.heldout                # soru seti (bir kez)
-  python -m src.finetune.evaluate               # ~1,5 saat
+  python -m src.finetune.evaluate               # ~2,5 saat
   python -m src.finetune.evaluate --summary     # yalnızca özet
 """
 import argparse
@@ -36,12 +43,17 @@ from collections import Counter, defaultdict
 from contextlib import contextmanager
 from pathlib import Path
 
-from src.agents.llm import BASE, LOCAL_ADAPTER, LOCAL_MODEL, LocalLLM
+from src.agents.llm import BASE, LocalLLM
 from src.finetune.heldout import HELDOUT, MONTHS_TR, OUT, group_key, load_heldout
 from src.harness import question_mode as QM
 from src.mcp_server import tools as TOOLS
 
-MODELS = {"base": BASE, "v1": LOCAL_ADAPTER}
+MODEL_4BIT = "models/Qwen3-4B-Instruct-2507-4bit"   # mlx_lm.convert -q --q-bits 4 --q-group-size 64 (4,5 bit/ağırlık)
+MODEL_8BIT = "models/Qwen3-4B-Instruct-2507-8bit"   # mlx_lm.convert -q --q-bits 8 --q-group-size 64 (8,5 bit/ağırlık)
+MODELS = {"base": (MODEL_8BIT, BASE),                 # etiket -> (model dosyası, adaptör); özet tablolarındaki sıra
+          "v1": (MODEL_4BIT, "models/adapters/bist-qwen3-4b-v1"),
+          "v2": (MODEL_8BIT, "models/adapters/bist-qwen3-4b-v2")}
+RUN_ORDER = ("v1", "base", "v2")                      # aynı dosyayı kullananlar art arda
 CATS = ("s1", "s2", "s3", "s4", "s5", "other", "error")
 REPEAT_N = 10
 PORT = 8090
@@ -193,14 +205,15 @@ def reproducibility(raw: list) -> dict:
 
 # ---------------------------------------------------------------- çalıştırma
 @contextmanager
-def local_server(url: str = None, port: int = PORT):
-    """mlx_lm.server'ı adaptörsüz başlatır (adaptör istekle gelir) ve iş bitince kapatır; url verilirse onu kullanır."""
+def local_server(url: str = None, port: int = PORT, model: str = MODEL_4BIT):
+    """mlx_lm.server'ı adaptörsüz başlatır (dosya ve adaptör istekle gelir) ve iş bitince kapatır; url verilirse onu
+    kullanır."""
     if url:
         yield url
         return
     SERVER_LOG.parent.mkdir(parents=True, exist_ok=True)
     log = open(SERVER_LOG, "w")
-    p = subprocess.Popen(["venv-llm/bin/mlx_lm.server", "--model", LOCAL_MODEL, "--port", str(port)], stdout=log,
+    p = subprocess.Popen(["venv-llm/bin/mlx_lm.server", "--model", model, "--port", str(port)], stdout=log,
                          stderr=subprocess.STDOUT, env=dict(os.environ, HF_HUB_OFFLINE="1"))
     try:
         for _ in range(300):
@@ -236,6 +249,11 @@ def repeat_subset(qs: list, n: int = REPEAT_N) -> list:
     return out
 
 
+def run_plan(qs: list, models=RUN_ORDER, repeat_n: int = REPEAT_N) -> list:
+    """(etiket, çalıştırma no, sorular): önce her model bütün sorular, sonra tekrarlar ters sırada."""
+    return [(m, 1, qs) for m in models] + [(m, 2, repeat_subset(qs, repeat_n)) for m in reversed(models)]
+
+
 def run_one(q: dict, llm, label: str, run: int, db: Path) -> dict:
     """Bir soruyu soru modunda çalıştırır (günlüğe yazar) ve puanlamaya yetecek kaydı döndürür."""
     res = QM.run_question(q["question"], q["asof"], llm, db=db, log=True)
@@ -262,17 +280,17 @@ def _append(path: Path, rec: dict):
         f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
 
-def run(url: str = None, models=("base", "v1"), repeat_n: int = REPEAT_N, limit: int = None, out: Path = OUT):
+def run(url: str = None, models=RUN_ORDER, repeat_n: int = REPEAT_N, limit: int = None, out: Path = OUT):
     qs = load_heldout(out / HELDOUT.name)[:limit]
     raw_path, db = out / "raw.jsonl", out / "question_log.sqlite"
     done = {(r["hid"], r["model"], r["run"]) for r in _jsonl(raw_path)}
-    plan = [(m, 1, qs) for m in models] + [(m, 2, repeat_subset(qs, repeat_n)) for m in reversed(models)]
+    plan = run_plan(qs, models, repeat_n)
     todo = sum((q["hid"], m, k) not in done for m, k, items in plan for q in items)
     print(f"{todo} çalıştırma kaldı ({len(qs)} soru, modeller {', '.join(models)}, tekrar {repeat_n})", flush=True)
     if todo:
-        with local_server(url) as base_url:
+        with local_server(url, model=MODELS[models[0]][0]) as base_url:
             for label, k, items in plan:
-                llm = LocalLLM(base_url=base_url, adapter=MODELS[label])
+                llm = LocalLLM(model=MODELS[label][0], base_url=base_url, adapter=MODELS[label][1])
                 for q in items:
                     if (q["hid"], label, k) in done:
                         continue
@@ -337,10 +355,18 @@ def render(res: dict, qs: list, models: list) -> str:
     head = "| metric | " + " | ".join(models) + " |\n|---|" + "---|" * len(models)
     line = lambda name, k, pct=True: f"| {name} | " + " | ".join(_f(o[m][k], pct) for m in models) + " |"
     lines = [
-        "# Local model evaluation: base vs fine-tuned (v1) on held-out questions", "",
-        f"Generated by `python -m src.finetune.evaluate`. Model `{LOCAL_MODEL}` (4-bit), `base` = no adapter, `v1` = "
-        f"LoRA adapter `{LOCAL_ADAPTER}`. Same settings as the live question mode: temperature 0, at most "
-        f"{QM.MAX_CALLS} tool calls, one correction round, max_tokens {', '.join(map(str, res['max_tokens'])) or '–'}.",
+        "# Local model evaluation: base vs fine-tuned (v1, v2) on held-out questions", "",
+        "Generated by `python -m src.finetune.evaluate`. One model, Qwen3-4B-Instruct-2507, in these setups:", ""]
+    lines += [f"- `{m}`: weights `{MODELS[m][0]}`, " + ("no adapter" if MODELS[m][1] == BASE else
+                                                       f"LoRA adapter `{MODELS[m][1]}`") for m in models]
+    lines += [
+        "",
+        "v1 was trained (MLX QLoRA) on the 4-bit weights and runs on them. v2 was trained on the full-precision "
+        "weights (PEFT on a GPU) and runs on the 8-bit weights, which are closer to what it was trained on. The base "
+        "model runs on the same 8-bit weights as v2, so base vs v2 differs only by the adapter; base vs v1 also "
+        "differs in quantization.", "",
+        f"Same settings as the live question mode: temperature 0, at most {QM.MAX_CALLS} tool calls, one correction "
+        f"round, max_tokens {', '.join(map(str, res['max_tokens'])) or '–'}.",
         "",
         f"**Held-out set** (`src/finetune/heldout.py`, `heldout.jsonl`): {len(qs)} questions written with phrasings, "
         "terms and a date format not used in training; no question shares category + stock/group + analysis date "
@@ -399,13 +425,15 @@ def render(res: dict, qs: list, models: list) -> str:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Taban ve ince ayarlı model, görülmemiş sorular (5. adım)")
     ap.add_argument("--url", default=None, help="çalışan sunucu (adaptörsüz başlatılmış); yoksa sunucu başlatılır")
-    ap.add_argument("--models", default="base,v1")
+    ap.add_argument("--models", default=",".join(RUN_ORDER))
     ap.add_argument("--repeat", type=int, default=REPEAT_N)
     ap.add_argument("--limit", type=int, default=None, help="ilk N soru (hızlı deneme)")
     ap.add_argument("--summary", action="store_true", help="yalnızca özeti yeniden yaz")
+    ap.add_argument("--out", default=str(OUT), help="çıktı klasörü (içinde heldout.jsonl olmalı; deneme için)")
     a = ap.parse_args()
+    out = Path(a.out)
     if not a.summary:
-        run(a.url, tuple(a.models.split(",")), a.repeat, a.limit)
-    s = summarize()
+        run(a.url, tuple(a.models.split(",")), a.repeat, a.limit, out)
+    s = summarize(out)
     print(json.dumps(s["overall"], ensure_ascii=False, indent=1))
-    print("özet: reports/local_llm/eval_v1/summary.md")
+    print(f"özet: {out / 'summary.md'}")

@@ -121,10 +121,14 @@ python -m src.harness.scan --replay <scan_id> --demo-db
 python -m src.harness.decision_log
 
 # Question mode (local model, no cloud API): free-form question -> model calls MCP tools -> harness checks
-#   1) start the local model server (separate venv-llm, offline):
+#   1) start the local model server (separate venv-llm, offline) WITHOUT --adapter-path: the client sends the
+#      LoRA adapter with every request (mlx_lm.server applies --adapter-path only to model 'default_model' and
+#      silently serves the base model for a real model path):
 #      HF_HUB_OFFLINE=1 venv-llm/bin/mlx_lm.server --model models/Qwen3-4B-Instruct-2507-4bit --port 8080
-#   2) ask (analysis-date ceiling, max 6 tool calls, number/advice/action checks, log reports/question_log.sqlite):
+#   2) ask (analysis-date ceiling, max 6 tool calls, number/advice/action checks, log reports/question_log.sqlite;
+#      fine-tuned adapter models/adapters/bist-qwen3-4b-v1 by default, the log records model + adapter):
 python -m src.harness.question_mode --asof 2026-09-10 "Perakende sektöründe (BIMAS, MGROS, MAVI) ..."
+python -m src.harness.question_mode --adapter none --asof 2026-09-10 "..."   # base model, for the comparison
 python -m src.harness.question_mode --replay <qid>     # re-run the logged tool calls, compare outputs
 
 # MCP: start the server as a subprocess (stdio), list the 15 tools, call each once

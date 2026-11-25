@@ -104,17 +104,31 @@ class GeminiLLM:
 
 LOCAL_URL = "http://127.0.0.1:8080/v1"
 LOCAL_MODEL = "models/Qwen3-4B-Instruct-2507-4bit"   # yerelde üretilen 4-bit (mlx_lm.convert -q, 4,5 bit/ağırlık)
+LOCAL_ADAPTER = "models/adapters/bist-qwen3-4b-v1"   # 4. adımda eğitilen LoRA adaptörü (src/finetune/train_mlx.py)
+BASE = "none"                                        # adaptörsüz taban model (karşılaştırma için)
 
 
 class LocalLLM:
     """Yerel model (internet yok, anahtar yok): OpenAI uyumlu yerel sunucu (mlx_lm.server, Ollama, llama.cpp).
-    Sıcaklık 0 = açgözlü çözme, aynı istem aynı cevabı verir. Önbellek yok: her cevap modelden gelir."""
+    Sıcaklık 0 = açgözlü çözme, aynı istem aynı cevabı verir. Önbellek yok: her cevap modelden gelir.
 
-    def __init__(self, model: str = None, base_url: str = None, temperature: float = 0.0, max_tokens: int = 900):
+    Adaptör her istekle açıkça gönderilir (kullanıcı kararı b, 25 Kasım 2026): mlx_lm.server '--adapter-path'i yalnızca
+    istekteki model adı 'default_model' iken uygular; gerçek model yolu gelince adaptörsüz tabanı sessizce yeniden
+    yükler (ilk adaptör kontrolü bu yüzden aslında tabanı ölçtü). Sunucu adaptörsüz başlatılır, adaptörü istemci
+    seçer; adı (name) soru günlüğüne yazılır, böylece cevabı hangi modelin verdiği kayıttan görülür.
+    adapter: None -> LOCAL_ADAPTER ortam değişkeni ya da varsayılan v1; 'none' -> taban model.
+    """
+
+    def __init__(self, model: str = None, base_url: str = None, temperature: float = 0.0, max_tokens: int = 900,
+                 adapter: str = None):
         from openai import OpenAI
         self.model = model or os.environ.get("LOCAL_MODEL", LOCAL_MODEL)
         self.base_url = base_url or os.environ.get("LOCAL_URL", LOCAL_URL)
-        self.name = f"local:{self.model}"
+        adapter = adapter or os.environ.get("LOCAL_ADAPTER", LOCAL_ADAPTER)
+        self.adapter = None if adapter.strip().lower() == BASE else adapter
+        if self.adapter and not (Path(self.adapter) / "adapters.safetensors").exists():
+            raise FileNotFoundError(f"adaptör bulunamadı: {self.adapter} (taban model için adapter='none')")
+        self.name = f"local:{self.model}" + (f"+{self.adapter}" if self.adapter else "")
         self.client = OpenAI(api_key="yerel", base_url=self.base_url, timeout=600)
         self.temperature, self.max_tokens = temperature, max_tokens
         self.calls = self.cache_hits = 0
@@ -124,6 +138,8 @@ class LocalLLM:
         kwargs = dict(model=self.model, messages=messages, temperature=self.temperature, max_tokens=self.max_tokens)
         if tools:
             kwargs["tools"] = tools
+        if self.adapter:                                 # mlx_lm.server isteğe özel alan: 'adapters'
+            kwargs["extra_body"] = dict(adapters=self.adapter)
         resp = self.client.chat.completions.create(**kwargs)
         msg = resp.choices[0].message
         self.calls += 1

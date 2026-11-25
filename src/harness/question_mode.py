@@ -14,8 +14,10 @@ Kullanıcı kararları (24 Kasım 2026): 1a eylemi model seçer, harness denetle
 3a çıktılar modele kısaltılmış verilir (uzun satır listeleri atılır, 4 ondalık); 4a uydurma sayı -> bir düzeltme
 denemesi, yine olursa ANALYSIS_UNSAFE.
 
-Çalıştırma (önce yerel sunucu: venv-llm/bin/mlx_lm.server --model models/Qwen3-4B-Instruct-2507-4bit --port 8080):
+Çalıştırma (önce yerel sunucu, adaptörsüz: venv-llm/bin/mlx_lm.server --model models/Qwen3-4B-Instruct-2507-4bit
+--port 8080; adaptörü istemci her istekle gönderir, src/agents/llm.LocalLLM):
   python -m src.harness.question_mode --asof 2026-09-10 "Perakende sektöründe (BIMAS, MGROS, MAVI) ..."
+  python -m src.harness.question_mode --adapter none --asof 2026-09-10 "..."      # taban model (karşılaştırma)
 """
 import argparse
 import asyncio
@@ -401,6 +403,8 @@ if __name__ == "__main__":
     ap.add_argument("--asof", required=False, help="analiz tarihi (YYYY-AA-GG); sonrası hiçbir araçta görünmez")
     ap.add_argument("--url", default=None, help="yerel OpenAI uyumlu sunucu (varsayılan http://127.0.0.1:8080/v1)")
     ap.add_argument("--model", default=None)
+    ap.add_argument("--adapter", default=None,
+                    help="LoRA adaptör klasörü (varsayılan models/adapters/bist-qwen3-4b-v1); 'none' = taban model")
     ap.add_argument("--replay", default=None, help="kayıt kimliği: araç çağrılarını yeniden çalıştır ve karşılaştır")
     ap.add_argument("--no-log", action="store_true")
     a = ap.parse_args()
@@ -409,4 +413,5 @@ if __name__ == "__main__":
     else:
         if not (a.question and a.asof):
             ap.error("soru ve --asof gerekli")
-        _print(run_question(a.question, a.asof, LocalLLM(model=a.model, base_url=a.url), log=not a.no_log))
+        _print(run_question(a.question, a.asof, LocalLLM(model=a.model, base_url=a.url, adapter=a.adapter),
+                            log=not a.no_log))

@@ -1,6 +1,7 @@
 """Yerel model 5. adım: görülmemiş soru seti (src/finetune/heldout.py) ve puanlama (src/finetune/evaluate.py)."""
 import asyncio
 import json
+from pathlib import Path
 
 import pytest
 
@@ -110,10 +111,29 @@ def test_expected_failures_and_gold_matching_in_error_question():
     assert (s["gold_hit"], s["expected_fail"], s["invalid"], s["correct"]) == (1, 2, 1, True)
 
 
+def test_budget_refused_calls_are_not_invalid_calls():
+    """Sorun 5 (26 Kasım 2026): 6 hak bitince reddedilen çağrılar çalışmadı; geçersiz sayılmaz, ayrı sayılır. Eski
+    kayıtta over_budget alanı yok, hata metninden tanınır."""
+    q = dict(hid="h1", cat="other", question="THYAO 2025-01-02 ile 2025-02-03 arası?", asof="2025-02-03",
+             gold_action="HOLD", gold_calls=[dict(name="get_stock_history", ok=True,
+                                                  args=dict(ticker="THYAO", start="2025-01-02", end="2025-02-03"))])
+    args = '{"ticker": "THYAO", "start": "2025-01-02", "end": "2025-02-03"}'
+    recs = [dict(name="check_data_quality", ok=False, arguments='{"ticker": "THYAOO"}', error="HATA: bilinmiyor",
+                 over_budget=False),
+            dict(name="get_stock_history", ok=False, arguments=args, error=E.QM.BUDGET_ERROR, over_budget=True),
+            dict(name="get_stock_history", ok=False, arguments=args, error=E.QM.BUDGET_ERROR)]      # eski kayıt
+    r = dict(model="base", run=1, action="HOLD", status="ok", retries=0, tool_calls=recs, first_numbers=0,
+             first_unsupported=[], first_advice=[], final_advice=[], llm_calls=4, latency=1.0)
+    s = E.score(q, r)
+    assert (s["n_calls"], s["invalid"], s["budget_refused"], s["gold_hit"]) == (1, 1, 2, 0)
+    a = E.aggregate([s])
+    assert (a["invalid_call_rate"], a["tool_calls"], a["budget_refused"]) == (1.0, 1.0, 2.0)
+
+
 def test_aggregate_and_reproducibility():
     base = dict(cat="s1", run=1, gold_action="WATCH", status="ok", retries=0, n_calls=2, invalid=1, expected_fail=0,
                 gold_n=2, gold_hit=1, full_evidence=False, bt_n=1, bt_hit=0, first_numbers=10, first_fabricated=1,
-                first_advice=0, final_advice=0, llm_calls=3, latency=10.0)
+                first_advice=0, final_advice=0, llm_calls=3, latency=10.0, budget_refused=0)
     rows = [dict(base, hid="a", model="v1", action="WATCH", correct=True),
             dict(base, hid="b", model="v1", action="HOLD", correct=False, invalid=0, gold_hit=2, full_evidence=True,
                  bt_hit=1, first_fabricated=0, latency=30.0)]
@@ -143,7 +163,7 @@ def test_run_one_and_summary_without_server(tmp_path):
     assert rec["action"] == "HOLD" and rec["status"] == "ok" and rec["first_unsupported"] == []
     E._append(tmp_path / "raw.jsonl", rec)
     E.replay_all(tmp_path)
-    res = E.summarize(tmp_path)
+    res = E.summarize(tmp_path, "eval")
     assert res["overall"]["v1"]["action_accuracy"] == 1.0 and res["overall"]["v1"]["full_evidence"] == 1.0
     assert res["replay_same_outputs"]["v1"] == 1.0
     assert "action accuracy" in (tmp_path / "summary.md").read_text()
@@ -152,13 +172,36 @@ def test_run_one_and_summary_without_server(tmp_path):
 
 def test_eval_setups_base_shares_v2_weights_and_two_switches():
     """Karar 1a (26 Kasım 2026): taban, v2 ile aynı 8-bit dosyada; v1 kendi 4-bit dosyasında. Sırada dosya 2 kez değişir."""
-    assert E.MODELS["base"] == (E.MODEL_8BIT, "none")
-    assert E.MODELS["v2"][0] == E.MODEL_8BIT and E.MODELS["v1"][0] == E.MODEL_4BIT
+    st = E.SETUPS["eval"]
+    assert st["models"]["base"] == (E.MODEL_8BIT, "none")
+    assert st["models"]["v2"][0] == E.MODEL_8BIT and st["models"]["v1"][0] == E.MODEL_4BIT
     qs = [dict(hid=f"q{i}", cat=c) for i, c in enumerate(E.CATS * 2)]
-    plan = E.run_plan(qs)
+    plan = E.run_plan(qs, st["order"])
     assert [(m, k) for m, k, _ in plan] == [("v1", 1), ("base", 1), ("v2", 1), ("v2", 2), ("base", 2), ("v1", 2)]
-    files = [E.MODELS[m][0] for m, _, items in plan for _ in items]
+    files = [st["models"][m][0] for m, _, items in plan for _ in items]
     assert sum(a != b for a, b in zip(files, files[1:])) == 2
+
+
+def test_eval_v3_setup_one_4bit_file_only_adapter_differs():
+    """Karar (26 Kasım 2026 akşam): eval_v3 = base, v1, v3 aynı 4-bit dosyada; v3 önce çalışır; dosya hiç değişmez."""
+    st = E.SETUPS["eval_v3"]
+    assert {f for f, _ in st["models"].values()} == {E.MODEL_4BIT}
+    assert [a for _, a in st["models"].values()] == ["none", E.ADAPTER_V1, E.ADAPTER_V3]
+    assert st["order"][0] == "v3" and st["heldout"] == "src/finetune/heldout_v3.py"
+    plan = E.run_plan([dict(hid=f"q{i}", cat=c) for i, c in enumerate(E.CATS)], st["order"])
+    assert [(m, k) for m, k, _ in plan] == [("v3", 1), ("v1", 1), ("base", 1), ("base", 2), ("v1", 2), ("v3", 2)]
+
+
+def test_setup_follows_output_folder(tmp_path):
+    assert E.setup_for(Path("reports/local_llm/eval_v3")) is E.SETUPS["eval_v3"]
+    assert E.setup_for(Path("reports/local_llm/eval")) is E.SETUPS["eval"]
+    assert E.setup_for(tmp_path, "eval_v3") is E.SETUPS["eval_v3"]
+    with pytest.raises(ValueError, match="kurulum bilinmiyor"):
+        E.setup_for(tmp_path)
+    q = dict(hid="h01", cat="other", question="soru", asof="2025-02-03", gold_action="HOLD", gold_calls=[])
+    (tmp_path / "heldout.jsonl").write_text(json.dumps(q) + "\n")
+    with pytest.raises(ValueError, match="olmayan model"):
+        E.run("http://127.0.0.1:1/v1", ("v2",), 0, None, tmp_path, "eval_v3")      # v2 eval_v3'te yok
 
 
 def test_server_prompt_cache_is_capped():
@@ -181,7 +224,7 @@ def _fake_run(tmp_path, monkeypatch, statuses):
     monkeypatch.setattr(E, "run_one", fake_one)
     monkeypatch.setattr(E, "LocalLLM", lambda **kw: None)
     monkeypatch.setattr(E, "replay_all", lambda out: None)
-    return lambda: E.run("http://127.0.0.1:1/v1", ("v1",), 0, None, tmp_path)
+    return lambda: E.run("http://127.0.0.1:1/v1", ("v1",), 0, None, tmp_path, "eval")
 
 
 def test_server_errors_not_recorded_and_run_stops(tmp_path, monkeypatch):

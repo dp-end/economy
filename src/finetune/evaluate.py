@@ -11,6 +11,10 @@ Kullanıcı kararları (26 Kasım 2026): üç kurulum, tek model (Qwen3-4B-Instr
   v2   = 8-bit dosya + v2 adaptörü (v2 GPU'da tam hassasiyetli ağırlıklarla eğitildi; 4-bit dosyada kaybı belirgin
          artıyor, 8-bit dosyada GPU'daki değerine iniyor)
   2a: canlı soru modunun varsayılanı (llm.LOCAL_MODEL/LOCAL_ADAPTER) bu değerlendirmeden sonra seçilir.
+Kullanıcı kararları (26 Kasım 2026 akşam, v3): kurulum çıktı klasörüne bağlı (SETUPS; eski 'eval' aynen kalır, özeti
+yeniden yazılabilir); 'eval_v3' = base, v1, v3 üçü de 4-bit dosyada (fark yalnızca adaptör; v3 GPU'da bu 4-bit
+ağırlıkların açılmış hâliyle eğitildi), soru seti heldout_v3.py (60 soru). 6 çağrı hakkı bitince çalıştırılmayan
+çağrılar geçersiz sayılmaz, ayrı sayılır (budget_refused).
 
 Metrikler (PDF §30 + hocanın duyurusu), her model için toplam ve kategori bazında:
   doğru eylem oranı (son eylem = altın eylem; tersi desteklenmeyen sonuç oranı), geçersiz araç çağrısı oranı (hata
@@ -27,8 +31,9 @@ varsayılanları, sıcaklık 0, en fazla 6 araç çağrısı, bir düzeltme).
 araç çıktılarıyla), replay.jsonl, per_question.csv, summary.md.
 Çalıştırma (proje kökü, ana venv; mlx_lm.server'ı kendisi başlatır ve kapatır):
   python -m src.finetune.heldout                # soru seti (bir kez)
-  python -m src.finetune.evaluate               # ~2,5 saat
+  python -m src.finetune.evaluate               # ~2,5 saat (reports/local_llm/eval, kurulum 'eval')
   python -m src.finetune.evaluate --summary     # yalnızca özet
+  python -m src.finetune.evaluate --out reports/local_llm/eval_v3   # v3 (soru seti heldout_v3), ~3 saat
 """
 import argparse
 import csv
@@ -50,10 +55,34 @@ from src.mcp_server import tools as TOOLS
 
 MODEL_4BIT = "models/Qwen3-4B-Instruct-2507-4bit"   # mlx_lm.convert -q --q-bits 4 --q-group-size 64 (4,5 bit/ağırlık)
 MODEL_8BIT = "models/Qwen3-4B-Instruct-2507-8bit"   # mlx_lm.convert -q --q-bits 8 --q-group-size 64 (8,5 bit/ağırlık)
-MODELS = {"base": (MODEL_8BIT, BASE),                 # etiket -> (model dosyası, adaptör); özet tablolarındaki sıra
-          "v1": (MODEL_4BIT, "models/adapters/bist-qwen3-4b-v1"),
-          "v2": (MODEL_8BIT, "models/adapters/bist-qwen3-4b-v2")}
-RUN_ORDER = ("v1", "base", "v2")                      # aynı dosyayı kullananlar art arda
+ADAPTER_V1 = "models/adapters/bist-qwen3-4b-v1"
+ADAPTER_V2 = "models/adapters/bist-qwen3-4b-v2"
+ADAPTER_V3 = "models/adapters/bist-qwen3-4b-v3"
+# Kurulum = çıktı klasörünün adı. models: etiket -> (model dosyası, adaptör), özet tablolarındaki sıra; order:
+# çalıştırma sırası (aynı dosyayı kullananlar art arda; yarıda kalırsa en önemli sonuç önce elde olsun).
+SETUPS = {
+    "eval": dict(
+        models={"base": (MODEL_8BIT, BASE), "v1": (MODEL_4BIT, ADAPTER_V1), "v2": (MODEL_8BIT, ADAPTER_V2)},
+        order=("v1", "base", "v2"), heldout="src/finetune/heldout.py",
+        note="v1 was trained (MLX QLoRA) on the 4-bit weights and runs on them. v2 was trained on the full-precision "
+             "weights (PEFT on a GPU) and runs on the 8-bit weights, which are closer to what it was trained on. The "
+             "base model runs on the same 8-bit weights as v2, so base vs v2 differs only by the adapter; base vs v1 "
+             "also differs in quantization.",
+        heldout_note="questions written with phrasings, terms and a date format not used in training; no question "
+                     "shares category + stock/group + analysis date with any training or validation conversation."),
+    "eval_v3": dict(
+        models={"base": (MODEL_4BIT, BASE), "v1": (MODEL_4BIT, ADAPTER_V1), "v3": (MODEL_4BIT, ADAPTER_V3)},
+        order=("v3", "v1", "base"), heldout="src/finetune/heldout_v3.py",
+        note="All three setups run on the same 4-bit weights, so they differ only by the adapter. v1 was trained "
+             "(MLX QLoRA) on these 4-bit weights. v3 was trained with PEFT on a GPU on the same 4-bit weights "
+             "dequantized to fp16 (identical values), which avoids the quantization gap seen for v2. The system "
+             "prompt and tool outputs are the current ones (rule-check line, success rates and the age of the last "
+             "event/disclosure); v1 was trained before these changes and sees them here for the first time.",
+        heldout_note="questions written with phrasings and terms that are neither in the v3 training templates nor "
+                     "in the first held-out set, and a date format (10/09/2026) not used in training; no question "
+                     "shares category + stock/group + analysis date with any v1 or v3 training or validation "
+                     "conversation."),
+}
 CATS = ("s1", "s2", "s3", "s4", "s5", "other", "error")
 REPEAT_N = 10
 PORT = 8090
@@ -64,6 +93,14 @@ SERVER_LOG = Path("data/finetune/eval_server.log")
 CACHE_BYTES = 2 * 1024 ** 3
 MAX_LLM_ERRORS = 3        # art arda bu kadar sunucu hatasında dur (sunucu ölmüştür; boşa kayıt yazma)
 DATE_PARAMS = ("start", "end", "date", "asof", "oos_start")
+
+
+def setup_for(out: Path, name: str = None) -> dict:
+    """Kurulum: verilen ad, yoksa çıktı klasörünün adı (eval, eval_v3). Bilinmeyen klasörde (deneme) ad şart."""
+    key = name or out.name
+    if key not in SETUPS:
+        raise ValueError(f"kurulum bilinmiyor: {key!r}; --setup ile {' / '.join(SETUPS)} verin")
+    return SETUPS[key]
 
 
 # ---------------------------------------------------------------- puanlama (karar 3a)
@@ -151,15 +188,23 @@ def expected_failure(q: dict, rec: dict) -> bool:
     return TOOLS._fold(q["bad"]) in TOOLS._fold(rec.get("arguments") or "")
 
 
+def budget_refused(rec: dict) -> bool:
+    """6 çağrı hakkı bitince çalıştırılmayan çağrı (eski kayıtlarda over_budget yok -> hata metninden)."""
+    return bool(rec.get("over_budget")) or rec.get("error") == QM.BUDGET_ERROR
+
+
 def score(q: dict, r: dict) -> dict:
     stated = stated_dates(q["question"], q["asof"])
-    recs = r["tool_calls"]
+    # Hak bitince reddedilen çağrı hiç çalışmadı: geçersiz sayılmaz, altını karşılamaz, ayrı sayılır.
+    refused = sum(budget_refused(x) for x in r["tool_calls"])
+    recs = [x for x in r["tool_calls"] if not budget_refused(x)]
     hits = match_gold(q["gold_calls"], recs, stated)
     exp = sum(expected_failure(q, x) for x in recs)
     bt = [h for g, h in zip(q["gold_calls"], hits) if g["name"] == "run_backtest"]
     return dict(hid=q["hid"], cat=q["cat"], model=r["model"], run=r["run"], gold_action=q["gold_action"],
                 action=r["action"], correct=r["action"] == q["gold_action"], status=r["status"], retries=r["retries"],
                 n_calls=len(recs), invalid=sum(not x["ok"] for x in recs) - exp, expected_fail=exp,
+                budget_refused=refused,
                 gold_n=len(hits), gold_hit=sum(hits), full_evidence=all(hits), bt_n=len(bt), bt_hit=sum(bt),
                 first_numbers=r["first_numbers"], first_fabricated=len(r["first_unsupported"]),
                 first_advice=len(r["first_advice"]), final_advice=len(r["final_advice"]),
@@ -187,6 +232,7 @@ def aggregate(rows: list) -> dict:
         llm_error=sum(x["status"] == "llm_error" for x in rows),
         retried=sum(x["retries"] > 0 for x in rows),
         tool_calls=s("n_calls") / n,
+        budget_refused=s("budget_refused") / n,
         llm_calls=s("llm_calls") / n,
         latency_mean=s("latency") / n,
         latency_median=statistics.median(x["latency"] for x in rows),
@@ -259,7 +305,7 @@ def repeat_subset(qs: list, n: int = REPEAT_N) -> list:
     return out
 
 
-def run_plan(qs: list, models=RUN_ORDER, repeat_n: int = REPEAT_N) -> list:
+def run_plan(qs: list, models: tuple, repeat_n: int = REPEAT_N) -> list:
     """(etiket, çalıştırma no, sorular): önce her model bütün sorular, sonra tekrarlar ters sırada."""
     return [(m, 1, qs) for m in models] + [(m, 2, repeat_subset(qs, repeat_n)) for m in reversed(models)]
 
@@ -290,7 +336,13 @@ def _append(path: Path, rec: dict):
         f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
 
-def run(url: str = None, models=RUN_ORDER, repeat_n: int = REPEAT_N, limit: int = None, out: Path = OUT):
+def run(url: str = None, models: tuple = None, repeat_n: int = REPEAT_N, limit: int = None, out: Path = OUT,
+        setup: str = None):
+    st = setup_for(out, setup)
+    MODELS, models = st["models"], tuple(models or st["order"])
+    unknown = [m for m in models if m not in MODELS]
+    if unknown:
+        raise ValueError(f"bu kurulumda olmayan model: {unknown}; var olanlar {list(MODELS)}")
     qs = load_heldout(out / HELDOUT.name)[:limit]
     raw_path, db = out / "raw.jsonl", out / "question_log.sqlite"
     done = {(r["hid"], r["model"], r["run"]) for r in _jsonl(raw_path)}
@@ -336,12 +388,13 @@ def replay_all(out: Path = OUT):
 
 
 # ---------------------------------------------------------------- özet
-def summarize(out: Path = OUT) -> dict:
+def summarize(out: Path = OUT, setup: str = None) -> dict:
+    st = setup_for(out, setup)
     qs = {q["hid"]: q for q in load_heldout(out / HELDOUT.name)}
     raw = _jsonl(out / "raw.jsonl")
     rows = [score(qs[r["hid"]], r) for r in raw]
     first = [x for x in rows if x["run"] == 1]
-    models = [m for m in MODELS if any(x["model"] == m for x in first)]
+    models = [m for m in st["models"] if any(x["model"] == m for x in first)]
     overall, per_cat, confusion = {}, {}, {}
     for m in models:
         mine = [x for x in first if x["model"] == m]
@@ -360,7 +413,7 @@ def summarize(out: Path = OUT) -> dict:
                 w.writerow(dict(x, question=qs[x["hid"]]["question"]))
     res = dict(overall=overall, per_category=per_cat, confusion=confusion, reproducibility=reproducibility(raw),
                replay_same_outputs=replay, replay_skipped=skipped, max_tokens=sorted({r.get("max_tokens") for r in raw} - {None}))
-    (out / "summary.md").write_text(render(res, list(qs.values()), models))
+    (out / "summary.md").write_text(render(res, list(qs.values()), models, st))
     return res
 
 
@@ -372,31 +425,27 @@ def _f(v, pct=True):
     return str(v)
 
 
-def render(res: dict, qs: list, models: list) -> str:
+def render(res: dict, qs: list, models: list, st: dict) -> str:
     """summary.md (İngilizce, raporlar gibi)."""
     o = res["overall"]
+    MODELS = st["models"]
     head = "| metric | " + " | ".join(models) + " |\n|---|" + "---|" * len(models)
     line = lambda name, k, pct=True: f"| {name} | " + " | ".join(_f(o[m][k], pct) for m in models) + " |"
+    tuned = ", ".join(m for m in models if MODELS[m][1] != BASE)
     lines = [
-        "# Local model evaluation: base vs fine-tuned (v1, v2) on held-out questions", "",
+        f"# Local model evaluation: base vs fine-tuned ({tuned}) on held-out questions", "",
         "Generated by `python -m src.finetune.evaluate`. One model, Qwen3-4B-Instruct-2507, in these setups:", ""]
     lines += [f"- `{m}`: weights `{MODELS[m][0]}`, " + ("no adapter" if MODELS[m][1] == BASE else
                                                        f"LoRA adapter `{MODELS[m][1]}`") for m in models]
     lines += [
-        "",
-        "v1 was trained (MLX QLoRA) on the 4-bit weights and runs on them. v2 was trained on the full-precision "
-        "weights (PEFT on a GPU) and runs on the 8-bit weights, which are closer to what it was trained on. The base "
-        "model runs on the same 8-bit weights as v2, so base vs v2 differs only by the adapter; base vs v1 also "
-        "differs in quantization.", "",
+        "", st["note"], "",
         f"Same settings as the live question mode: temperature 0, at most {QM.MAX_CALLS} tool calls, one correction "
         f"round, max_tokens {', '.join(map(str, res['max_tokens'])) or '–'}.",
         "",
-        f"**Held-out set** (`src/finetune/heldout.py`, `heldout.jsonl`): {len(qs)} questions written with phrasings, "
-        "terms and a date format not used in training; no question shares category + stock/group + analysis date "
-        "with any training or validation conversation. Gold tool calls and gold actions come from the same code "
-        "and rules that produced the training data, so this measures whether the model applies the rules to new "
-        "wording, not whether the rules are economically right. The instructor's five sample questions are in the "
-        "training set and therefore not used here.", "",
+        f"**Held-out set** (`{st['heldout']}`, `heldout.jsonl`): {len(qs)} {st['heldout_note']} Gold tool calls and "
+        "gold actions come from the same code and rules that produced the training data, so this measures whether "
+        "the model applies the rules to new wording, not whether the rules are economically right. The "
+        "instructor's five sample questions are in the training set and therefore not used here.", "",
         "| category | " + " | ".join(CATS) + " |", "|---|" + "---|" * len(CATS),
         "| questions | " + " | ".join(str(sum(q["cat"] == c for q in qs)) for c in CATS) + " |", "",
         "Gold actions: " + ", ".join(f"{a} {n}" for a, n in Counter(q["gold_action"] for q in qs).most_common()) + ".",
@@ -415,13 +464,16 @@ def render(res: dict, qs: list, models: list) -> str:
         line("no successful tool call", "no_evidence"),
         line("model/server errors", "llm_error"),
         line("tool calls per question", "tool_calls", False),
+        line(f"calls refused by the {QM.MAX_CALLS}-call budget per question", "budget_refused", False),
         line("LLM calls per question", "llm_calls", False),
         line("latency mean (s)", "latency_mean", False),
         line("latency median (s)", "latency_median", False),
         "", "Tool calls match when the tool name and every key argument of the gold call agree (stock/sector, "
         "event/pattern/strategy, horizon/lookback, conditions, dates stated in the question); extra valid arguments "
         "are allowed. Calls with the unknown code in error questions are expected to fail and are not counted as "
-        "invalid.", "", "## By category (action accuracy / invalid tool-call rate / evidence completeness)", "",
+        f"invalid. Calls the model asked for after its {QM.MAX_CALLS}-call budget was used up were refused by the "
+        "harness and never run: they are counted on their own line, not as tool calls, not as invalid calls and "
+        "not as evidence.", "", "## By category (action accuracy / invalid tool-call rate / evidence completeness)", "",
         "| category | " + " | ".join(models) + " |", "|---|" + "---|" * len(models)]
     for c in CATS:
         cells = []
@@ -451,15 +503,17 @@ def render(res: dict, qs: list, models: list) -> str:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Taban ve ince ayarlı model, görülmemiş sorular (5. adım)")
     ap.add_argument("--url", default=None, help="çalışan sunucu (adaptörsüz başlatılmış); yoksa sunucu başlatılır")
-    ap.add_argument("--models", default=",".join(RUN_ORDER))
+    ap.add_argument("--models", default=None, help="virgüllü etiketler; yoksa kurulumun sırası")
     ap.add_argument("--repeat", type=int, default=REPEAT_N)
     ap.add_argument("--limit", type=int, default=None, help="ilk N soru (hızlı deneme)")
     ap.add_argument("--summary", action="store_true", help="yalnızca özeti yeniden yaz")
-    ap.add_argument("--out", default=str(OUT), help="çıktı klasörü (içinde heldout.jsonl olmalı; deneme için)")
+    ap.add_argument("--out", default=str(OUT), help="çıktı klasörü (içinde heldout.jsonl olmalı)")
+    ap.add_argument("--setup", default=None, choices=list(SETUPS),
+                    help="kurulum; yoksa çıktı klasörünün adı (deneme klasöründe şart)")
     a = ap.parse_args()
     out = Path(a.out)
     if not a.summary:
-        run(a.url, tuple(a.models.split(",")), a.repeat, a.limit, out)
-    s = summarize(out)
+        run(a.url, tuple(a.models.split(",")) if a.models else None, a.repeat, a.limit, out, a.setup)
+    s = summarize(out, a.setup)
     print(json.dumps(s["overall"], ensure_ascii=False, indent=1))
     print(f"özet: {out / 'summary.md'}")

@@ -24,7 +24,7 @@ Gold actions: REJECT_SIGNAL 9, WATCH 8, HOLD 6, INVESTIGATE 4, FUNDAMENTAL_IMPRO
 |---|---|---|---|
 | action accuracy | 25.0% | 67.5% | 55.0% |
 | unsupported conclusion rate | 75.0% | 32.5% | 45.0% |
-| invalid tool-call rate | 59.2% | 8.8% | 9.3% |
+| invalid tool-call rate | 41.0% | 8.8% | 9.3% |
 | evidence completeness (gold calls matched) | 36.1% | 82.0% | 65.6% |
 | questions with all gold calls | 27.5% | 80.0% | 57.5% |
 | backtest call correctness | 0.0% | 80.0% | 20.0% |
@@ -35,22 +35,23 @@ Gold actions: REJECT_SIGNAL 9, WATCH 8, HOLD 6, INVESTIGATE 4, FUNDAMENTAL_IMPRO
 | answers withheld by the gate | 3 | 3 | 2 |
 | no successful tool call | 4 | 0 | 0 |
 | model/server errors | 0 | 0 | 0 |
-| tool calls per question | 5.3 | 1.5 | 1.4 |
+| tool calls per question | 3.7 | 1.5 | 1.4 |
+| calls refused by the 6-call budget per question | 1.6 | 0.0 | 0.0 |
 | LLM calls per question | 2.5 | 2.3 | 2.3 |
 | latency mean (s) | 85.9 | 46.1 | 90.9 |
 | latency median (s) | 81.5 | 43.7 | 47.5 |
 
-Tool calls match when the tool name and every key argument of the gold call agree (stock/sector, event/pattern/strategy, horizon/lookback, conditions, dates stated in the question); extra valid arguments are allowed. Calls with the unknown code in error questions are expected to fail and are not counted as invalid.
+Tool calls match when the tool name and every key argument of the gold call agree (stock/sector, event/pattern/strategy, horizon/lookback, conditions, dates stated in the question); extra valid arguments are allowed. Calls with the unknown code in error questions are expected to fail and are not counted as invalid. Calls the model asked for after its 6-call budget was used up were refused by the harness and never run: they are counted on their own line, not as tool calls, not as invalid calls and not as evidence.
 
 ## By category (action accuracy / invalid tool-call rate / evidence completeness)
 
 | category | base | v1 | v2 |
 |---|---|---|---|
-| s1 | 14.3% / 57.5% / 14.3% | 71.4% / 13.3% / 85.7% | 42.9% / 7.7% / 50.0% |
+| s1 | 14.3% / 48.5% / 14.3% | 71.4% / 13.3% / 85.7% | 42.9% / 7.7% / 50.0% |
 | s2 | 57.1% / 47.8% / 0.0% | 71.4% / 25.0% / 71.4% | 71.4% / 28.6% / 57.1% |
 | s3 | 14.3% / 16.7% / 42.9% | 28.6% / 9.1% / 50.0% | 28.6% / 10.0% / 42.9% |
-| s4 | 14.3% / 58.1% / 42.9% | 42.9% / 0.0% / 100.0% | 42.9% / 0.0% / 100.0% |
-| s5 | 0.0% / 30.4% / 60.0% | 100.0% / 0.0% / 100.0% | 40.0% / 0.0% / 80.0% |
+| s4 | 14.3% / 56.7% / 42.9% | 42.9% / 0.0% / 100.0% | 42.9% / 0.0% / 100.0% |
+| s5 | 0.0% / 15.8% / 60.0% | 100.0% / 0.0% / 100.0% | 40.0% / 0.0% / 80.0% |
 | other | 0.0% / 20.0% / 75.0% | 100.0% / 0.0% / 100.0% | 100.0% / 0.0% / 75.0% |
 | error | 100.0% / 100.0% / 66.7% | 100.0% / 0.0% / 100.0% | 100.0% / 100.0% / 66.7% |
 

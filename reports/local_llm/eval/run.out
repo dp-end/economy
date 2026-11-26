@@ -1,0 +1,588 @@
+98 çalıştırma kaldı (40 soru, modeller v1, base, v2, tekrar 10)
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: 'Error executing tool test_weekday_pattern: oos_start (2026-01-01) start (2024-01-01) ile end (2025-12-31) arasında olmalı'
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h13 s2    altın REJECT_SIGNAL                     model WATCH                             ✗  88.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h14 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  68.2 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h15 s3    altın WATCH                             model INVESTIGATE                       ✗ 178.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h16 s3    altın WATCH                             model REJECT_SIGNAL                     ✗  88.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h17 s3    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗  95.2 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h18 s3    altın REJECT_SIGNAL                     model INVESTIGATE                       ✗  75.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'calculate_indicators' failed: "Error executing tool calculate_indicators: bilinmeyen gösterge: ['rsi', 'volume']. Geçerli: sma_20, sma_50, sma_200, ema_20, ema_50, rsi_14, macd, macd_signal, macd_hist, bb_mid, bb_upper, bb_lower, bb_bandwidth, bb_pctb, atr_14, kama, kama_slope, supertrend, st_dir, st_flip, tenkan, kijun, cloud_top, cloud_bottom, cloud_state, vol_z_20, ret_1d, ret_5d, vol_20d"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'calculate_indicators' failed: "Error executing tool calculate_indicators: bilinmeyen gösterge: ['volume']. Geçerli: sma_20, sma_50, sma_200, ema_20, ema_50, rsi_14, macd, macd_signal, macd_hist, bb_mid, bb_upper, bb_lower, bb_bandwidth, bb_pctb, atr_14, kama, kama_slope, supertrend, st_dir, st_flip, tenkan, kijun, cloud_top, cloud_bottom, cloud_state, vol_z_20, ret_1d, ret_5d, vol_20d"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h19 s3    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓ 107.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h20 s3    altın TECHNICAL_REVERSAL_CANDIDATE      model INVESTIGATE                       ✗  50.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'find_support_resistance' failed: 'Error executing tool find_support_resistance: tolerance 0,001 ile 0,1 arasında olmalı'
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen koşul: 'close_below_support'. Geçerli: rsi_dip, rsi_tepe, rsi_notr, hacim_yuksek, hacim_normal, st_yukari, st_asagi, bulut_ustu, bulut_alti, bulut_ici, kama_yukselen, kama_dusen, kama_yatay, trend_yukari, trend_asagi ('+' ile birleştirilir)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h21 s3    altın TECHNICAL_REVERSAL_CANDIDATE      model WATCH                             ✗  70.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q' (beklenen biçim YYYY-AA-GG)"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h22 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model INVESTIGATE                       ✗ 103.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q1_2025' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q2_2025' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q3_2025' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q4_2025' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q1_2026' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q2_2026' (beklenen biçim YYYY-AA-GG)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h23 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model ANALYSIS_UNSAFE                   ✗  63.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q' (beklenen biçim YYYY-AA-GG)"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h24 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model INVESTIGATE                       ✗ 113.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q1' (beklenen biçim YYYY-AA-GG)"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h25 s4    altın HOLD                              model INVESTIGATE                       ✗  95.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q' (beklenen biçim YYYY-AA-GG)"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h26 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model WATCH                             ✗  84.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q' (beklenen biçim YYYY-AA-GG)"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h27 s4    altın HOLD                              model INVESTIGATE                       ✗ 190.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q4' (beklenen biçim YYYY-AA-GG)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h28 s4    altın INVESTIGATE                       model INVESTIGATE                       ✓  93.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h29 s5    altın WATCH                             model ANALYSIS_UNSAFE                   ✗ 134.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h30 s5    altın INVESTIGATE                       model REJECT_SIGNAL                     ✗  80.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_news_events' failed: "Error executing tool get_news_events: bilinmeyen konu: 'export'. Geçerli: rutin, bilanco, temettu, geri_alim, sermaye, derecelendirme, borclanma, sozlesme, birlesme_satinalma, yonetim, faaliyet, hukuk_duzenleme, genel_kurul, faiz, kur, enflasyon, emtia, jeopolitik, pay_alim_satim, varant, diger"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h31 s5    altın WATCH                             model ANALYSIS_UNSAFE                   ✗ 155.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+Tool 'calculate_indicators' failed: "Error executing tool calculate_indicators: bilinmeyen gösterge: ['rsi']. Geçerli: sma_20, sma_50, sma_200, ema_20, ema_50, rsi_14, macd, macd_signal, macd_hist, bb_mid, bb_upper, bb_lower, bb_bandwidth, bb_pctb, atr_14, kama, kama_slope, supertrend, st_dir, st_flip, tenkan, kijun, cloud_top, cloud_bottom, cloud_state, vol_z_20, ret_1d, ret_5d, vol_20d"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h32 s5    altın INVESTIGATE                       model WATCH                             ✗ 104.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h33 s5    altın TECHNICAL_REVERSAL_CANDIDATE      model ANALYSIS_UNSAFE                   ✗  30.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h34 other altın HOLD                              model WATCH                             ✗  31.2 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h35 other altın HOLD                              model WATCH                             ✗  33.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h36 other altın HOLD                              model WATCH                             ✗  23.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_news_events' failed: "Error executing tool get_news_events: bilinmeyen konu: 'KAP'. Geçerli: rutin, bilanco, temettu, geri_alim, sermaye, derecelendirme, borclanma, sozlesme, birlesme_satinalma, yonetim, faaliyet, hukuk_duzenleme, genel_kurul, faiz, kur, enflasyon, emtia, jeopolitik, pay_alim_satim, varant, diger"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h37 other altın HOLD                              model WATCH                             ✗  31.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_index_history' failed: "Error executing tool get_index_history: bilinmeyen endeks: 'XU030'. Yalnızca XU100 var"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h38 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓  42.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'calculate_indicators' failed: "Error executing tool calculate_indicators: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'find_support_resistance' failed: "Error executing tool find_support_resistance: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'calculate_fundamental_change' failed: "Error executing tool calculate_fundamental_change: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h39 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓  67.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'rank_sector_relative_strength' failed: "Error executing tool rank_sector_relative_strength: bilinmeyen hisse kodu: 'TURKU'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'TURKU'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h40 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓ 243.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h01 s1    altın WATCH                             model WATCH                             ✓  45.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h02 s1    altın WATCH                             model WATCH                             ✓  37.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h03 s1    altın INVESTIGATE                       model WATCH                             ✗  46.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h04 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model POTENTIAL_CATCH_UP_CANDIDATE      ✓ 108.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h05 s1    altın WATCH                             model INVESTIGATE                       ✗  84.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h06 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model WATCH                             ✗  78.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'run_backtest' failed: "Error executing tool run_backtest: bilinmeyen sektör grubu: 'sigorta_ve_araci_kurum_hisseleri'. Geçerli: Automotive & Durables, Banking, Chemicals & Energy, Construction RE & Utilities, Healthcare, Metals & Mining, Other Financials, Retail & Consumer, Tech Telecom & Defense, Transportation (Türkçe adlar da olur, ör. perakende, banka) ya da tickers=[...] verin"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h07 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model ANALYSIS_UNSAFE                   ✗  29.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h08 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  54.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h09 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗  29.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h10 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  45.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h11 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗  29.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h12 s2    altın WATCH                             model WATCH                             ✓  66.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h13 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  42.2 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h14 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  41.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h15 s3    altın WATCH                             model INVESTIGATE                       ✗  54.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen koşul: 'trend_down_20'. Geçerli: rsi_dip, rsi_tepe, rsi_notr, hacim_yuksek, hacim_normal, st_yukari, st_asagi, bulut_ustu, bulut_alti, bulut_ici, kama_yukselen, kama_dusen, kama_yatay, trend_yukari, trend_asagi ('+' ile birleştirilir)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h16 s3    altın WATCH                             model REJECT_SIGNAL                     ✗ 110.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h17 s3    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  58.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h18 s3    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗  97.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h19 s3    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  64.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h20 s3    altın TECHNICAL_REVERSAL_CANDIDATE      model WATCH                             ✗  56.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h21 s3    altın TECHNICAL_REVERSAL_CANDIDATE      model HOLD                              ✗  33.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h22 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model INVESTIGATE                       ✗ 181.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h23 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model FUNDAMENTAL_IMPROVEMENT_CANDIDATE ✓ 102.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h24 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model FUNDAMENTAL_IMPROVEMENT_CANDIDATE ✓  99.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h25 s4    altın HOLD                              model ANALYSIS_UNSAFE                   ✗ 496.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h26 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model HOLD                              ✗ 927.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h27 s4    altın HOLD                              model HOLD                              ✓ 127.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h28 s4    altın INVESTIGATE                       model FUNDAMENTAL_IMPROVEMENT_CANDIDATE ✗  50.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h29 s5    altın WATCH                             model WATCH                             ✓  44.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h30 s5    altın INVESTIGATE                       model ANALYSIS_UNSAFE                   ✗  70.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h31 s5    altın WATCH                             model WATCH                             ✓  48.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h32 s5    altın INVESTIGATE                       model POTENTIAL_CATCH_UP_CANDIDATE      ✗  43.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h33 s5    altın TECHNICAL_REVERSAL_CANDIDATE      model INVESTIGATE                       ✗  44.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h34 other altın HOLD                              model HOLD                              ✓  25.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h35 other altın HOLD                              model HOLD                              ✓  25.2 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h36 other altın HOLD                              model HOLD                              ✓  24.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h37 other altın HOLD                              model HOLD                              ✓  46.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_index_history' failed: "Error executing tool get_index_history: bilinmeyen endeks: 'XU030'. Yalnızca XU100 var"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h38 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓  22.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h39 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓  21.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'rank_sector_relative_strength' failed: "Error executing tool rank_sector_relative_strength: bilinmeyen sektör grubu: 'textil'. Geçerli: Automotive & Durables, Banking, Chemicals & Energy, Construction RE & Utilities, Healthcare, Metals & Mining, Other Financials, Retail & Consumer, Tech Telecom & Defense, Transportation (Türkçe adlar da olur, ör. perakende, banka) ya da tickers=[...] verin"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #1 h40 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓  20.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #2 h01 s1    altın WATCH                             model WATCH                             ✓  32.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #2 h08 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  48.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #2 h15 s3    altın WATCH                             model INVESTIGATE                       ✗  49.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #2 h22 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model FUNDAMENTAL_IMPROVEMENT_CANDIDATE ✓ 178.2 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #2 h29 s5    altın WATCH                             model WATCH                             ✓  46.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #2 h34 other altın HOLD                              model HOLD                              ✓  25.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_index_history' failed: "Error executing tool get_index_history: bilinmeyen endeks: 'XU030'. Yalnızca XU100 var"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #2 h38 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓  22.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #2 h02 s1    altın WATCH                             model WATCH                             ✓  32.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #2 h09 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗  26.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen koşul: 'trend_down_20'. Geçerli: rsi_dip, rsi_tepe, rsi_notr, hacim_yuksek, hacim_normal, st_yukari, st_asagi, bulut_ustu, bulut_alti, bulut_ici, kama_yukselen, kama_dusen, kama_yatay, trend_yukari, trend_asagi ('+' ile birleştirilir)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v2 #2 h16 s3    altın WATCH                             model REJECT_SIGNAL                     ✗ 101.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #2 h01 s1    altın WATCH                             model POTENTIAL_CATCH_UP_CANDIDATE      ✗  54.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #2 h08 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  54.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #2 h15 s3    altın WATCH                             model INVESTIGATE                       ✗ 183.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q' (beklenen biçim YYYY-AA-GG)"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #2 h22 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model INVESTIGATE                       ✗ 101.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #2 h29 s5    altın WATCH                             model ANALYSIS_UNSAFE                   ✗ 128.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #2 h34 other altın HOLD                              model WATCH                             ✗  28.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_index_history' failed: "Error executing tool get_index_history: bilinmeyen endeks: 'XU030'. Yalnızca XU100 var"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #2 h38 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓  39.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #2 h02 s1    altın WATCH                             model POTENTIAL_CATCH_UP_CANDIDATE      ✗  53.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: 'Error executing tool test_weekday_pattern: oos_start (2025-01-01) start (2023-01-01) ile end (2024-12-31) arasında olmalı'
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #2 h09 s2    altın REJECT_SIGNAL                     model WATCH                             ✗ 102.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #2 h16 s3    altın WATCH                             model REJECT_SIGNAL                     ✗  86.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #2 h01 s1    altın WATCH                             model WATCH                             ✓  31.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #2 h08 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  40.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #2 h15 s3    altın WATCH                             model WATCH                             ✓  52.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #2 h22 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model FUNDAMENTAL_IMPROVEMENT_CANDIDATE ✓  57.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #2 h29 s5    altın WATCH                             model WATCH                             ✓  41.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #2 h34 other altın HOLD                              model HOLD                              ✓  33.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_index_history' failed: "Error executing tool get_index_history: bilinmeyen endeks: 'XU030'. Yalnızca XU100 var"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #2 h38 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓  20.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #2 h02 s1    altın WATCH                             model WATCH                             ✓  28.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #2 h09 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  41.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #2 h16 s3    altın WATCH                             model WATCH                             ✓  56.6 sn
+Tool 'run_backtest' failed: 'Error executing tool run_backtest: tickers en az 2 farklı hisse olmalı'
+Tool 'rank_sector_relative_strength' failed: "Error executing tool rank_sector_relative_strength: bilinmeyen hisse kodu: 'HOLD'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'test_weekday_pattern' failed: 'Error executing tool test_weekday_pattern: oos_start (2026-01-01) start (2026-01-01) ile end (2026-09-16) arasında olmalı'
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen olay: 'supertrend_down_to_up'. Geçerli: bb_lower_reentry, bb_lower_touch, bb_mid_hold_down, bb_mid_hold_up, bb_upper_reentry, bb_upper_touch, cloud_break_down, cloud_break_up, cloud_reject_down, cloud_reject_up, cloud_return_from_above, cloud_return_from_below, kama_turn_down, kama_turn_up, resistance_break, resistance_touch, rsi_overbought_exit, rsi_oversold_exit, supertrend_down, supertrend_up, support_break, support_touch"
+Tool 'get_index_history' failed: "Error executing tool get_index_history: bilinmeyen endeks: 'XU030'. Yalnızca XU100 var"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'rank_sector_relative_strength' failed: "Error executing tool rank_sector_relative_strength: bilinmeyen sektör grubu: 'tekstil'. Geçerli: Automotive & Durables, Banking, Chemicals & Energy, Construction RE & Utilities, Healthcare, Metals & Mining, Other Financials, Retail & Consumer, Tech Telecom & Defense, Transportation (Türkçe adlar da olur, ör. perakende, banka) ya da tickers=[...] verin"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: bilinmeyen hisse kodu: 'HOLDING, SIGORTA VE ARACI KURUM'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'calculate_fundamental_change' failed: "Error executing tool calculate_fundamental_change: bilinmeyen hisse kodu: 'HOLDING, SIGORTA VE ARACI KURUM'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'HOLDING, SIGORTA VE ARACI KURUM'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen hisse kodu: 'HOLDING, SIGORTA VE ARACI KURUM'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: bilinmeyen hisse kodu: 'HOLDING, SIGORTA VE ARACI KURUM'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'get_news_events' failed: "Error executing tool get_news_events: bilinmeyen hisse kodu: 'HOLDING, SIGORTA VE ARACI KURUM'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q4' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q4' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q4' (beklenen biçim YYYY-AA-GG)"
+Tool 'run_backtest' failed: 'Error executing tool run_backtest: threshold 0,005 ile 0,5 arasında olmalı (oran; 0.10 = 10 puan geride)'
+Tool 'run_backtest' failed: "Error executing tool run_backtest: ticker 'GUBRF' grupta yok: BIMAS, MGROS, MAVI, CCOLA"
+Tool 'run_backtest' failed: "Error executing tool run_backtest: ticker 'PETKM' grupta yok: BIMAS, MGROS, MAVI, CCOLA"
+Tool 'run_backtest' failed: "Error executing tool run_backtest: ticker 'SASA' grupta yok: BIMAS, MGROS, MAVI, CCOLA"
+Tool 'run_backtest' failed: "Error executing tool run_backtest: ticker 'TUPRS' grupta yok: BIMAS, MGROS, MAVI, CCOLA"
+Tool 'rank_sector_relative_strength' failed: "Error executing tool rank_sector_relative_strength: bilinmeyen hisse kodu: 'HBC'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'run_backtest' failed: "Error executing tool run_backtest: bilinmeyen sektör grubu: 'Holding, Sigorta ve Aracı Kurumlar'. Geçerli: Automotive & Durables, Banking, Chemicals & Energy, Construction RE & Utilities, Healthcare, Metals & Mining, Other Financials, Retail & Consumer, Tech Telecom & Defense, Transportation (Türkçe adlar da olur, ör. perakende, banka) ya da tickers=[...] verin"
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen hisse kodu: 'TAVK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'TAVK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: bilinmeyen hisse kodu: 'TAVK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'test_weekday_pattern' failed: 'Error executing tool test_weekday_pattern: oos_start (2025-01-01) start (2023-01-01) ile end (2024-12-31) arasında olmalı'
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+Tool 'test_weekday_pattern' failed: 'Error executing tool test_weekday_pattern: oos_start (2025-01-01) start (2022-01-01) ile end (2024-12-31) arasında olmalı'
+Tool 'test_weekday_pattern' failed: 'Error executing tool test_weekday_pattern: oos_start (2026-01-01) start (2024-01-01) ile end (2025-12-31) arasında olmalı'
+Tool 'calculate_indicators' failed: "Error executing tool calculate_indicators: bilinmeyen gösterge: ['rsi', 'volume']. Geçerli: sma_20, sma_50, sma_200, ema_20, ema_50, rsi_14, macd, macd_signal, macd_hist, bb_mid, bb_upper, bb_lower, bb_bandwidth, bb_pctb, atr_14, kama, kama_slope, supertrend, st_dir, st_flip, tenkan, kijun, cloud_top, cloud_bottom, cloud_state, vol_z_20, ret_1d, ret_5d, vol_20d"
+Tool 'calculate_indicators' failed: "Error executing tool calculate_indicators: bilinmeyen gösterge: ['volume']. Geçerli: sma_20, sma_50, sma_200, ema_20, ema_50, rsi_14, macd, macd_signal, macd_hist, bb_mid, bb_upper, bb_lower, bb_bandwidth, bb_pctb, atr_14, kama, kama_slope, supertrend, st_dir, st_flip, tenkan, kijun, cloud_top, cloud_bottom, cloud_state, vol_z_20, ret_1d, ret_5d, vol_20d"
+Tool 'find_support_resistance' failed: 'Error executing tool find_support_resistance: tolerance 0,001 ile 0,1 arasında olmalı'
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen koşul: 'close_below_support'. Geçerli: rsi_dip, rsi_tepe, rsi_notr, hacim_yuksek, hacim_normal, st_yukari, st_asagi, bulut_ustu, bulut_alti, bulut_ici, kama_yukselen, kama_dusen, kama_yatay, trend_yukari, trend_asagi ('+' ile birleştirilir)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q' (beklenen biçim YYYY-AA-GG)"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q1_2025' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q2_2025' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q3_2025' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q4_2025' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q1_2026' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q2_2026' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q' (beklenen biçim YYYY-AA-GG)"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q1' (beklenen biçim YYYY-AA-GG)"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q' (beklenen biçim YYYY-AA-GG)"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q' (beklenen biçim YYYY-AA-GG)"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q4' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_news_events' failed: "Error executing tool get_news_events: bilinmeyen konu: 'export'. Geçerli: rutin, bilanco, temettu, geri_alim, sermaye, derecelendirme, borclanma, sozlesme, birlesme_satinalma, yonetim, faaliyet, hukuk_duzenleme, genel_kurul, faiz, kur, enflasyon, emtia, jeopolitik, pay_alim_satim, varant, diger"
+Tool 'rank_sector_relative_strength' failed: 'Error executing tool rank_sector_relative_strength: tickers en az 2 farklı hisse olmalı'
+Tool 'calculate_indicators' failed: "Error executing tool calculate_indicators: bilinmeyen gösterge: ['rsi']. Geçerli: sma_20, sma_50, sma_200, ema_20, ema_50, rsi_14, macd, macd_signal, macd_hist, bb_mid, bb_upper, bb_lower, bb_bandwidth, bb_pctb, atr_14, kama, kama_slope, supertrend, st_dir, st_flip, tenkan, kijun, cloud_top, cloud_bottom, cloud_state, vol_z_20, ret_1d, ret_5d, vol_20d"
+Tool 'find_support_resistance' failed: 'Error executing tool find_support_resistance: tolerance 0,001 ile 0,1 arasında olmalı'
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q3' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_news_events' failed: "Error executing tool get_news_events: bilinmeyen konu: 'performans'. Geçerli: rutin, bilanco, temettu, geri_alim, sermaye, derecelendirme, borclanma, sozlesme, birlesme_satinalma, yonetim, faaliyet, hukuk_duzenleme, genel_kurul, faiz, kur, enflasyon, emtia, jeopolitik, pay_alim_satim, varant, diger"
+Tool 'get_news_events' failed: "Error executing tool get_news_events: bilinmeyen konu: 'KAP'. Geçerli: rutin, bilanco, temettu, geri_alim, sermaye, derecelendirme, borclanma, sozlesme, birlesme_satinalma, yonetim, faaliyet, hukuk_duzenleme, genel_kurul, faiz, kur, enflasyon, emtia, jeopolitik, pay_alim_satim, varant, diger"
+Tool 'get_index_history' failed: "Error executing tool get_index_history: bilinmeyen endeks: 'XU030'. Yalnızca XU100 var"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'calculate_indicators' failed: "Error executing tool calculate_indicators: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'find_support_resistance' failed: "Error executing tool find_support_resistance: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'calculate_fundamental_change' failed: "Error executing tool calculate_fundamental_change: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'get_news_events' failed: "Error executing tool get_news_events: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'rank_sector_relative_strength' failed: "Error executing tool rank_sector_relative_strength: bilinmeyen hisse kodu: 'TURKU'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'TURKU'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'KARAK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'run_backtest' failed: "Error executing tool run_backtest: bilinmeyen sektör grubu: 'sigorta_ve_araci_kurum_hisseleri'. Geçerli: Automotive & Durables, Banking, Chemicals & Energy, Construction RE & Utilities, Healthcare, Metals & Mining, Other Financials, Retail & Consumer, Tech Telecom & Defense, Transportation (Türkçe adlar da olur, ör. perakende, banka) ya da tickers=[...] verin"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen koşul: 'trend_down_20'. Geçerli: rsi_dip, rsi_tepe, rsi_notr, hacim_yuksek, hacim_normal, st_yukari, st_asagi, bulut_ustu, bulut_alti, bulut_ici, kama_yukselen, kama_dusen, kama_yatay, trend_yukari, trend_asagi ('+' ile birleştirilir)"
+Tool 'get_index_history' failed: "Error executing tool get_index_history: bilinmeyen endeks: 'XU030'. Yalnızca XU100 var"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'rank_sector_relative_strength' failed: "Error executing tool rank_sector_relative_strength: bilinmeyen sektör grubu: 'textil'. Geçerli: Automotive & Durables, Banking, Chemicals & Energy, Construction RE & Utilities, Healthcare, Metals & Mining, Other Financials, Retail & Consumer, Tech Telecom & Defense, Transportation (Türkçe adlar da olur, ör. perakende, banka) ya da tickers=[...] verin"
+{
+ "base": {
+  "n": 40,
+  "action_accuracy": 0.25,
+  "unsupported_conclusion": 0.75,
+  "invalid_call_rate": 0.5920398009950248,
+  "evidence_completeness": 0.36065573770491804,
+  "full_evidence": 0.275,
+  "backtest_call_correct": 0.0,
+  "fabricated_number_rate": 0.02318840579710145,
+  "answers_with_fabrication": 0.125,
+  "advice_first": 1,
+  "advice_shown": 0,
+  "withheld": 3,
+  "no_evidence": 4,
+  "llm_error": 0,
+  "retried": 7,
+  "tool_calls": 5.275,
+  "llm_calls": 30.175,
+  "latency_mean": 85.9425,
+  "latency_median": 81.55
+ },
+ "v1": {
+  "n": 40,
+  "action_accuracy": 0.675,
+  "unsupported_conclusion": 0.32499999999999996,
+  "invalid_call_rate": 0.08771929824561403,
+  "evidence_completeness": 0.819672131147541,
+  "full_evidence": 0.8,
+  "backtest_call_correct": 0.8,
+  "fabricated_number_rate": 0.005008347245409015,
+  "answers_with_fabrication": 0.075,
+  "advice_first": 0,
+  "advice_shown": 0,
+  "withheld": 3,
+  "no_evidence": 0,
+  "llm_error": 0,
+  "retried": 3,
+  "tool_calls": 1.5,
+  "llm_calls": 50.825,
+  "latency_mean": 46.1125,
+  "latency_median": 43.7
+ },
+ "v2": {
+  "n": 40,
+  "action_accuracy": 0.55,
+  "unsupported_conclusion": 0.44999999999999996,
+  "invalid_call_rate": 0.09259259259259259,
+  "evidence_completeness": 0.6557377049180327,
+  "full_evidence": 0.575,
+  "backtest_call_correct": 0.2,
+  "fabricated_number_rate": 0.002232142857142857,
+  "answers_with_fabrication": 0.025,
+  "advice_first": 0,
+  "advice_shown": 0,
+  "withheld": 2,
+  "no_evidence": 0,
+  "llm_error": 0,
+  "retried": 3,
+  "tool_calls": 1.4,
+  "llm_calls": 50.7,
+  "latency_mean": 90.91499999999999,
+  "latency_median": 47.55
+ }
+}
+özet: reports/local_llm/eval/summary.md

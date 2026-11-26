@@ -130,6 +130,24 @@ def test_same_question_logged_twice_in_one_second_gets_two_ids(tmp_path):
     assert len(set(ids)) == 3 and all(QM.load_question(i, db)["status"] == "llm_error" for i in ids)
 
 
+def test_llm_calls_counted_per_question_when_llm_is_reused(tmp_path):
+    """Gerçek bulgu (26 Kasım 2026): değerlendirmede aynı LLM nesnesi 40 soruda kullanıldı ve llm_calls birikti."""
+    llm = ScriptLLM([{"tool_calls": [RANK]}, {"content": GOOD}] * 3)       # her soru: araç çağrısı + cevap
+    counts = [QM.run_question(Q1, ASOF, llm, log=False)["llm_calls"] for _ in range(3)]
+    assert counts == [2, 2, 2] and llm.calls == 6
+
+
+def test_replay_skips_calls_refused_by_budget(tmp_path):
+    """Gerçek bulgu (26 Kasım 2026): hak bittiği için çalıştırılmamış çağrılar tekrar oynatmada çalıştırılıp 'aynı
+    değil' sayılıyordu (taban model %87,5)."""
+    db = tmp_path / "q.sqlite"
+    res = QM.run_question(Q1, ASOF, ScriptLLM([{"tool_calls": [RANK] * (QM.MAX_CALLS + 2)}, {"content": GOOD}]), db=db)
+    assert sum(bool(o.get("over_budget")) for o in res["tool_calls"]) == 2
+    assert QM.load_question(res["qid"], db)["tool_calls"][-1]["over_budget"]
+    rep = QM.replay_question(res["qid"], db)
+    assert rep["same_outputs"] and rep["n_calls"] == QM.MAX_CALLS and rep["n_skipped"] == 2
+
+
 def test_compact_view_only_selects_and_rounds():
     with T.data_ceiling(ASOF):
         full = T.to_json(T.calculate_fundamental_change(ticker="TUPRS", start="2024-01-01"))

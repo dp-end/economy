@@ -332,7 +332,7 @@ def replay_all(out: Path = OUT):
         if r["run"] == 1 and r["qid"] not in done:
             rp = QM.replay_question(r["qid"], db)
             _append(path, dict(qid=r["qid"], hid=r["hid"], model=r["model"], n_calls=rp["n_calls"],
-                               same_outputs=rp["same_outputs"]))
+                               n_skipped=rp["n_skipped"], same_outputs=rp["same_outputs"]))
 
 
 # ---------------------------------------------------------------- özet
@@ -351,6 +351,7 @@ def summarize(out: Path = OUT) -> dict:
     rp = _jsonl(out / "replay.jsonl")
     replay = {m: sum(r["same_outputs"] for r in rp if r["model"] == m) / max(sum(r["model"] == m for r in rp), 1)
               for m in models}
+    skipped = {m: sum(r.get("n_skipped", 0) for r in rp if r["model"] == m) for m in models}
     if rows:
         with open(out / "per_question.csv", "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=list(rows[0]) + ["question"])
@@ -358,7 +359,7 @@ def summarize(out: Path = OUT) -> dict:
             for x in sorted(rows, key=lambda x: (x["hid"], x["model"], x["run"])):
                 w.writerow(dict(x, question=qs[x["hid"]]["question"]))
     res = dict(overall=overall, per_category=per_cat, confusion=confusion, reproducibility=reproducibility(raw),
-               replay_same_outputs=replay, max_tokens=sorted({r.get("max_tokens") for r in raw} - {None}))
+               replay_same_outputs=replay, replay_skipped=skipped, max_tokens=sorted({r.get("max_tokens") for r in raw} - {None}))
     (out / "summary.md").write_text(render(res, list(qs.values()), models))
     return res
 
@@ -439,8 +440,11 @@ def render(res: dict, qs: list, models: list) -> str:
         if r:
             lines.append(f"- **{m}**: {r['n']} questions run twice: same action {_f(r['same_action'])}, same tool "
                          f"calls {_f(r['same_calls'])}, same answer text {_f(r['same_answer'])}.")
+        n_skip = res.get("replay_skipped", {}).get(m, 0)
         lines.append(f"- **{m}**: logged tool calls replayed under the same ceiling: same outputs "
-                     f"{_f(res['replay_same_outputs'].get(m))}.")
+                     f"{_f(res['replay_same_outputs'].get(m))}"
+                     + (f" ({n_skip} calls refused by the 6-call budget were never run, so they are not replayed)"
+                        if n_skip else "") + ".")
     return "\n".join(lines) + "\n"
 
 

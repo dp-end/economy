@@ -40,6 +40,7 @@ from src.mcp_server.tools import data_ceiling
 
 QDB = Path("reports/question_log.sqlite")
 MAX_CALLS = 6
+BUDGET_ERROR = "çağrı hakkı bitti"     # hak bitince çalıştırılmayan çağrının kayıttaki hata metni
 KEEP_ROWS = 20
 ROUND = 4
 ACTION_HELP = {
@@ -299,7 +300,7 @@ async def _converse(question: str, asof: str, llm, outputs: list) -> tuple:
                     if len(outputs) >= MAX_CALLS:
                         content = f"HATA: en fazla {MAX_CALLS} araç çağrısı yapılabilir; bu çağrı yapılmadı."
                         outputs.append(dict(name=c["name"], arguments=c["arguments"], ok=False, output=None,
-                                            error="çağrı hakkı bitti", over_budget=True))
+                                            error=BUDGET_ERROR, over_budget=True))
                     else:
                         rec = await _call_tool(client, names, c)
                         outputs.append(rec)
@@ -323,6 +324,7 @@ async def _converse(question: str, asof: str, llm, outputs: list) -> tuple:
 
 async def _run(question: str, asof: str, llm) -> dict:
     t0 = time.time()
+    calls0 = llm.calls          # aynı LLM nesnesi birçok soruda kullanılabilir (değerlendirme): bu sorunun çağrıları
     outputs = []
     try:
         answer, raw, retries, v = await _converse(question, asof, llm, outputs)
@@ -356,7 +358,7 @@ async def _run(question: str, asof: str, llm) -> dict:
         answer = trim_after_action(answer)
     return dict(question=question, asof=asof, model=getattr(llm, "name", "?"), action=action, action_source=source,
                 status=status, answer=answer, answer_raw=raw, tool_calls=outputs, validation=v, retries=retries,
-                invalid_tool_calls=sum(not o["ok"] for o in outputs), llm_calls=llm.calls, error=error,
+                invalid_tool_calls=sum(not o["ok"] for o in outputs), llm_calls=llm.calls - calls0, error=error,
                 latency=round(time.time() - t0, 1),
                 states=["START", "SET_CEILING", "CALL_TOOLS", "ANSWER", "VALIDATE", "LOG_AND_CLOSE"])
 
@@ -376,7 +378,7 @@ def log_question(res: dict, db: Path = QDB) -> str:
     # çökünce 0,0 sn'de biten çalıştırmalar) saniyelik damga aynı kimliği verip UNIQUE hatası çıkarıyordu.
     stamp = now.isoformat(timespec="microseconds")
     qid = hashlib.sha256(f"{res['question']}|{res['asof']}|{res['model']}|{stamp}".encode()).hexdigest()[:12]
-    calls = [{k: o.get(k) for k in ("name", "arguments", "args", "ok", "error")} for o in res["tool_calls"]]
+    calls = [{k: o.get(k) for k in ("name", "arguments", "args", "ok", "error", "over_budget")} for o in res["tool_calls"]]
     with sqlite3.connect(db) as con:
         con.execute(SCHEMA)
         con.execute("INSERT INTO questions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -402,16 +404,21 @@ def load_question(qid: str, db: Path = QDB) -> dict:
 def replay_question(qid: str, db: Path = QDB) -> dict:
     """Kayıttaki araç çağrılarını aynı tavanla yeniden çalıştırır; modelin gördüğü çıktılar aynı mı?"""
     q = load_question(qid, db)
+    # Çağrı hakkı bittiği için hiç çalıştırılmamış çağrılar tekrar oynatılmaz (26 Kasım 2026 bulgusu: çalıştırılınca
+    # gerçek çıktı verip 'aynı değil' sayılıyordu). Eski kayıtlarda over_budget alanı yok -> hata metninden tanınır.
+    ran = [(c, o) for c, o in zip(q["tool_calls"], q["outputs"])
+           if not (c.get("over_budget") or c.get("error") == BUDGET_ERROR)]
 
     async def go():
         with data_ceiling(q["asof"]):
             async with Client(build_server()) as client:
                 names = {t.name for t in (await client.list_tools()).tools}
                 return [await _call_tool(client, names, dict(name=c["name"], arguments=c["arguments"]))
-                        for c in q["tool_calls"]]
+                        for c, _ in ran]
     again = asyncio.run(go())
-    same = [a["output"] == b for a, b in zip(again, q["outputs"])]
-    return dict(qid=qid, asof=q["asof"], action=q["action"], n_calls=len(again), same_outputs=all(same), per_call=same)
+    same = [a["output"] == o for a, (_, o) in zip(again, ran)]
+    return dict(qid=qid, asof=q["asof"], action=q["action"], n_calls=len(again),
+                n_skipped=len(q["tool_calls"]) - len(ran), same_outputs=all(same), per_call=same)
 
 
 def _print(res: dict):

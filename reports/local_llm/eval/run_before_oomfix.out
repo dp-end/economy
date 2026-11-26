@@ -1,0 +1,380 @@
+150 çalıştırma kaldı (40 soru, modeller v1, base, v2, tekrar 10)
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h01 s1    altın WATCH                             model WATCH                             ✓  28.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h02 s1    altın WATCH                             model WATCH                             ✓  27.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'run_backtest' failed: 'Error executing tool run_backtest: tickers en az 2 farklı hisse olmalı'
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h03 s1    altın INVESTIGATE                       model INVESTIGATE                       ✓  74.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h04 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model WATCH                             ✗  73.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h05 s1    altın WATCH                             model WATCH                             ✓  65.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h06 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model POTENTIAL_CATCH_UP_CANDIDATE      ✓  58.2 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'rank_sector_relative_strength' failed: "Error executing tool rank_sector_relative_strength: bilinmeyen hisse kodu: 'HOLD'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h07 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model ANALYSIS_UNSAFE                   ✗  20.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h08 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  39.2 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h09 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  40.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: 'Error executing tool test_weekday_pattern: oos_start (2026-01-01) start (2026-01-01) ile end (2026-09-16) arasında olmalı'
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h10 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗  57.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h11 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗  24.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h12 s2    altın WATCH                             model WATCH                             ✓  49.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h13 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  31.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h14 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  31.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h15 s3    altın WATCH                             model WATCH                             ✓  52.9 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h16 s3    altın WATCH                             model WATCH                             ✓  58.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen olay: 'supertrend_down_to_up'. Geçerli: bb_lower_reentry, bb_lower_touch, bb_mid_hold_down, bb_mid_hold_up, bb_upper_reentry, bb_upper_touch, cloud_break_down, cloud_break_up, cloud_reject_down, cloud_reject_up, cloud_return_from_above, cloud_return_from_below, kama_turn_down, kama_turn_up, resistance_break, resistance_touch, rsi_overbought_exit, rsi_oversold_exit, supertrend_down, supertrend_up, support_break, support_touch"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h17 s3    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗  22.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h18 s3    altın REJECT_SIGNAL                     model INVESTIGATE                       ✗  63.2 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h19 s3    altın REJECT_SIGNAL                     model WATCH                             ✗  53.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h20 s3    altın TECHNICAL_REVERSAL_CANDIDATE      model WATCH                             ✗  51.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h21 s3    altın TECHNICAL_REVERSAL_CANDIDATE      model ANALYSIS_UNSAFE                   ✗  90.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h22 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model FUNDAMENTAL_IMPROVEMENT_CANDIDATE ✓  47.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h23 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model HOLD                              ✗  71.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h24 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model ANALYSIS_UNSAFE                   ✗ 108.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h25 s4    altın HOLD                              model INVESTIGATE                       ✗  46.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h26 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model HOLD                              ✗  48.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h27 s4    altın HOLD                              model HOLD                              ✓  84.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h28 s4    altın INVESTIGATE                       model INVESTIGATE                       ✓  51.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h29 s5    altın WATCH                             model WATCH                             ✓  38.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h30 s5    altın INVESTIGATE                       model INVESTIGATE                       ✓  40.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h31 s5    altın WATCH                             model WATCH                             ✓  39.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h32 s5    altın INVESTIGATE                       model INVESTIGATE                       ✓  51.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h33 s5    altın TECHNICAL_REVERSAL_CANDIDATE      model TECHNICAL_REVERSAL_CANDIDATE      ✓  36.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h34 other altın HOLD                              model HOLD                              ✓  31.2 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h35 other altın HOLD                              model HOLD                              ✓  22.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h36 other altın HOLD                              model HOLD                              ✓  21.6 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h37 other altın HOLD                              model HOLD                              ✓  28.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_index_history' failed: "Error executing tool get_index_history: bilinmeyen endeks: 'XU030'. Yalnızca XU100 var"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h38 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓  19.8 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'THYAOO'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h39 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓  20.2 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'rank_sector_relative_strength' failed: "Error executing tool rank_sector_relative_strength: bilinmeyen sektör grubu: 'tekstil'. Geçerli: Automotive & Durables, Banking, Chemicals & Energy, Construction RE & Utilities, Healthcare, Metals & Mining, Other Financials, Retail & Consumer, Tech Telecom & Defense, Transportation (Türkçe adlar da olur, ör. perakende, banka) ya da tickers=[...] verin"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+v1 #1 h40 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓  19.5 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h01 s1    altın WATCH                             model POTENTIAL_CATCH_UP_CANDIDATE      ✗  56.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h02 s1    altın WATCH                             model POTENTIAL_CATCH_UP_CANDIDATE      ✗  51.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h03 s1    altın INVESTIGATE                       model INVESTIGATE                       ✓  98.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: bilinmeyen hisse kodu: 'HOLDING, SIGORTA VE ARACI KURUM'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'calculate_fundamental_change' failed: "Error executing tool calculate_fundamental_change: bilinmeyen hisse kodu: 'HOLDING, SIGORTA VE ARACI KURUM'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'HOLDING, SIGORTA VE ARACI KURUM'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen hisse kodu: 'HOLDING, SIGORTA VE ARACI KURUM'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: bilinmeyen hisse kodu: 'HOLDING, SIGORTA VE ARACI KURUM'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h04 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model INVESTIGATE                       ✗  82.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q4' (beklenen biçim YYYY-AA-GG)"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: 'period' tarih değil: 'Q4' (beklenen biçim YYYY-AA-GG)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h05 s1    altın WATCH                             model INVESTIGATE                       ✗ 101.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'run_backtest' failed: "Error executing tool run_backtest: ticker 'GUBRF' grupta yok: BIMAS, MGROS, MAVI, CCOLA"
+Tool 'run_backtest' failed: "Error executing tool run_backtest: ticker 'PETKM' grupta yok: BIMAS, MGROS, MAVI, CCOLA"
+Tool 'run_backtest' failed: "Error executing tool run_backtest: ticker 'SASA' grupta yok: BIMAS, MGROS, MAVI, CCOLA"
+Tool 'run_backtest' failed: "Error executing tool run_backtest: ticker 'TUPRS' grupta yok: BIMAS, MGROS, MAVI, CCOLA"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h06 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model INVESTIGATE                       ✗  82.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'rank_sector_relative_strength' failed: "Error executing tool rank_sector_relative_strength: bilinmeyen hisse kodu: 'HBC'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'run_backtest' failed: "Error executing tool run_backtest: bilinmeyen sektör grubu: 'Holding, Sigorta ve Aracı Kurumlar'. Geçerli: Automotive & Durables, Banking, Chemicals & Energy, Construction RE & Utilities, Healthcare, Metals & Mining, Other Financials, Retail & Consumer, Tech Telecom & Defense, Transportation (Türkçe adlar da olur, ör. perakende, banka) ya da tickers=[...] verin"
+Tool 'detect_reversal_events' failed: "Error executing tool detect_reversal_events: bilinmeyen hisse kodu: 'TAVK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+Tool 'get_stock_history' failed: "Error executing tool get_stock_history: bilinmeyen hisse kodu: 'TAVK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GARAN, GUBRF, ISCTR, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TAVHL, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG, YKBNK"
+Tool 'get_fundamental_metrics' failed: "Error executing tool get_fundamental_metrics: bilinmeyen hisse kodu: 'TAVK'. Geçerli kodlar: AKBNK, AKSEN, ARCLK, ASELS, BIMAS, CCOLA, ECILC, EKGYO, ENJSA, ENKAI, EREGL, FROTO, GUBRF, ISMEN, KCHOL, KRDMD, MAVI, MGROS, MPARK, OYAKC, PETKM, PGSUS, SASA, TCELL, THYAO, TOASO, TRALT, TTKOM, TUPRS, TURSG"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h07 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model ANALYSIS_UNSAFE                   ✗  71.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h08 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  56.3 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: 'Error executing tool test_weekday_pattern: oos_start (2025-01-01) start (2023-01-01) ile end (2024-12-31) arasında olmalı'
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h09 s2    altın REJECT_SIGNAL                     model WATCH                             ✗ 109.1 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h10 s2    altın REJECT_SIGNAL                     model REJECT_SIGNAL                     ✓  70.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: "Error executing tool test_weekday_pattern: pattern: 'weekday', 'down_streak:K', 'up_streak:K' (K 1-6) ya da 'week:DDD-UU' (Pzt..Cum 5 gün; D düşüş, U yükseliş, . fark etmez; tire koşul günlerini sonuç günlerinden ayırır, ör. 'week:D...-U' Pazartesi düşüş -> Cuma, 'week:D-U...' Pazartesi düşüş -> Salı)"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h11 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗  58.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: 'Error executing tool test_weekday_pattern: oos_start (2025-01-01) start (2022-01-01) ile end (2024-12-31) arasında olmalı'
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+base #1 h12 s2    altın WATCH                             model WATCH                             ✓  55.4 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Tool 'test_weekday_pattern' failed: 'Error executing tool test_weekday_pattern: oos_start (2026-01-01) start (2024-01-01) ile end (2025-12-31) arasında olmalı'
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 200 OK"
+Retrying request in 0.387523 seconds (retry 1 of 2)
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h13 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗  65.7 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h14 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h15 s3    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h16 s3    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h17 s3    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h18 s3    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h19 s3    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h20 s3    altın TECHNICAL_REVERSAL_CANDIDATE      model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h21 s3    altın TECHNICAL_REVERSAL_CANDIDATE      model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h22 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h23 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h24 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h25 s4    altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h26 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h27 s4    altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h28 s4    altın INVESTIGATE                       model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h29 s5    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h30 s5    altın INVESTIGATE                       model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h31 s5    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h32 s5    altın INVESTIGATE                       model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h33 s5    altın TECHNICAL_REVERSAL_CANDIDATE      model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h34 other altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h35 other altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h36 other altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h37 other altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h38 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h39 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+base #1 h40 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h01 s1    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h02 s1    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h03 s1    altın INVESTIGATE                       model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h04 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h05 s1    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h06 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h07 s1    altın POTENTIAL_CATCH_UP_CANDIDATE      model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h08 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h09 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h10 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h11 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h12 s2    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h13 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h14 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h15 s3    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h16 s3    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h17 s3    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h18 s3    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h19 s3    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h20 s3    altın TECHNICAL_REVERSAL_CANDIDATE      model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h21 s3    altın TECHNICAL_REVERSAL_CANDIDATE      model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h22 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h23 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h24 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h25 s4    altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h26 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h27 s4    altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h28 s4    altın INVESTIGATE                       model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h29 s5    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h30 s5    altın INVESTIGATE                       model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h31 s5    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h32 s5    altın INVESTIGATE                       model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h33 s5    altın TECHNICAL_REVERSAL_CANDIDATE      model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h34 other altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h35 other altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h36 other altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h37 other altın HOLD                              model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h38 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h39 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #1 h40 error altın ANALYSIS_UNSAFE                   model ANALYSIS_UNSAFE                   ✓   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #2 h01 s1    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #2 h08 s2    altın REJECT_SIGNAL                     model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #2 h15 s3    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #2 h22 s4    altın FUNDAMENTAL_IMPROVEMENT_CANDIDATE model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+v2 #2 h29 s5    altın WATCH                             model ANALYSIS_UNSAFE                   ✗   0.0 sn
+HTTP Request: POST http://127.0.0.1:8090/v1/chat/completions "HTTP/1.0 404 Not Found"
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/habib/Okul/Ekonomi/BIST-Proje/src/finetune/evaluate.py", line 436, in <module>
+    run(a.url, tuple(a.models.split(",")), a.repeat, a.limit, out)
+  File "/Users/habib/Okul/Ekonomi/BIST-Proje/src/finetune/evaluate.py", line 297, in run
+    rec = run_one(q, llm, label, k, db)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/habib/Okul/Ekonomi/BIST-Proje/src/finetune/evaluate.py", line 259, in run_one
+    res = QM.run_question(q["question"], q["asof"], llm, db=db, log=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/habib/Okul/Ekonomi/BIST-Proje/src/harness/question_mode.py", line 367, in run_question
+    res["qid"] = log_question(res, db)
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/habib/Okul/Ekonomi/BIST-Proje/src/harness/question_mode.py", line 378, in log_question
+    con.execute("INSERT INTO questions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+sqlite3.IntegrityError: UNIQUE constraint failed: questions.qid

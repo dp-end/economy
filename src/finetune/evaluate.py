@@ -58,6 +58,11 @@ CATS = ("s1", "s2", "s3", "s4", "s5", "other", "error")
 REPEAT_N = 10
 PORT = 8090
 SERVER_LOG = Path("data/finetune/eval_server.log")
+# Sunucunun eski konuşmaları tuttuğu önbelleğin üst sınırı. Sınırsızken 26 Kasım 2026'da 10 konuşma 7,2 GB'a çıktı,
+# 8-bit model (4 GB) ile birlikte GPU belleği taştı (Metal OOM). Bir konuşma ~9k token = ~1,3 GB; 2 GB o anki
+# konuşmayı tutar, eskiler LRU ile atılır.
+CACHE_BYTES = 2 * 1024 ** 3
+MAX_LLM_ERRORS = 3        # art arda bu kadar sunucu hatasında dur (sunucu ölmüştür; boşa kayıt yazma)
 DATE_PARAMS = ("start", "end", "date", "asof", "oos_start")
 
 
@@ -204,6 +209,11 @@ def reproducibility(raw: list) -> dict:
 
 
 # ---------------------------------------------------------------- çalıştırma
+def server_cmd(model: str = MODEL_4BIT, port: int = PORT) -> list:
+    return ["venv-llm/bin/mlx_lm.server", "--model", model, "--port", str(port),
+            "--prompt-cache-bytes", str(CACHE_BYTES)]
+
+
 @contextmanager
 def local_server(url: str = None, port: int = PORT, model: str = MODEL_4BIT):
     """mlx_lm.server'ı adaptörsüz başlatır (dosya ve adaptör istekle gelir) ve iş bitince kapatır; url verilirse onu
@@ -213,7 +223,7 @@ def local_server(url: str = None, port: int = PORT, model: str = MODEL_4BIT):
         return
     SERVER_LOG.parent.mkdir(parents=True, exist_ok=True)
     log = open(SERVER_LOG, "w")
-    p = subprocess.Popen(["venv-llm/bin/mlx_lm.server", "--model", model, "--port", str(port)], stdout=log,
+    p = subprocess.Popen(server_cmd(model, port), stdout=log,
                          stderr=subprocess.STDOUT, env=dict(os.environ, HF_HUB_OFFLINE="1"))
     try:
         for _ in range(300):
@@ -289,12 +299,24 @@ def run(url: str = None, models=RUN_ORDER, repeat_n: int = REPEAT_N, limit: int 
     print(f"{todo} çalıştırma kaldı ({len(qs)} soru, modeller {', '.join(models)}, tekrar {repeat_n})", flush=True)
     if todo:
         with local_server(url, model=MODELS[models[0]][0]) as base_url:
+            errors = 0
             for label, k, items in plan:
                 llm = LocalLLM(model=MODELS[label][0], base_url=base_url, adapter=MODELS[label][1])
                 for q in items:
                     if (q["hid"], label, k) in done:
                         continue
                     rec = run_one(q, llm, label, k, db)
+                    if rec["status"] == "llm_error":
+                        # Sunucu hatası modelin cevabı değildir: raw'a yazılmaz, aynı komut yeniden çalışınca tekrar
+                        # denenir (soru günlüğünde llm_error kaydı kalır). Art arda MAX_LLM_ERRORS -> dur.
+                        errors += 1
+                        print(f"{label} #{k} {q['hid']} sunucu hatası ({errors}/{MAX_LLM_ERRORS}), kaydedilmedi: "
+                              f"{(rec['error'] or '')[:120]}", flush=True)
+                        if errors >= MAX_LLM_ERRORS:
+                            raise RuntimeError(f"art arda {errors} sunucu hatası, durduruldu; bkz. {SERVER_LOG}. "
+                                               "Aynı komutla kaldığı yerden devam eder.")
+                        continue
+                    errors = 0
                     _append(raw_path, rec)
                     print(f"{label} #{k} {q['hid']} {q['cat']:5s} altın {q['gold_action']:<33s} model "
                           f"{rec['action']:<33s} {'✓' if rec['action'] == q['gold_action'] else '✗'} "

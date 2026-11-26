@@ -370,8 +370,12 @@ def run_question(question: str, asof: str, llm=None, db: Path = QDB, log: bool =
 
 # ---------------------------------------------------------------- günlük ve tekrar oynatma
 def log_question(res: dict, db: Path = QDB) -> str:
-    created = datetime.now().isoformat(timespec="seconds")
-    qid = hashlib.sha256(f"{res['question']}|{res['asof']}|{res['model']}|{created}".encode()).hexdigest()[:12]
+    now = datetime.now()
+    created = now.isoformat(timespec="seconds")
+    # Kimlikte mikrosaniye: aynı soru aynı saniyede iki kez kaydedilince (26 Kasım 2026 değerlendirmesi, sunucu
+    # çökünce 0,0 sn'de biten çalıştırmalar) saniyelik damga aynı kimliği verip UNIQUE hatası çıkarıyordu.
+    stamp = now.isoformat(timespec="microseconds")
+    qid = hashlib.sha256(f"{res['question']}|{res['asof']}|{res['model']}|{stamp}".encode()).hexdigest()[:12]
     calls = [{k: o.get(k) for k in ("name", "arguments", "args", "ok", "error")} for o in res["tool_calls"]]
     with sqlite3.connect(db) as con:
         con.execute(SCHEMA)

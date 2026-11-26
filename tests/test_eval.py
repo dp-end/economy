@@ -159,3 +159,35 @@ def test_eval_setups_base_shares_v2_weights_and_two_switches():
     assert [(m, k) for m, k, _ in plan] == [("v1", 1), ("base", 1), ("v2", 1), ("v2", 2), ("base", 2), ("v1", 2)]
     files = [E.MODELS[m][0] for m, _, items in plan for _ in items]
     assert sum(a != b for a, b in zip(files, files[1:])) == 2
+
+
+def test_server_prompt_cache_is_capped():
+    """26 Kasım 2026: sınırsız önbellek 7,2 GB'a çıktı, 8-bit model ile Metal OOM. Sunucu sınırla başlar."""
+    cmd = E.server_cmd(E.MODEL_8BIT, 8090)
+    assert cmd[cmd.index("--prompt-cache-bytes") + 1] == str(E.CACHE_BYTES) and E.CACHE_BYTES <= 2 * 1024 ** 3
+
+
+def _fake_run(tmp_path, monkeypatch, statuses):
+    qs = [dict(hid=f"h{i:02d}", cat="other", question=f"soru {i}", asof="2025-02-03", gold_action="HOLD")
+          for i in range(len(statuses))]
+    (tmp_path / "heldout.jsonl").write_text("".join(json.dumps(q, ensure_ascii=False) + "\n" for q in qs))
+    it = iter(statuses)
+
+    def fake_one(q, llm, label, run, db):
+        st = next(it)
+        return dict(hid=q["hid"], cat=q["cat"], model=label, run=run, qid=q["hid"], status=st, latency=0.0,
+                    action="HOLD" if st == "ok" else "ANALYSIS_UNSAFE", error="Error code: 404" if st != "ok" else None)
+
+    monkeypatch.setattr(E, "run_one", fake_one)
+    monkeypatch.setattr(E, "LocalLLM", lambda **kw: None)
+    monkeypatch.setattr(E, "replay_all", lambda out: None)
+    return lambda: E.run("http://127.0.0.1:1/v1", ("v1",), 0, None, tmp_path)
+
+
+def test_server_errors_not_recorded_and_run_stops(tmp_path, monkeypatch):
+    """Sunucu hatası modelin cevabı değil: raw'a yazılmaz (yeniden çalıştırınca tekrar denenir); art arda 3 hatada durur."""
+    run = _fake_run(tmp_path, monkeypatch, ["ok", "llm_error", "ok", "llm_error", "llm_error", "llm_error", "ok"])
+    with pytest.raises(RuntimeError, match="art arda 3"):
+        run()
+    raw = E._jsonl(tmp_path / "raw.jsonl")
+    assert [r["hid"] for r in raw] == ["h00", "h02"] and all(r["status"] == "ok" for r in raw)

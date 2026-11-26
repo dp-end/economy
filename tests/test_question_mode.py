@@ -121,6 +121,15 @@ def test_log_and_replay(tmp_path):
     assert rep["same_outputs"] and rep["n_calls"] == 1
 
 
+def test_same_question_logged_twice_in_one_second_gets_two_ids(tmp_path):
+    """Gerçek bulgu (26 Kasım 2026): sunucu çökünce aynı soru 0,0 sn'de iki kez kaydedildi; saniyelik damga aynı kimliği
+    verdi ve değerlendirme UNIQUE hatasıyla durdu."""
+    db = tmp_path / "q.sqlite"
+    res = QM.run_question(Q1, ASOF, ScriptLLM([{"raise": "Error code: 404"}]), db=db, log=False)
+    ids = [QM.log_question(res, db) for _ in range(3)]
+    assert len(set(ids)) == 3 and all(QM.load_question(i, db)["status"] == "llm_error" for i in ids)
+
+
 def test_compact_view_only_selects_and_rounds():
     with T.data_ceiling(ASOF):
         full = T.to_json(T.calculate_fundamental_change(ticker="TUPRS", start="2024-01-01"))

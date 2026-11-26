@@ -15,6 +15,11 @@ kısaltmasından sonra en uzun konuşma 8.946 token, hiçbiri atılmaz).
       çalıştırır; adaptör her 25 adımda Google Drive'a yazılır, oturum koparsa --resume ile kaldığı yerden sürer.
 Sonra adaptör Mac'e indirilir ve src/finetune/peft_to_mlx.py ile MLX biçimine çevrilir (4-bit taban üzerinde kullanılır).
 
+v3 (26 Kasım 2026, Kaggle T4): --mlx-weights ile taban ağırlıklar, Mac'te çalışan 4-bit dosyanın (Hugging Face'teki
+bit bit aynı kopyası, MLX4_*) açılmış hâlidir: v1 gibi çalışacağı ağırlıkların üzerinde eğitilir, ama bulutta. Açma
+(dequantize) mx.dequantize ile 253 tensörün hepsinde birebir aynı; 2 katmanlı kesik modelde PyTorch ve MLX aynı en
+olası tokeni veriyor. Paket: prepare --data data/finetune_v3 --out dist/kaggle_v3 --notebook ...kaggle_train_v3.ipynb.
+
 Kayıp: MLX eğitimindeki (train_mlx.loss_fn) tanımın aynısı, konuşmadaki hedef tokenlerin ortalama çapraz entropisi.
 Bellek için logit yalnızca hedef pozisyonlarda ve 1.024'lük parçalar hâlinde hesaplanır (parça başına ~0,6 GB;
 12.288 x 151.936 tam logit ~7 GB olurdu, T4'te sığmaz). fp16'da gradyan ölçekleyici (GradScaler) kullanılır;
@@ -38,6 +43,86 @@ CFG = dict(num_layers=16, rank=16, scale=20.0, dropout=0.05, learning_rate=2e-5,
 CHUNK = 1024                                                    # kayıp parçası (hedef token)
 PACK = Path("dist/colab_v2")
 NOTEBOOK = Path(__file__).with_name("colab_train_v2.ipynb")
+# v3 (26 Kasım 2026): taban ağırlıklar Mac'te çalışan 4-bit dosyanın açılmış hâli. Hugging Face'teki bu dosya
+# models/Qwen3-4B-Instruct-2507-4bit/model.safetensors ile bit bit aynı (sha256 aşağıda); MLX affine, 64'lük grup.
+MLX4_REPO = "mlx-community/Qwen3-4B-Instruct-2507-4bit"
+MLX4_REVISION = "50d427756c6b1b2fe0c0a10f67fbda1fc8e82c1b"
+MLX4_FILE = "model.safetensors"
+MLX4_SHA256 = "2a73c6c248601ab904e035548abd8e6abb65ea27dcb5f342fb0a8910eb44173f"
+QBITS, QGROUP = 4, 64
+NOTEBOOK_V3 = Path(__file__).with_name("kaggle_train_v3.ipynb")
+
+
+# ---------------------------------------------------------------- 4-bit ağırlıkları açma (MLX affine)
+def unpack_codes(w64, shifts, mask):
+    """MLX paketlemesi: her 32 bitlik sözcükte 32/bits kod, en düşük bitler ilk sütun. w64: sözcükler int64 olarak
+    [..., k]; shifts: 0, bits, 2*bits, ...; dönen [..., k*32/bits]. numpy ve torch dizileriyle aynı çalışır."""
+    return ((w64[..., None] >> shifts) & mask).reshape(*w64.shape[:-1], -1)
+
+
+def dequantize(w, scales, biases, bits: int = QBITS, group: int = QGROUP):
+    """torch: uint32 sözcükler + bf16 ölçek/kayma -> ağırlık (bf16). mx.dequantize ile birebir aynı olduğu Mac'te
+    253 tensörün hepsinde denetlendi (prepare --check-dequant)."""
+    import torch
+    w64 = w.view(torch.int32).to(torch.int64)
+    shifts = torch.arange(0, 32, bits, dtype=torch.int64, device=w.device)
+    q = unpack_codes(w64, shifts, (1 << bits) - 1).float()
+    s = scales.float().repeat_interleave(group, dim=-1)
+    b = biases.float().repeat_interleave(group, dim=-1)
+    return (s * q + b).to(torch.bfloat16)
+
+
+def mlx_state(path):
+    """MLX 4-bit safetensors -> {ad: torch tensörü (bf16)}; nicemlenmiş olanlar açılır (embedding satır parçalarıyla)."""
+    import torch
+    from safetensors import safe_open
+    out = {}
+    with safe_open(str(path), framework="pt") as f:
+        keys = set(f.keys())
+        for k in sorted(keys):
+            if k.endswith((".scales", ".biases")):
+                continue
+            base = k[:-len(".weight")]
+            if k.endswith(".weight") and base + ".scales" in keys:
+                w, sc, bi = f.get_tensor(k), f.get_tensor(base + ".scales"), f.get_tensor(base + ".biases")
+                out[k] = torch.cat([dequantize(w[i:i + 8192], sc[i:i + 8192], bi[i:i + 8192])
+                                    for i in range(0, w.shape[0], 8192)])
+            else:
+                out[k] = f.get_tensor(k)
+    return out
+
+
+def load_mlx_weights(model, path):
+    """Modelin her parametresini 4-bit dosyadan doldurur; eksik ya da fazla ad varsa durur. Bağlı embedding/lm_head
+    tek parametredir (named_parameters bir kez verir)."""
+    import torch
+    st = mlx_state(path)
+    params = dict(model.named_parameters())
+    missing, extra = set(params) - set(st), set(st) - set(params)
+    assert not missing and not extra, f"ad uyuşmazlığı: eksik {sorted(missing)[:5]}, fazla {sorted(extra)[:5]}"
+    with torch.no_grad():
+        for k, p in params.items():
+            assert tuple(p.shape) == tuple(st[k].shape), (k, p.shape, st[k].shape)
+            p.copy_(st[k].to(p.dtype))
+    return len(params)
+
+
+def check_dequant(path):
+    """Mac (venv-llm): bütün nicemlenmiş tensörlerde dequantize == mx.dequantize mı?"""
+    import mlx.core as mx
+    import numpy as np
+    import torch
+    W = mx.load(str(path))
+    names = sorted(k[:-len(".scales")] for k in W if k.endswith(".scales"))
+    worst = 0.0
+    for n in names:
+        ref = np.array(mx.dequantize(W[n + ".weight"], W[n + ".scales"], W[n + ".biases"], group_size=QGROUP,
+                                     bits=QBITS).astype(mx.float32))
+        t = lambda a: torch.from_numpy(np.array(a.astype(mx.float32))).to(torch.bfloat16)
+        w = torch.from_numpy(np.array(W[n + ".weight"]).view(np.int32))
+        mine = dequantize(w, t(W[n + ".scales"]), t(W[n + ".biases"])).float().numpy()
+        worst = max(worst, float(np.abs(mine - ref).max()))
+    return dict(quantized_tensors=len(names), max_abs_diff=worst)
 
 
 # ---------------------------------------------------------------- prepare (Mac)
@@ -52,16 +137,22 @@ def prepare(a):
         return tok.apply_chat_template(msgs, tools=tools, add_generation_prompt=gen, tokenize=True, return_dict=False)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    n = tot = tgt = 0
+    n = tot = tgt = mx_len = 0
     with gzip.open(out / "tokenized.jsonl.gz", "wt") as f:
         for line in open(data / "conversations.jsonl"):
             c = json.loads(line)
             ids, spans = assistant_spans(c["messages"], render)
             f.write(json.dumps(dict(id=c["id"], cat=c["cat"], split=c["split"], ids=ids, spans=spans)) + "\n")
             n, tot, tgt = n + 1, tot + len(ids), tgt + len(target_positions(len(ids), spans))
+            mx_len = max(mx_len, len(ids))
     shutil.copy(__file__, out / "train_gpu.py")
-    shutil.copy(NOTEBOOK, out / NOTEBOOK.name)
-    print(json.dumps(dict(conversations=n, tokens=tot, target_tokens=tgt, out=str(out)), ensure_ascii=False))
+    nb = Path(a.notebook) if a.notebook else NOTEBOOK
+    shutil.copy(nb, out / nb.name)
+    info = dict(conversations=n, tokens=tot, target_tokens=tgt, max_tokens=mx_len, out=str(out))
+    if a.check_dequant:
+        info["dequant_check"] = check_dequant(Path(a.tokenizer) / MLX4_FILE)
+    (out / "pack_info.json").write_text(json.dumps(info, ensure_ascii=False, indent=1))
+    print(json.dumps(info, ensure_ascii=False))
 
 
 # ---------------------------------------------------------------- train (Colab)
@@ -125,8 +216,18 @@ def train(a):
         order = order[:cfg["max_micro_steps"]]
     val_items = valid_c[:cfg["eval_conversations"]]
 
-    model = AutoModelForCausalLM.from_pretrained(a.model, revision=a.revision, dtype=dtype,
-                                                 attn_implementation="sdpa", device_map={"": dev})
+    if a.mlx_weights:                                          # v3: yapı config'ten, ağırlıklar 4-bit dosyadan
+        # Model sınıfı cihaz bağlamından önce yüklenmeli: bağlam içinde tembel içe aktarma torch._dynamo'da döngüsel
+        # içe aktarma hatası verdi (transformers 5.24, torch 2.8; Mac'te denendi).
+        from transformers import AutoConfig, Qwen3ForCausalLM  # noqa: F401
+        conf = AutoConfig.from_pretrained(a.model, revision=a.revision)
+        with torch.device(dev):
+            model = AutoModelForCausalLM.from_config(conf, dtype=dtype, attn_implementation="sdpa")
+        n_loaded = load_mlx_weights(model, a.mlx_weights)
+    else:
+        model = AutoModelForCausalLM.from_pretrained(a.model, revision=a.revision, dtype=dtype,
+                                                     attn_implementation="sdpa", device_map={"": dev})
+        n_loaded = None
     model.config.use_cache = False
     model.gradient_checkpointing_enable(gradient_checkpointing_kwargs=dict(use_reentrant=False))
     model.enable_input_require_grads()
@@ -182,10 +283,12 @@ def train(a):
     def save(k, cid):
         model.save_pretrained(str(out))
         meta = dict(micro_step=k, of=len(order), last_conversation=cid, base=a.model, revision=a.revision,
-                    dtype=str(dtype), cfg=cfg, lora_layers=layers, targets=TARGETS)
+                    base_weights=str(a.mlx_weights or a.model), dtype=str(dtype), cfg=cfg, lora_layers=layers,
+                    targets=TARGETS)
         (out / "state.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1))
 
-    write(dict(kind="start", model=a.model, revision=a.revision, device=dev, dtype=str(dtype),
+    write(dict(kind="start", model=a.model, revision=a.revision, base_weights=str(a.mlx_weights or a.model),
+               loaded_from_mlx=n_loaded, device=dev, dtype=str(dtype),
                gpu=torch.cuda.get_device_name(0) if dev == "cuda" else None, train_conversations=len(train_c),
                valid_conversations=len(valid_c), dropped_over_max_seq=len(dropped), micro_steps=len(order),
                optimizer_steps=opt_steps, tokens_per_epoch=sum(len(c["ids"]) for c in train_c),
@@ -243,6 +346,8 @@ if __name__ == "__main__":
     p.add_argument("--data", default="data/finetune")
     p.add_argument("--tokenizer", default="models/Qwen3-4B-Instruct-2507-4bit")
     p.add_argument("--out", default=str(PACK))
+    p.add_argument("--notebook", default=None, help="pakete konacak defter (varsayılan Colab v2)")
+    p.add_argument("--check-dequant", action="store_true", help="4-bit açma == mx.dequantize (venv-llm, mlx gerekir)")
     t = sub.add_parser("train", help="Colab: eğitim")
     t.add_argument("--data", default="tokenized.jsonl.gz")
     t.add_argument("--model", default=BASE_REPO)
@@ -252,6 +357,7 @@ if __name__ == "__main__":
     t.add_argument("--device", default=None)
     t.add_argument("--dtype", default="auto", help="auto | float16 | bfloat16 | float32")
     t.add_argument("--resume", action="store_true")
+    t.add_argument("--mlx-weights", default=None, help="v3: MLX 4-bit safetensors; taban ağırlıklar bundan açılır")
     t.add_argument("--smoke", action="store_true", help="6 konuşmayla (en uzun 2 dahil) uçtan uca deneme")
     t.add_argument("--set", action="append", help="CFG değeri değiştir, ör. max_micro_steps=4")
     args = ap.parse_args()

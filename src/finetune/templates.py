@@ -99,8 +99,15 @@ def days(a, b) -> int:
     return (date.fromisoformat(str(b)[:10]) - date.fromisoformat(str(a)[:10])).days
 
 
-def finish(lines: list, action: str, why: str) -> tuple:
-    return "\n".join(lines + [f"- Eylem gerekçesi: {why}", f"ANALİTİK DURUM: {action}"]), action
+def yn(b) -> str:
+    return "bilinmiyor" if b is None else "evet" if b else "hayır"
+
+
+def finish(lines: list, action: str, why: str, check: list = None) -> tuple:
+    """check (v3, 26 Kasım 2026): eylemden hemen önce kuralın her koşulu, araç çıktısındaki değeriyle ve evet/hayır
+    sonucuyla yazılır; küçük model kuralı ezbere değil adım adım uygular."""
+    rule = [f"- Kural kontrolü: {' · '.join(check)} → {action}"] if check else []
+    return "\n".join(lines + rule + [f"- Eylem gerekçesi: {why}", f"ANALİTİK DURUM: {action}"]), action
 
 
 # ---------------------------------------------------------------- soru kalıpları (slot: {..})
@@ -197,7 +204,8 @@ def ans_s1(spec: dict, outs: list) -> tuple:
     if spec["variant"] == "rank":
         lines += ["- Geçmişteki benzer geride kalmalar bu soruda test edilmedi; tarihsel doğrulama olmadan catch-up adayı "
                   "denemez.", DISCLAIMER]
-        return finish(lines, "WATCH", "yalnızca bugünkü sıralama var, backtest yapılmadı.")
+        return finish(lines, "WATCH", "yalnızca bugünkü sıralama var, backtest yapılmadı.",
+                      ["geçmiş geride kalmalar test edildi mi? hayır (backtest yok)"])
     bt = outs[1]["output"]
     st, gr = bt["stock"], bt["group"]
     by = {x["horizon_days"]: x for x in st["by_horizon"]}
@@ -239,13 +247,17 @@ def ans_s1(spec: dict, outs: list) -> tuple:
         fails.append(f"20 günde isabet {pct(h20)} (< %60)")
     if fp is not None and fp > 0.40:
         fails.append(f"yanlış pozitif oranı {pct(fp)} (> %40)")
+    check = [f"sektör ortancası > 0? {yn(sm > 0)} ({pct(sm)})",
+             f"20 günlük penceresi tamamlanmış olay ≥ 10? {yn(n20 >= 10)} ({n20})",
+             f"20 günde isabet ≥ %60? {yn(None if h20 is None else h20 >= 0.60)} ({pct(h20)})",
+             f"yanlış pozitif ≤ %40? {yn(None if fp is None else fp <= 0.40)} ({pct(fp)})"]
     if not fails:
         return finish(lines, "POTENTIAL_CATCH_UP_CANDIDATE",
                       "sektör güçlü, en az 10 olay, isabet en az %60 ve yanlış pozitif en fazla %40; yine de ileride "
-                      "backtest ile doğrulanmalı.")
+                      "backtest ile doğrulanmalı.", check)
     if n20 < 10:
-        return finish(lines, "INVESTIGATE", "; ".join(fails) + ".")
-    return finish(lines, "WATCH", "; ".join(fails) + ".")
+        return finish(lines, "INVESTIGATE", "; ".join(fails) + ".", check)
+    return finish(lines, "WATCH", "; ".join(fails) + ".", check)
 
 
 def _stab_line(name: str, st: dict) -> str:
@@ -271,6 +283,9 @@ def ans_s2(spec: dict, outs: list) -> tuple:
                          + (" — az gözlem." if x.get("warning") else "."))
         lines.append(_stab_line("örüntü", stab[key]))
         ok = stab[key]["verdict"] == "kararlı" and (b.get("mean_after_cost") or 0) > 0
+        mac = b.get("mean_after_cost")
+        check = [f"araç kararı kararlı? {yn(stab[key]['verdict'] == 'kararlı')} ({stab[key]['verdict']})",
+                 f"örneklem dışı maliyet sonrası ortalama > 0? {yn(None if mac is None else mac > 0)} ({pv(mac)})"]
         why = ("araç örüntüyü kararsız buldu." if stab[key]["verdict"] != "kararlı" else
                "örneklem dışında maliyet sonrası ortalama sıfırın altında." if not ok else
                "örüntü kararlı ve maliyet sonrası pozitif; yine de tek başına işlem kuralı değildir.")
@@ -289,13 +304,15 @@ def ans_s2(spec: dict, outs: list) -> tuple:
             if stab[k]["verdict"] == "kararlı" and b.get("mean") is not None and b["mean"] > STABLE_COST:
                 good.append(name)
         ok = bool(good)
+        check = [f"kararlı ve örneklem dışı ortalaması maliyeti (%0,30) aşan seçenek var mı? {yn(ok)}"
+                 + (f" ({', '.join(good)})" if good else "")]
         why = (f"{', '.join(good)} kararlı ve günlük ortalama maliyetin (%0,30) üstünde." if ok else
                "kararlı ve maliyeti (%0,30) aşan bir örüntü yok.")
     lines += [f"- Dönemler: örneklem içi {dtr(o['start'])} ile {dtr(o['oos_start'])} arası, örneklem dışı "
               f"{dtr(o['oos_start'])} – {dtr(o['end'])}.",
               "- Çoklu test riski: birçok desen denenirse şansla anlamlı görünen çıkar; R3'te 243 testin yalnızca 18'i "
               "düzeltme sonrası kaldı.", DISCLAIMER]
-    return finish(lines, "WATCH" if ok else "REJECT_SIGNAL", why)
+    return finish(lines, "WATCH" if ok else "REJECT_SIGNAL", why, check)
 
 
 def ans_s3(spec: dict, outs: list) -> tuple:
@@ -334,18 +351,25 @@ def ans_s3(spec: dict, outs: list) -> tuple:
     lines.append(f"- Son durum ({dtr(last['date'])}): kapanış {num(last['Close'])}, RSI(14) {num(last.get('rsi_14'))}, "
                  f"Supertrend {'yukarı' if st and st > 0 else 'aşağı'}, fiyat bulutun "
                  f"{'üstünde' if cl and cl > 0 else 'altında' if cl and cl < 0 else 'içinde'}.")
-    lines.append("- Son 3 işlem gününde yeni olay " + ("var." if spec["recent"] else "yok."))
+    recent, last_ev, ago = (meta["event_in_last_3_trading_days"], meta["last_event_date"],
+                            meta["trading_days_since_last_event"])
+    when = f"son olay {dtr(last_ev)}, {ago} işlem günü önce" if last_ev else "dönemde olay yok"
+    lines.append(f"- Son 3 işlem gününde yeni olay {'var' if recent else 'yok'} ({when}).")
     lines.append(DISCLAIMER)
-    n, rate = h5["n"], (h5["success"] / h5["n"] if h5["n"] else None)
+    n, rate = h5["n"], h5["success_rate"]
+    check = [f"5 günlük penceresi tamamlanmış olay ≥ 10? {yn(n >= 10)} ({n})"]
+    if n >= 10:
+        check += [f"5 günde başarı ≥ %60? {yn(rate >= 0.60)} ({pct(rate)})", f"başarı ≤ %50? {yn(rate <= 0.50)}",
+                  f"son 3 işlem gününde olay? {yn(recent)} ({when})"]
     if n < 10:
-        return finish(lines, "INVESTIGATE", f"5 günlük penceresi tamamlanmış yalnızca {n} olay var (< 10).")
+        return finish(lines, "INVESTIGATE", f"5 günlük penceresi tamamlanmış yalnızca {n} olay var (< 10).", check)
     if rate <= 0.50:
-        return finish(lines, "REJECT_SIGNAL", f"5 günde başarı {h5['success']}/{n}, yazı-turadan iyi değil.")
-    if rate >= 0.60 and spec["recent"]:
+        return finish(lines, "REJECT_SIGNAL", f"5 günde başarı {h5['success']}/{n}, yazı-turadan iyi değil.", check)
+    if rate >= 0.60 and recent:
         return finish(lines, "TECHNICAL_REVERSAL_CANDIDATE",
-                      f"en az 10 olay, 5 günde başarı {h5['success']}/{n} ve son 3 işlem gününde yeni olay var.")
+                      f"en az 10 olay, 5 günde başarı {h5['success']}/{n} ve son 3 işlem gününde yeni olay var.", check)
     return finish(lines, "WATCH", f"5 günde başarı {h5['success']}/{n}" + (
-        "; ama son 3 işlem gününde yeni olay yok." if rate >= 0.60 else "; başarı %60'ın altında."))
+        "; ama son 3 işlem gününde yeni olay yok." if rate >= 0.60 else "; başarı %60'ın altında."), check)
 
 
 def table_rows(t: dict) -> list:
@@ -396,13 +420,20 @@ def ans_s4(spec: dict, outs: list) -> tuple:
         lines.append(f"- Analiz günündeki değerleme: F/K {num(v.get('pe'))}, PD/DD {num(v.get('pb'))}.")
     lines += [f"- Uyarı: {w}" for w in ch["warnings"]]
     lines.append(DISCLAIMER)
-    if last is None or last.get("improving") is None:
+    lq = ch["last_quarter"]
+    if lq is None or lq.get("improving") is None:
+        which = f" ({per(lq['period_end'])})" if lq else ""
         return finish(lines, "INVESTIGATE", "son çeyreğin iyileşip iyileşmediği bilinmiyor (FAVÖK ya da yıllık "
-                                            "karşılaştırma yok).")
-    if last["improving"] and spec["days_since"] <= FUND_RECENT:
+                                            "karşılaştırma yok).", [f"son çeyrek{which} iyileşen? bilinmiyor"])
+    age = lq["trading_days_since_disclosure"]
+    check = [f"son çeyrek ({per(lq['period_end'])}) iyileşen? {yn(lq['improving'])}",
+             f"son 63 işlem gününde açıklandı? {yn(age <= FUND_RECENT)} (tepki günü {dtr(lq['event_day'])}, {age} işlem "
+             f"günü önce)"]
+    if lq["improving"] and age <= FUND_RECENT:
         return finish(lines, "FUNDAMENTAL_IMPROVEMENT_CANDIDATE",
-                      f"son çeyrek ({per(last['period_end'])}) iyileşen ve açıklaması güncel (son 63 işlem günü içinde).")
-    return finish(lines, "HOLD", "son çeyrek iyileşen değil ya da açıklaması güncel değil.")
+                      f"son çeyrek ({per(lq['period_end'])}) iyileşen ve açıklaması güncel (son 63 işlem günü içinde).",
+                      check)
+    return finish(lines, "HOLD", "son çeyrek iyileşen değil ya da açıklaması güncel değil.", check)
 
 
 def ans_s5_fx(spec: dict, outs: list) -> tuple:
@@ -422,10 +453,12 @@ def ans_s5_fx(spec: dict, outs: list) -> tuple:
              f"{pts(mo['other_months']['mean_excess_vs_xu100_pct'])}; aylık korelasyon {num(mo['corr_ret_vs_usdtry'], 2)}.",
              "- 'Kesin yükselir' iddiası verilerle doğrulanmadı; şirketin ihracat payı bu veride yok ve geçmiş ilişki "
              "nedensellik ya da gelecek getiri garantisi değildir.", DISCLAIMER]
+    check = [f"beta > 0 ve p < 0,05 (iddia destekleniyor)? {yn(p < 0.05 and b > 0)} (beta {num(b, 2)}, p = {num(p, 2)})"]
     if p < 0.05 and b > 0:
-        return finish(lines, "WATCH", "kur artışıyla pozitif ve anlamlı bir geçmiş ilişki var, ama bu bir tahmin değil.")
+        return finish(lines, "WATCH", "kur artışıyla pozitif ve anlamlı bir geçmiş ilişki var, ama bu bir tahmin değil.",
+                      check)
     return finish(lines, "INVESTIGATE", "kur ile hissenin XU100'e göre getirisi arasında pozitif ve anlamlı bir ilişki yok; "
-                                        "iddia desteklenmiyor.")
+                                        "iddia desteklenmiyor.", check)
 
 
 def ans_bundle(spec: dict, outs: list, refusal: bool) -> tuple:
@@ -440,7 +473,8 @@ def ans_bundle(spec: dict, outs: list, refusal: bool) -> tuple:
     if g["status"] in ("HARD_BLOCK", "ANALYSIS_UNSAFE"):
         act = "ANALYSIS_UNSAFE"
     return finish(lines, act, f"kanıt paketinin kurallarla seçilmiş durumu {o['action']}"
-                              + ("" if act == o["action"] else "; kalite kapısı nedeniyle analiz güvenli değil") + ".")
+                              + ("" if act == o["action"] else "; kalite kapısı nedeniyle analiz güvenli değil") + ".",
+                  [f"kanıt paketinin kurallı durumu {o['action']}", f"kalite kapısı {g['status']}"])
 
 
 def ans_other(spec: dict, outs: list) -> tuple:

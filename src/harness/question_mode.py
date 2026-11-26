@@ -63,7 +63,8 @@ Kurallar:
 4. Penceresi analiz tarihinde kapanmamış olayları (complete=false, n_incomplete) istatistiğe katma ve bunu söyle.
    Olay sayısı azsa uyar. Nedensellik iddia etme. Birçok desen denendiyse çoklu test riskini belirt.
 5. Oranları yüzde olarak yaz (0.1126 = %11,26). Sayıları araç çıktısındaki gibi doğru yuvarla.
-6. Cevabı Türkçe, kısa ve maddeli yaz: önce bulgular, sonra sınırlamalar, sonra eylem gerekçesi. Son satır tam olarak:
+6. Cevabı Türkçe, kısa ve maddeli yaz: önce bulgular, sonra sınırlamalar, sonra 'Kural kontrolü' (kuralın her
+   koşulu, araç çıktısındaki değeriyle, evet/hayır), sonra eylem gerekçesi. Son satır tam olarak:
    ANALİTİK DURUM: <eylem>
    İzinli eylemler: {actions}.
 7. Eylem kuralları:
@@ -77,7 +78,8 @@ Kurallar:
    - Bilanço: son çeyrek iyileşen (last_quarter.improving) ve son 63 işlem gününde açıklandıysa
      (last_quarter.trading_days_since_disclosure ≤ 63) FUNDAMENTAL_IMPROVEMENT_CANDIDATE; iyileşme bilinmiyorsa
      INVESTIGATE; aksi HOLD.
-   - Tavsiye ya da iddia: iddia verilerle desteklenmiyorsa INVESTIGATE, destekleniyorsa WATCH.
+   - Tavsiye ya da iddia: iddia verilerle desteklenmiyorsa INVESTIGATE, destekleniyorsa WATCH (kur iddiasında
+     destek = beta > 0 ve p < 0,05).
    - Betimleyici sorular HOLD; araç hatası ya da analiz tarihinden sonraya ait istek ANALYSIS_UNSAFE.""".strip()
 ACTION_RE = re.compile(r"ANAL[İIı]T[İIı]K\s+DURUM\s*:\s*\**\s*([A-Za-z_]+)", re.I)
 ADVICE_RE = [re.compile(p, re.I) for p in (

@@ -246,14 +246,15 @@ def expand_plan(rng: random.Random, plan: list = PLAN) -> list:
             for m, kw in plan]
 
 
-async def build_heldout(seed: int = SEED_EVAL, out: Path = HELDOUT, train_path: Path = TRAIN, plan: list = PLAN) -> dict:
+async def build_heldout(seed: int = SEED_EVAL, out: Path = HELDOUT, train_path: Path = TRAIN, plan: list = PLAN,
+                        sampler=None, expand=None) -> dict:
     rng = random.Random(seed)
-    smp = HeldoutSampler(rng)
+    smp = (sampler or HeldoutSampler)(rng)
     seen, train_questions = training_keys(train_path)
     rows, skips = [], Counter()
     async with Client(build_server()) as client:
         tools, names = await QM.list_tools(client)
-        for i, (method, kw) in enumerate(expand_plan(rng, plan)):
+        for i, (method, kw) in enumerate((expand or expand_plan)(rng, plan)):
             for _ in range(MAX_TRIES):
                 sp = getattr(smp, method)(**kw)
                 if sp["question"] in train_questions:

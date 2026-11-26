@@ -46,3 +46,22 @@ def test_expected_keys_like_v1_adapter():
     k = expected_keys(36, 16)
     assert len(k) == 16 * len(LINEAR) * 2 == 224          # v1 adaptöründeki anahtar sayısı
     assert "model.layers.20.mlp.down_proj.lora_a" in k and not any(".19." in x for x in k)
+
+
+def test_unpack_codes_low_bits_first():
+    """v3: MLX paketlemesi, her uint32 sözcükte 8 adet 4 bitlik kod, en düşük bitler ilk sütun (numpy ile; torch'ta
+    aynı fonksiyon kullanılıyor, gerçek dosyada mx.dequantize ile karşılaştırması Mac'te yapıldı)."""
+    from src.finetune.train_gpu import QBITS, unpack_codes
+    rng = np.random.default_rng(0)
+    codes = rng.integers(0, 16, size=(3, 16), dtype=np.int64)
+    words = np.zeros((3, 2), dtype=np.uint32)
+    for j in range(16):
+        words[:, j // 8] |= (codes[:, j].astype(np.uint32) << np.uint32(4 * (j % 8)))
+    w64 = words.view(np.int32).astype(np.int64)                 # torch yolu: uint32 -> int32 görünümü -> int64
+    out = unpack_codes(w64, np.arange(0, 32, QBITS, dtype=np.int64), (1 << QBITS) - 1)
+    assert (out == codes).all()
+
+
+def test_mlx4_source_pinned():
+    from src.finetune import train_gpu as G
+    assert len(G.MLX4_REVISION) == 40 and len(G.MLX4_SHA256) == 64 and (G.QBITS, G.QGROUP) == (4, 64)

@@ -98,4 +98,6 @@ def test_targeted_examples_meet_candidate_rules(small):
     assert {(c["cat"], c["action"]) for c in t} == {("s1", "POTENTIAL_CATCH_UP_CANDIDATE"),
                                                     ("s3", "TECHNICAL_REVERSAL_CANDIDATE")}
     s3 = next(c for c in t if c["cat"] == "s3")
-    assert "Son 3 işlem gününde yeni olay var." in s3["messages"][-1]["content"]
+    last = s3["messages"][-1]["content"]
+    assert "Son 3 işlem gününde yeni olay var (son olay " in last
+    assert "son 3 işlem gününde olay? evet" in last and "→ TECHNICAL_REVERSAL_CANDIDATE" in last   # v3 kural satırı

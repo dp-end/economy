@@ -108,3 +108,17 @@ def test_bank_and_errors():
     assert any("FAVÖK ve net borç hesaplanmaz" in w for w in out["warnings"])
     with pytest.raises(ToolError, match="sonra olamaz"):
         T.calculate_fundamental_change(ticker="TUPRS", start="2026-05-01", end="2026-01-01")
+
+
+def test_last_quarter_disclosure_age_in_trading_days():
+    """v3 (26 Kasım 2026): kural 'son 63 işlem gününde açıklandı' için tepki gününden bu yana geçen işlem günü
+    araçta. TUPRS 2026/06: tepki günü 2026-08-05, 10.09.2026'ya kadar 26 işlem günü."""
+    o = T.calculate_fundamental_change(**Q4)
+    lq = o["last_quarter"]
+    assert lq["period_end"] == o["quarters"][-1]["period_end"] and lq["improving"] == o["quarters"][-1]["improving"]
+    days = get_index_history("XU100").index
+    ev = pd.Timestamp(lq["event_day"])
+    assert lq["event_day"] == "2026-08-05" and lq["trading_days_since_disclosure"] == 26
+    assert lq["trading_days_since_disclosure"] == int(((days > ev) & (days <= pd.Timestamp(CEIL))).sum())
+    same_day = T.calculate_fundamental_change(**dict(Q4, end=lq["event_day"]))["last_quarter"]
+    assert same_day["event_day"] == lq["event_day"] and same_day["trading_days_since_disclosure"] == 0

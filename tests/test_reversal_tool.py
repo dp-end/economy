@@ -126,3 +126,22 @@ def test_reversal_tool_errors_and_research_table_untouched():
         T.detect_reversal_events(ticker="ASELS", event="bb_lower_touch", event_set="harness")
     te = pd.read_parquet("reports/technical_events.parquet")
     assert not te["event"].isin(list(TE.TOUCH_DIRECTION)).any()                          # R1 tablosuna girmedi
+
+
+def test_success_rate_and_recency_fields():
+    """v3 (26 Kasım 2026): kural 'başarı ≥ %60' ve 'son 3 işlem gününde olay' için gereken sayıları araç verir; model
+    bölme yapmaz, işlem günü saymaz."""
+    o = T.detect_reversal_events(**Q3)
+    for g in o["by_condition"]:
+        for h in g["horizons"]:
+            assert h["success_rate"] == (h["success"] / h["n"] if h["n"] else None)
+    days = get_index_history("XU100").index
+    last = pd.Timestamp(o["meta"]["last_event_date"])
+    k = days.searchsorted(last)
+    for ago, recent in ((0, True), (2, True), (3, False)):
+        end = str(days[k + ago].date())
+        m = T.detect_reversal_events(**dict(Q3, end=end))["meta"]
+        assert m["last_event_date"] == str(last.date())
+        assert m["trading_days_since_last_event"] == ago and m["event_in_last_3_trading_days"] is recent
+    none = T.detect_reversal_events(**dict(Q3, start="2024-01-02", end="2024-01-03"))["meta"]
+    assert none["last_event_date"] is None and none["event_in_last_3_trading_days"] is False

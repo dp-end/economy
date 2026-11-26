@@ -225,7 +225,8 @@ DEFAULT_CONDITIONS = {1: ["rsi_dip", "hacim_yuksek", "rsi_dip+hacim_yuksek", "st
 COND_NOTE = ("Koşullar olay günü kapanışındaki durum: rsi_dip/rsi_tepe = son 3 günde RSI(14) ≤ 35 / ≥ 65; hacim_yuksek = "
              "son 3 günde hacim z-skoru > 1; st_* = Supertrend yönü; bulut_* = fiyatın Ichimoku bulutuna göre yeri; "
              "kama_* = 5 günlük KAMA değişimi > +%0,5 / < −%0,5 / arası; trend_* = kapanış SMA200 üstünde/altında. "
-             "success: h. gün kapanışı olay günü kapanışından yüksek (yükseliş olayı; düşüş olayında düşük). "
+             "success: h. gün kapanışı olay günü kapanışından yüksek (yükseliş olayı; düşüş olayında düşük); "
+             "success_rate = success / n (penceresi tamamlanmış olaylar). "
              "mean_pct/median_pct ham getiri, mean_exc_pct XU100'e göre fazla getiri (yüzde). n_incomplete: penceresi "
              "analiz tarihini aşan, henüz bilinmediği için istatistiğe katılmayan olaylar.")
 
@@ -251,7 +252,7 @@ def _by_condition(ev: pd.DataFrame, direction: int, conditions: list) -> list:
             x, xe = g[f"fwd_{h}"].dropna().astype(float), g[f"exc_{h}"].dropna().astype(float)
             ok = int((direction * x > 0).sum())
             hs.append(dict(horizon_days=h, n=int(len(x)), n_incomplete=int(g[f"fwd_{h}"].isna().sum()),
-                           success=ok, failure=int(len(x)) - ok,
+                           success=ok, failure=int(len(x)) - ok, success_rate=ok / len(x) if len(x) else None,
                            mean_pct=x.mean() * 100 if len(x) else None, median_pct=x.median() * 100 if len(x) else None,
                            mean_exc_pct=xe.mean() * 100 if len(xe) else None))
         row = dict(condition=name, n_events=int(len(g)), horizons=hs)
@@ -298,6 +299,15 @@ def detect_reversal_events(ticker: str, start: str = None, end: str = None, even
                .reset_index().to_dict("records"))
     meta = dict(ticker=t, start=str(s.date()), end=str(e.date()), event_set=event_set,
                 note="exc_h = h gün sonra XU100'e göre fazla getiri")
+    # Son olayın tazeliği (işlem günü; 0 = olay 'end' günü). Kural 'son 3 işlem gününde olay' = en fazla 2 gün önce.
+    # Model takvimden işlem günü sayamaz; sayıyı araç verir (26 Kasım 2026, v1 hata incelemesi).
+    if len(ev):
+        last = ev["date"].max()
+        ago = int(days.searchsorted(e, side="right") - 1 - days.searchsorted(last))
+        meta.update(last_event_date=str(last.date()), trading_days_since_last_event=ago,
+                    event_in_last_3_trading_days=ago <= 2)
+    else:
+        meta.update(last_event_date=None, trading_days_since_last_event=None, event_in_last_3_trading_days=False)
     extra = {}
     if event:
         direction = TOUCH_DIRECTION.get(event, DIRECTION.get(event))
@@ -628,7 +638,8 @@ REACTION_NOTE = ("Tepki (reaction): KAP açıklamasından sonraki ilk işlem gü
                  "gün. ebitda_margin_chg = çeyreklik FAVÖK marjı - geçen yılın aynı çeyreği; deleveraging = geçen yılın "
                  "aynı çeyreğindeki Net Borç/FAVÖK - bugünkü (+ = düştü); nd_ebitda negatifse şirket net nakitte. "
                  "improving = FAVÖK marjı yıllık arttı VE Net Borç/FAVÖK yıllık düştü (R4 §8 ölçüleri); biri "
-                 "bilinmiyorsa null.")
+                 "bilinmiyorsa null. last_quarter: seçilen son çeyrek; trading_days_since_disclosure = tepki gününden "
+                 "sonra analiz gününe kadar (dahil) geçen işlem günü.")
 
 
 def _reaction_summary(rows: list) -> list:
@@ -683,6 +694,15 @@ def calculate_fundamental_change(ticker: str, periods: int = 4, asof: str = None
         row["improving"] = None if pd.isna(mu) or pd.isna(nd) else bool(mu > 0 and nd > 0)
         row["reaction"] = to_json(reaction_windows(t, r["event_day"], d))
     summary = _reaction_summary(rows)
+    # Son seçilen çeyreğin tazeliği: KAP tepki gününden sonra analiz gününe kadar (dahil) kaç işlem günü geçti.
+    # Kural 'son 63 işlem gününde açıklandı' bu sayıya bakar; model takvimden sayamaz (26 Kasım 2026).
+    last_q = None
+    if rows:
+        days = _index("XU100").index
+        lr = q.iloc[-1]
+        last_q = dict(period_end=rows[-1]["period_end"], event_day=str(lr["event_day"].date()),
+                      improving=rows[-1]["improving"],
+                      trading_days_since_disclosure=int(((days > lr["event_day"]) & (days <= d)).sum()))
     warnings = ["İlişki nedensellik değildir: 'iyi bilanço = fiyat artar' denemez; tepki aynı günkü piyasa ve "
                 "sektör haberlerini de içerir."]
     small = [f"{x['group']} {x['n_quarters']}" for x in summary[:2] if x["n_quarters"] < MIN_EVENTS]
@@ -695,7 +715,7 @@ def calculate_fundamental_change(ticker: str, periods: int = 4, asof: str = None
     if open_:
         warnings.append(f"20 günlük penceresi analiz tarihinde henüz kapanmamış çeyrek: {', '.join(open_)} "
                         "(boş bırakıldı, özete katılmadı).")
-    return to_json(dict(ticker=t, asof=str(d.date()), selection=selection, quarters=rows,
+    return to_json(dict(ticker=t, asof=str(d.date()), selection=selection, quarters=rows, last_quarter=last_q,
                         reaction_summary=summary, warnings=warnings, reaction_note=REACTION_NOTE, note=FUND_NOTE))
 
 

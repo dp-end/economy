@@ -71,10 +71,12 @@ Kurallar:
      pozitif en fazla %40 ise POTENTIAL_CATCH_UP_CANDIDATE; olay 10'dan azsa INVESTIGATE; aksi WATCH. Geçmiş test
      edilmediyse WATCH.
    - Takvim deseni: araç 'kararsız' dediyse ya da maliyet sonrası sonuç sıfır ya da altındaysa REJECT_SIGNAL; aksi WATCH.
-   - Teknik olay: en az 10 olay, 5 günde başarı en az %60 ve son 3 işlem gününde yeni olay varsa
-     TECHNICAL_REVERSAL_CANDIDATE; olay 10'dan azsa INVESTIGATE; başarı en fazla %50 ise REJECT_SIGNAL; aksi WATCH.
-   - Bilanço: son çeyrek iyileşen ve son 63 işlem gününde açıklandıysa FUNDAMENTAL_IMPROVEMENT_CANDIDATE; iyileşme
-     bilinmiyorsa INVESTIGATE; aksi HOLD.
+   - Teknik olay: en az 10 olay, 5 günde başarı en az %60 (success_rate) ve son 3 işlem gününde yeni olay varsa
+     (event_in_last_3_trading_days) TECHNICAL_REVERSAL_CANDIDATE; olay 10'dan azsa INVESTIGATE; başarı en fazla %50
+     ise REJECT_SIGNAL; aksi WATCH.
+   - Bilanço: son çeyrek iyileşen (last_quarter.improving) ve son 63 işlem gününde açıklandıysa
+     (last_quarter.trading_days_since_disclosure ≤ 63) FUNDAMENTAL_IMPROVEMENT_CANDIDATE; iyileşme bilinmiyorsa
+     INVESTIGATE; aksi HOLD.
    - Tavsiye ya da iddia: iddia verilerle desteklenmiyorsa INVESTIGATE, destekleniyorsa WATCH.
    - Betimleyici sorular HOLD; araç hatası ya da analiz tarihinden sonraya ait istek ANALYSIS_UNSAFE.""".strip()
 ACTION_RE = re.compile(r"ANAL[İIı]T[İIı]K\s+DURUM\s*:\s*\**\s*([A-Za-z_]+)", re.I)

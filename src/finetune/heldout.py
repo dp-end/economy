@@ -201,11 +201,13 @@ class HeldoutSampler(B.Sampler):
 
 # ---------------------------------------------------------------- altın çağrılar ve eğitimle çakışma
 def gold_calls(messages: list) -> list:
-    """Konuşmadaki asistan araç çağrıları, sırayla: [{'name', 'args', 'ok'}] (ok: araç hatası dönmedi)."""
+    """Konuşmadaki asistan araç çağrıları, sırayla: [{'name', 'args', 'ok'}] (ok: araç hatası dönmedi). Hata-düzelt
+    konuşmasındaki bilerek bozulmuş çağrı ('train': False) altın çağrı değildir, atlanır."""
     failed = {m["tool_call_id"] for m in messages if m["role"] == "tool" and str(m["content"]).startswith("HATA")}
     return [dict(name=tc["function"]["name"], args=json.loads(tc["function"]["arguments"] or "{}"),
                  ok=tc["id"] not in failed)
-            for m in messages if m["role"] == "assistant" for tc in (m.get("tool_calls") or [])]
+            for m in messages if m["role"] == "assistant" and m.get("train", True)
+            for tc in (m.get("tool_calls") or [])]
 
 
 def group_key(args: dict) -> tuple:
@@ -227,14 +229,16 @@ def subject_key(cat: str, asof: str, calls: list) -> tuple:
     return cat, json.dumps(subj, ensure_ascii=False), asof
 
 
-def training_keys(path: Path = TRAIN) -> tuple:
-    """Eğitim + doğrulama konuşmalarının konu anahtarları ve soru metinleri."""
+def training_keys(path=TRAIN) -> tuple:
+    """Eğitim + doğrulama konuşmalarının konu anahtarları ve soru metinleri. path bir liste de olabilir (v4: v1 ve v4
+    verisinin ikisiyle de çakışmasın)."""
     keys, questions = set(), set()
-    if path.exists():
-        for line in open(path):
-            c = json.loads(line)
-            keys.add(subject_key(c["cat"], c["asof"], gold_calls(c["messages"])))
-            questions.add(c["question"])
+    for p in (path if isinstance(path, (list, tuple)) else [path]):
+        if Path(p).exists():
+            for line in open(p):
+                c = json.loads(line)
+                keys.add(subject_key(c["cat"], c["asof"], gold_calls(c["messages"])))
+                questions.add(c["question"])
     return keys, questions
 
 

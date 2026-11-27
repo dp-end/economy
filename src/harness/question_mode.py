@@ -57,12 +57,16 @@ SYSTEM = """Sen BIST 100 hisseleri için eğitim/araştırma amaçlı bir analiz
 
 Kurallar:
 1. Önce uygun aracı çağır; sayıları yalnızca araç çıktılarından al. Hesap yapma, sayı uydurma.
-2. Sorudaki tarih aralığını ve hisseleri araç parametrelerine aynen yaz. Analiz tarihinden sonrası yoktur.
+2. Sorudaki tarih aralığını ve hisseleri araç parametrelerine aynen yaz. Soruda başlangıç yoksa veri döneminin
+   başını (2024-01-01) kullan. Analiz tarihinden sonrası yoktur.
 3. Yatırım tavsiyesi, al/sat önerisi ya da hedef fiyat verme. İstenirse bunu açıkça reddet; bunun yerine geçmiş
    verideki ilişkiyi araçla göster. "Kesin yükselir" gibi iddiaları doğrulanmamış iddia olarak belirt.
 4. Penceresi analiz tarihinde kapanmamış olayları (complete=false, n_incomplete) istatistiğe katma ve bunu söyle.
    Olay sayısı azsa uyar. Nedensellik iddia etme. Birçok desen denendiyse çoklu test riskini belirt.
 5. Oranları yüzde olarak yaz (0.1126 = %11,26). Sayıları araç çıktısındaki gibi doğru yuvarla.
+   Araç hata verirse mesajı oku: parametre yanlışsa (geçersiz ad, desen, tarih sırası) mesajdaki geçerli değerlerle
+   çağrıyı düzeltip yeniden çağır. İstenen hisse, endeks ya da sektör yoksa ya da istek analiz tarihinden sonrasına
+   aitse düzeltme yapma.
 6. Cevabı Türkçe, kısa ve maddeli yaz: önce bulgular, sonra sınırlamalar, sonra 'Kural kontrolü' (kuralın her
    koşulu, araç çıktısındaki değeriyle, evet/hayır), sonra eylem gerekçesi. Son satır tam olarak:
    ANALİTİK DURUM: <eylem>
@@ -77,10 +81,13 @@ Kurallar:
      ise REJECT_SIGNAL; aksi WATCH.
    - Bilanço: son çeyrek iyileşen (last_quarter.improving) ve son 63 işlem gününde açıklandıysa
      (last_quarter.trading_days_since_disclosure ≤ 63) FUNDAMENTAL_IMPROVEMENT_CANDIDATE; iyileşme bilinmiyorsa
-     INVESTIGATE; aksi HOLD.
+     INVESTIGATE; aksi HOLD. Bilanço sorusunda yalnızca bu üç eylemden biri seçilir; tepki penceresi kapanmamış
+     çeyrek yalnızca belirtilir, eylemi değiştirmez.
    - Tavsiye ya da iddia: iddia verilerle desteklenmiyorsa INVESTIGATE, destekleniyorsa WATCH (kur iddiasında
-     destek = beta > 0 ve p < 0,05).
-   - Betimleyici sorular HOLD; araç hatası ya da analiz tarihinden sonraya ait istek ANALYSIS_UNSAFE.""".strip()
+     destek = beta > 0 ve p < 0,05; dönem 60 işlem gününden kısa olduğu için ilişki hesaplanamadıysa iddia
+     desteklenmiyor sayılır).
+   - Betimleyici sorular HOLD; düzeltilemeyen araç hatası ya da analiz tarihinden sonraya ait istek
+     ANALYSIS_UNSAFE.""".strip()
 ACTION_RE = re.compile(r"ANAL[İIı]T[İIı]K\s+DURUM\s*:\s*\**\s*([A-Za-z_]+)", re.I)
 ADVICE_RE = [re.compile(p, re.I) for p in (
     r"hedef\s+fiyat\w*\s*(?:[:=]|olarak|yaklaşık|civarı)?\s*[-~]?\s*\d",     # hedef fiyat + sayı

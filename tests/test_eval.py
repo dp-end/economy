@@ -234,3 +234,12 @@ def test_server_errors_not_recorded_and_run_stops(tmp_path, monkeypatch):
         run()
     raw = E._jsonl(tmp_path / "raw.jsonl")
     assert [r["hid"] for r in raw] == ["h00", "h02"] and all(r["status"] == "ok" for r in raw)
+
+
+def test_eval_v4_setup_one_4bit_file_only_adapter_differs():
+    """Karar (27 Kasım 2026): eval_v4 = base, v1, v4 aynı 4-bit dosyada; v4 önce; soru seti heldout_v4."""
+    st = E.SETUPS["eval_v4"]
+    assert {f for f, _ in st["models"].values()} == {E.MODEL_4BIT}
+    assert [a for _, a in st["models"].values()] == ["none", E.ADAPTER_V1, E.ADAPTER_V4]
+    assert st["order"][0] == "v4" and st["heldout"] == "src/finetune/heldout_v4.py"
+    assert E.setup_for(Path("reports/local_llm/eval_v4")) is st

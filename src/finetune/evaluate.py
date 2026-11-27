@@ -58,6 +58,7 @@ MODEL_8BIT = "models/Qwen3-4B-Instruct-2507-8bit"   # mlx_lm.convert -q --q-bits
 ADAPTER_V1 = "models/adapters/bist-qwen3-4b-v1"
 ADAPTER_V2 = "models/adapters/bist-qwen3-4b-v2"
 ADAPTER_V3 = "models/adapters/bist-qwen3-4b-v3"
+ADAPTER_V4 = "models/adapters/bist-qwen3-4b-v4"
 # Kurulum = çıktı klasörünün adı. models: etiket -> (model dosyası, adaptör), özet tablolarındaki sıra; order:
 # çalıştırma sırası (aynı dosyayı kullananlar art arda; yarıda kalırsa en önemli sonuç önce elde olsun).
 SETUPS = {
@@ -82,6 +83,22 @@ SETUPS = {
                      "in the first held-out set, and a date format (10/09/2026) not used in training; no question "
                      "shares category + stock/group + analysis date with any v1 or v3 training or validation "
                      "conversation."),
+    "eval_v4": dict(
+        models={"base": (MODEL_4BIT, BASE), "v1": (MODEL_4BIT, ADAPTER_V1), "v4": (MODEL_4BIT, ADAPTER_V4)},
+        order=("v4", "v1", "base"), heldout="src/finetune/heldout_v4.py",
+        note="All three setups run on the same 4-bit weights, so they differ only by the adapter. v1 was trained "
+             "(MLX QLoRA) on these 4-bit weights; v4 was trained like v3 (PEFT on a GPU on the dequantized 4-bit "
+             "weights) on the v4 data: error-fix conversations (a deliberately broken call, the real tool error, "
+             "the corrected call; the broken call is not in the loss), generated weekday-pattern sentences and "
+             "short-period exchange-rate claims. The system prompt is the current one (fix and retry correctable "
+             "tool errors, default start 2024-01-01, three actions for fundamentals questions); v1 was trained "
+             "before these changes and sees them here for the first time.",
+        heldout_note="questions written with phrasings, terms and weekday-pattern wording that are in neither the "
+                     "v4 training data nor the earlier held-out sets, patterns drawn uniformly from all 132 valid "
+                     "weekday patterns, and a date format (10/09/2026) not used in training; no question shares "
+                     "category + stock/group + analysis date with any v1 or v4 training or validation "
+                     "conversation. The v4 data fixes were designed after looking at the errors on the v3 held-out "
+                     "set, which is why that set is not used here."),
 }
 CATS = ("s1", "s2", "s3", "s4", "s5", "other", "error")
 REPEAT_N = 10

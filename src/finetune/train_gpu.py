@@ -19,6 +19,9 @@ v3 (26 Kasım 2026, Kaggle T4): --mlx-weights ile taban ağırlıklar, Mac'te ç
 bit bit aynı kopyası, MLX4_*) açılmış hâlidir: v1 gibi çalışacağı ağırlıkların üzerinde eğitilir, ama bulutta. Açma
 (dequantize) mx.dequantize ile 253 tensörün hepsinde birebir aynı; 2 katmanlı kesik modelde PyTorch ve MLX aynı en
 olası tokeni veriyor. Paket: prepare --data data/finetune_v3 --out dist/kaggle_v3 --notebook ...kaggle_train_v3.ipynb.
+v4 (27 Kasım 2026): eğitim kodu ve ayarlar v3 ile aynı; hata-düzelt konuşmalarındaki bozuk çağrı ('train': False)
+masks.assistant_spans'te hedef dışı kalır. Paket: prepare --data data/finetune_v4 --out dist/kaggle_v4
+--notebook src/finetune/kaggle_train_v4.ipynb.
 
 Kayıp: MLX eğitimindeki (train_mlx.loss_fn) tanımın aynısı, konuşmadaki hedef tokenlerin ortalama çapraz entropisi.
 Bellek için logit yalnızca hedef pozisyonlarda ve 1.024'lük parçalar hâlinde hesaplanır (parça başına ~0,6 GB;

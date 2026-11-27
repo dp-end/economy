@@ -439,7 +439,19 @@ def ans_s4(spec: dict, outs: list) -> tuple:
 def ans_s5_fx(spec: dict, outs: list) -> tuple:
     o = outs[0]["output"]
     s, fx = o["summary"], o["fx_relation"]
-    u, d, mo = s["usdtry"], fx["daily"], fx["monthly"]
+    u = s["usdtry"]
+    if "daily" not in fx:
+        # v4: dönem 60 işlem gününden kısa -> araç ilişkiyi hesaplamaz (fx_relation.warning); iddia desteklenmiyor
+        lines = [REFUSAL,
+                 f"- {dtr(s['start'])} – {dtr(s['end'])}: USD/TRY {num(u['start'], 4)} → {num(u['end'], 4)} "
+                 f"({pv(u['change_pct'])}).",
+                 f"- Kur-hisse ilişkisi hesaplanamadı: {fx['warning']}.",
+                 "- 'Kesin yükselir' iddiası verilerle doğrulanmadı; geçmiş ilişki nedensellik ya da gelecek getiri "
+                 "garantisi değildir.", DISCLAIMER]
+        return finish(lines, "INVESTIGATE", "dönem kısa olduğu için kur-hisse ilişkisi hesaplanamadı; iddia "
+                                            "desteklenmiyor.",
+                      [f"kur-hisse ilişkisi hesaplandı mı? hayır ({fx['n_days']} işlem günü, en az 60 gerekli)"])
+    d, mo = fx["daily"], fx["monthly"]
     b, p = d["excess_vs_xu100"]["beta"], d["excess_vs_xu100"]["p"]
     t = fx["ticker"]
     lines = [REFUSAL,

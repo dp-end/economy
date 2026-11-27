@@ -7,17 +7,26 @@ maskelenir): 2,79 M token. MLX'e bağlı değildir; 'render' tokenizer'ın sohbe
 """
 
 
+def clean_messages(messages: list) -> list:
+    """Eğitim işaretlerini ('train') sohbet şablonuna gitmeden siler."""
+    return [{k: v for k, v in m.items() if k != "train"} for m in messages]
+
+
 def assistant_spans(messages: list, render) -> tuple:
     """(token kimlikleri, [(başlangıç, bitiş), ...]) — her asistan mesajının şablondaki token aralığı.
 
     render(mesajlar, add_generation_prompt) -> token listesi. Aralık, mesajdan önceki istem + '<|im_start|>assistant\\n'
     sonrasından mesajın '<|im_end|>' sonuna kadardır (model durmayı da öğrenir). Şablonun önek tutarlı olması şarttır
     (ilk k mesajın tokenleri tam konuşmanın ilk tokenleri); değilse hata verilir, sessizce yanlış maske üretilmez.
+    v4 (27 Kasım 2026): 'train': False işaretli asistan mesajı (hata-düzelt konuşmasındaki bilerek yanlış çağrı)
+    bağlamda kalır ama hedef değildir; model hatayı değil düzeltmeyi öğrenir. İşaret şablona gönderilmez.
     """
+    flags = [m.get("train", True) for m in messages]
+    messages = clean_messages(messages)
     full = list(render(messages, False))
     spans = []
     for i, m in enumerate(messages):
-        if m["role"] != "assistant":
+        if m["role"] != "assistant" or not flags[i]:
             continue
         head = list(render(messages[:i], True))
         upto = list(render(messages[:i + 1], False))

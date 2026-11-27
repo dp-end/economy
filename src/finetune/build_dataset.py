@@ -108,6 +108,34 @@ class Conv:
         return recs
 
 
+class FixConv(Conv):
+    """v4 hata-düzelt konuşması (27 Kasım 2026, kullanıcı kararı): ilk uygun çağrı bir kez bilerek bozulur, gerçek
+    araç hatası döner, sonraki asistan turu yalnızca düzeltilmiş (altın) çağrıyı yapar; konuşmanın gerisi aynıdır.
+    Bozuk çağrının asistan mesajı 'train': False işaretlidir: bağlamda kalır, kayıpta yer almaz (masks.py).
+    mistake(ad, argümanlar) -> bozuk argümanlar ya da None (bu çağrıya uygulanmaz)."""
+
+    def __init__(self, client, names, question: str, asof: str, mistake):
+        super().__init__(client, names, question, asof)
+        self.mistake, self.fixed = mistake, False
+
+    async def turn(self, *calls) -> list:
+        if self.fixed:
+            return await super().turn(*calls)
+        bad = [self.mistake(name, dict(args)) for name, args in calls]
+        j = next((i for i, b in enumerate(bad) if b is not None), None)
+        if j is None:
+            return await super().turn(*calls)
+        wrong = [(n, bad[j]) if i == j else (n, a) for i, (n, a) in enumerate(calls)]
+        i_msg = len(self.messages)
+        recs = await super().turn(*wrong)
+        self.messages[i_msg]["train"] = False
+        if recs[j]["ok"]:
+            raise Skip(f"bozuk çağrı hata vermedi: {calls[j][0]} {bad[j]}")
+        (fix,) = await super().turn(calls[j])
+        self.fixed = True
+        return [fix if i == j else r for i, r in enumerate(recs)]
+
+
 def _ok(rec):
     if not rec["ok"]:
         raise Skip(f"araç hatası: {rec['name']}: {rec['error'][:120]}")
@@ -418,8 +446,13 @@ class Sampler:
 # ---------------------------------------------------------------- üretim
 async def run_spec(client, tools, names, sp: dict) -> dict:
     with data_ceiling(sp["asof"]):
-        c = Conv(client, names, sp["question"], sp["asof"])
+        if sp.get("mistake"):
+            c = FixConv(client, names, sp["question"], sp["asof"], sp["mistake"])
+        else:
+            c = Conv(client, names, sp["question"], sp["asof"])
         text, action = await RUNNERS[sp["cat"]](c, sp)
+        if sp.get("mistake") and not c.fixed:
+            raise Skip(f"hata-düzelt uygulanmadı ({sp.get('fix')})")
     v = QM.validate_answer(text, sp["question"], c.outputs)
     if v["problems"] or v["action"] != action:
         raise AssertionError(f"şablon cevabı denetimden geçmedi ({sp['cat']}): {v['problems']} | {text[:300]}")
@@ -428,16 +461,19 @@ async def run_spec(client, tools, names, sp: dict) -> dict:
             "s4": "FUNDAMENTAL_IMPROVEMENT_CANDIDATE"}.get(sp["cat"])
     if sp.get("targeted") and action != want:
         raise Skip(f"hedefli örnek beklenen eylemi vermedi ({action})")
-    meta = {k: sp[k] for k in ("cat", "variant", "kind", "T", "asof", "question", "targeted") if k in sp}
+    meta = {k: sp[k] for k in ("cat", "variant", "kind", "T", "asof", "question", "targeted", "fix") if k in sp}
     cid = hashlib.sha256(json.dumps(c.messages, ensure_ascii=False).encode()).hexdigest()[:12]
     return dict(id=cid, **meta, action=action, n_calls=len(c.outputs), n_tool_errors=sum(not o["ok"] for o in c.outputs),
                 messages=c.messages)
 
 
 def split_turns(conv: dict, tools: list) -> list:
-    """Her asistan mesajı ayrı örnek: öncesi istem (maskelenir), o mesaj hedef."""
+    """Her asistan mesajı ayrı örnek: öncesi istem (maskelenir), o mesaj hedef. 'train': False işaretli mesaj
+    (hata-düzelt konuşmasındaki bozuk çağrı) hedef olmaz; işaret dosyaya yazılmaz."""
+    from src.finetune.masks import clean_messages
     ms = conv["messages"]
-    return [dict(messages=ms[:i + 1], tools=tools) for i, m in enumerate(ms) if m["role"] == "assistant"]
+    return [dict(messages=clean_messages(ms[:i + 1]), tools=tools) for i, m in enumerate(ms)
+            if m["role"] == "assistant" and m.get("train", True)]
 
 
 async def build(counts: dict, seed: int = SEED, out: Path = OUT, sampler=None) -> dict:

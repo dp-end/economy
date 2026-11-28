@@ -111,6 +111,11 @@ LOCAL_MAX_TOKENS = 3072                              # cevap başına en fazla �
 LOCAL_SEED = 42             # her istekte gönderilir ve iz kaydına yazılır; sıcaklık 0'da (açgözlü) sonucu değiştirmez
 BASE_REPO = "Qwen/Qwen3-4B-Instruct-2507"            # taban modelin kaynağı (Hugging Face)
 BASE_REVISION = "cdbee75f17c01a7cc42f958dc650907174af0554"   # src/finetune/train_gpu.BASE_REVISION ile aynı
+# Çalışan 4-bit ağırlıklar: models/Qwen3-4B-Instruct-2507-4bit/model.safetensors, Hugging Face'teki bu dosyayla bit bit
+# aynı (SHA-256 28 Kasım 2026'da yeniden doğrulandı); v3/v4 eğitimi de bunun açılmış hâli üzerinde (train_gpu.MLX4_*).
+WEIGHTS_REPO = "mlx-community/Qwen3-4B-Instruct-2507-4bit"
+WEIGHTS_REVISION = "50d427756c6b1b2fe0c0a10f67fbda1fc8e82c1b"
+WEIGHTS_SHA256 = "2a73c6c248601ab904e035548abd8e6abb65ea27dcb5f342fb0a8910eb44173f"
 
 
 def sha256_file(path) -> str:
@@ -170,7 +175,10 @@ class LocalLLM:
             f = Path(self.adapter) / "adapters.safetensors" if self.adapter else None
             self._info = dict(
                 name=self.name, base_model=BASE_REPO, base_revision=BASE_REVISION, weights=self.model,
-                weights_note="taban modelden yerelde mlx_lm.convert -q ile üretilen 4-bit ağırlıklar",
+                weights_source=f"https://huggingface.co/{WEIGHTS_REPO}", weights_revision=WEIGHTS_REVISION,
+                weights_sha256=WEIGHTS_SHA256 if self.model == LOCAL_MODEL else None,
+                weights_note="taban modelin MLX 4-bit (affine, 64'lük grup) hâli; yerel dosya Hugging Face'tekiyle bit "
+                             "bit aynı (SHA-256), özet her soruda yeniden hesaplanmaz (2,3 GB)",
                 quantization=_quantization(self.model), adapter=self.adapter,
                 adapter_file=str(f) if f else None, adapter_sha256=sha256_file(f) if f else None,
                 server=self.base_url, server_software=_server_software(),

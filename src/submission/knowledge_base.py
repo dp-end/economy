@@ -1,4 +1,4 @@
-"""Teslim: RAG dosyası (sunum duyurusu, 28 Kasım 2026) -> submission/knowledge_base.json.
+"""Teslim: RAG dosyası (sunum duyurusu, 28 Kasım 2026) -> submission/rag/knowledge_base.json.
 
 Duyuru: "RAG dosyası: Bilgi tabanı belgeleri ve kaynak meta verileri (JSON)". Kullanıcı kararı (28 Kasım 2026,
 seçenek A): sistemde gömme (embedding) tabanlı arama yok; model bilgiye MCP araçlarıyla ulaşır ve araçlar analiz
@@ -36,7 +36,7 @@ from src.harness import question_mode as QM
 from src.harness.evidence import speech_known_day
 from src.mcp_server.server import build_server
 
-OUT = Path("submission/knowledge_base.json")
+OUT = Path("submission/rag/knowledge_base.json")
 VERSION = 1
 NEWS = Path("reports/news_events.parquet")
 KAP_ODA = Path("data/kap_oda")
@@ -313,7 +313,7 @@ def build(spec_pdf: Path = SPEC_PDF) -> dict:
 
 
 def main():
-    ap = argparse.ArgumentParser(description="RAG dosyası: submission/knowledge_base.json")
+    ap = argparse.ArgumentParser(description="RAG dosyası: submission/rag/knowledge_base.json")
     ap.add_argument("--pdf", type=Path, default=SPEC_PDF, help="proje PDF'i (yalnızca künye ve SHA-256 için)")
     ap.add_argument("--out", type=Path, default=OUT)
     a = ap.parse_args()

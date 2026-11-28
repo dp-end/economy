@@ -1,0 +1,12 @@
+{"kind": "start", "model": "Qwen/Qwen3-4B-Instruct-2507", "revision": "cdbee75f17c01a7cc42f958dc650907174af0554", "base_weights": "/root/.cache/huggingface/hub/models--mlx-community--Qwen3-4B-Instruct-2507-4bit/snapshots/50d427756c6b1b2fe0c0a10f67fbda1fc8e82c1b/model.safetensors", "loaded_from_mlx": 398, "device": "cuda", "dtype": "torch.float16", "gpu": "Tesla T4", "train_conversations": 6, "valid_conversations": 2, "dropped_over_max_seq": 0, "micro_steps": 6, "optimizer_steps": 3, "tokens_per_epoch": 36812, "trainable_params": 14680064, "start_micro_step": 0, "cfg": {"num_layers": 16, "rank": 16, "scale": 20.0, "dropout": 0.05, "learning_rate": 2e-05, "min_lr": 2e-06, "warmup_steps": 10, "grad_accumulation": 2, "epochs": 1, "max_seq_length": 12288, "seed": 0, "report_every": 1, "eval_every": 3, "eval_conversations": 2, "save_every": 3, "max_micro_steps": 0}}
+{"kind": "val", "micro_step": 0, "val_loss": 1.5331640243530273}
+{"kind": "train", "micro_step": 1, "optimizer_step": 1, "loss": 1.5222911834716797, "lr": 2.0000000000000003e-06, "tok_per_s": 476.8, "peak_gb": 10.19, "skipped_steps": 0, "elapsed_min": 0.1, "eta_min": 1.2}
+{"kind": "train", "micro_step": 2, "optimizer_step": 1, "loss": 1.9814558029174805, "lr": 2.0000000000000003e-06, "tok_per_s": 473.7, "peak_gb": 10.25, "skipped_steps": 0, "elapsed_min": 0.3, "eta_min": 1.0}
+{"kind": "train", "micro_step": 3, "optimizer_step": 2, "loss": 1.249161958694458, "lr": 2.0000000000000003e-06, "tok_per_s": 365.4, "peak_gb": 14.14, "skipped_steps": 0, "elapsed_min": 0.8, "eta_min": 0.8}
+{"kind": "val", "micro_step": 3, "val_loss": 1.5061659216880798}
+{"kind": "train", "micro_step": 4, "optimizer_step": 2, "loss": 1.117820143699646, "lr": 1.1e-05, "tok_per_s": 313.3, "peak_gb": 14.16, "skipped_steps": 0, "elapsed_min": 1.6, "eta_min": 0.4}
+{"kind": "train", "micro_step": 5, "optimizer_step": 3, "loss": 1.7444639205932617, "lr": 1.1e-05, "tok_per_s": 320.8, "peak_gb": 14.16, "skipped_steps": 0, "elapsed_min": 1.7, "eta_min": 0.2}
+{"kind": "train", "micro_step": 6, "optimizer_step": 3, "loss": 2.0280089378356934, "lr": 2e-05, "tok_per_s": 326.8, "peak_gb": 14.16, "skipped_steps": 0, "elapsed_min": 1.9, "eta_min": 0.0}
+{"kind": "val", "micro_step": 6, "val_loss": 1.0923792719841003}
+{"kind": "val_full", "micro_step": 6, "conversations": 2, "val_loss": 1.0923792719841003}
+{"kind": "done", "micro_step": 6, "minutes": 2.1, "skipped_steps": 0, "adapter": "adapter_smoke"}

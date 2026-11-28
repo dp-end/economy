@@ -193,3 +193,39 @@ def test_tool_error_explained_as_unsafe_is_shown():
     assert res["status"] == "ok" and res["answer"] == text and res["action"] == "ANALYSIS_UNSAFE"
     res, _ = run([{"tool_calls": [bad]}, {"content": "- Örüntü yok.\nANALİTİK DURUM: REJECT_SIGNAL"}])
     assert res["status"] == "no_evidence" and res["action"] == "ANALYSIS_UNSAFE" and "Örüntü yok" not in res["answer"]
+
+
+def test_trace_json_has_everything_the_announcement_asks(tmp_path):
+    """Sunum duyurusu (28 Kasım 2026): model + sürüm, sistem ve kullanıcı istemi, araçlar + parametreler + tarih
+    aralıkları, araç çıktıları, nihai yanıt, zaman damgaları, sıcaklık ve seed."""
+    llm = ScriptLLM([{"tool_calls": [RANK]}, {"content": GOOD + "\nBeklenen getiri 987,65."}, {"content": GOOD}])
+    llm.temperature, llm.seed, llm.max_tokens = 0.0, 42, 3072
+    res = QM.run_question(Q1, ASOF, llm, db=tmp_path / "q.sqlite")
+    f = tmp_path / "traces" / f"{res['qid']}.json"
+    assert res["trace"] == str(f) and f.exists()
+    t = json.loads(f.read_text())
+    assert t["model"]["name"] == "script" and t["generation"]["temperature"] == 0.0 and t["generation"]["seed"] == 42
+    assert t["prompts"]["system"] == QM.system_prompt(ASOF) and Q1 in t["prompts"]["user"]
+    assert len(t["tools_offered"]) == 15 and t["analysis_date"] == ASOF
+    kinds = [s["type"] for s in t["steps"]]
+    assert kinds == ["llm", "tool", "llm", "validate", "harness_message", "llm", "validate"]
+    tool = t["steps"][1]
+    assert tool["name"] == "rank_sector_relative_strength" and tool["dates"] == {"date": ASOF} and tool["ok"]
+    assert tool["output_model"]["most_behind"] == "MAVI" and "most_behind" in tool["output_full"]
+    assert json.loads(tool["message_to_model"]) == tool["output_model"]          # modele giden metin = kısaltılmış çıktı
+    assert "987,65" in t["steps"][3]["unsupported_numbers"][0] and "DÜZELT" in t["steps"][4]["content"]
+    assert all(s["started_at"] <= s["ended_at"] for s in t["steps"] if "started_at" in s)
+    assert t["final"]["answer"].endswith("ANALİTİK DURUM: WATCH") and t["final"]["retries"] == 1
+    assert "987,65" in t["first_answer"] and t["started_at"] <= t["ended_at"]
+
+
+def test_no_trace_without_log(tmp_path):
+    res, _ = run([{"tool_calls": [RANK]}, {"content": GOOD}])
+    assert "trace" not in res and res["steps"][0]["type"] == "llm"
+
+
+def test_model_error_step_is_in_trace(tmp_path):
+    res = QM.run_question(Q1, ASOF, ScriptLLM([{"tool_calls": [RANK]}, {"raise": "Error code: 404"}]),
+                          db=tmp_path / "q.sqlite")
+    t = json.loads(open(res["trace"]).read())
+    assert t["steps"][-1]["type"] == "llm" and "404" in t["steps"][-1]["error"] and t["final"]["status"] == "llm_error"

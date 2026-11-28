@@ -126,7 +126,10 @@ python -m src.harness.decision_log
 #      silently serves the base model for a real model path):
 #      HF_HUB_OFFLINE=1 venv-llm/bin/mlx_lm.server --model models/Qwen3-4B-Instruct-2507-4bit --port 8080
 #   2) ask (analysis-date ceiling, max 6 tool calls, number/advice/action checks, log reports/question_log.sqlite;
-#      fine-tuned adapter models/adapters/bist-qwen3-4b-v1 by default, the log records model + adapter):
+#      fine-tuned adapter models/adapters/bist-qwen3-4b-v4 by default, temperature 0, seed 42 (--seed);
+#      full trace per question in reports/traces/<qid>.json: model + base revision + adapter SHA-256, system and
+#      user prompt, tool definitions, every model/tool step with timestamps, tool params + date ranges, model-seen
+#      and full tool outputs, correction request, final answer and checks):
 python -m src.harness.question_mode --asof 2026-09-10 "Perakende sektöründe (BIMAS, MGROS, MAVI) ..."
 python -m src.harness.question_mode --adapter none --asof 2026-09-10 "..."   # base model, for the comparison
 python -m src.harness.question_mode --replay <qid>     # re-run the logged tool calls, compare outputs

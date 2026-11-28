@@ -64,3 +64,22 @@ def test_env_selects_adapter(monkeypatch, adapter_dir):
     monkeypatch.setenv("LOCAL_ADAPTER", adapter_dir)
     assert LocalLLM().adapter == adapter_dir
     assert LocalLLM(adapter="none").adapter is None                 # açık parametre ortam değişkeninden önce gelir
+
+
+def test_seed_sent_and_info_has_adapter_hash(adapter_dir, monkeypatch):
+    import hashlib
+    llm = LocalLLM(adapter=adapter_dir)
+    fake = with_fake(llm)
+    llm.chat([dict(role="user", content="soru")])
+    assert fake.kwargs["seed"] == 42 and llm.seed == 42
+    i = llm.info()
+    assert i["adapter_sha256"] == hashlib.sha256(b"").hexdigest() and i["base_model"] == "Qwen/Qwen3-4B-Instruct-2507"
+    assert i["temperature"] == 0.0 and i["seed"] == 42 and i["max_tokens"] == 3072
+    monkeypatch.setenv("LOCAL_SEED", "7")
+    assert LocalLLM(adapter="none").seed == 7 and LocalLLM(adapter="none", seed=3).seed == 3
+
+
+def test_default_adapter_is_v4(monkeypatch):
+    from src.agents.llm import LOCAL_ADAPTER
+    monkeypatch.delenv("LOCAL_ADAPTER", raising=False)
+    assert LOCAL_ADAPTER.endswith("bist-qwen3-4b-v4") and LocalLLM().adapter == LOCAL_ADAPTER

@@ -10,6 +10,10 @@ Durumlar ve izinler (PDF §23: her durum yalnızca tanımlı araçları açar):
         -> VALIDATE         sayı denetimi (src/agents/validate), tavsiye/hedef fiyat, eylem listesi, kural geçersiz
                             kılmaları; sorun varsa bir kez düzeltme isteği, yine varsa cevap gösterilmez
         -> LOG_AND_CLOSE    reports/question_log.sqlite (soru, araç çağrıları, modelin gördüğü çıktılar, cevap)
+                            + tam iz kaydı reports/traces/<kimlik>.json (write_trace)
+İz kaydı (sunum duyurusu, 28 Kasım 2026): model + sürüm + adaptör SHA-256, sıcaklık, seed, sistem ve kullanıcı
+istemi, modele sunulan araç tanımları, her model ve araç adımı zaman damgasıyla (araç parametreleri, tarih aralıkları,
+modelin gördüğü ve tam araç çıktısı), harness'ın eklediği mesajlar (düzeltme isteği), nihai cevap ve denetim.
 Kullanıcı kararları (24 Kasım 2026): 1a eylemi model seçer, harness denetler; 2a 15 aracın hepsi, en fazla 6 çağrı;
 3a çıktılar modele kısaltılmış verilir (uzun satır listeleri atılır, 4 ondalık); 4a uydurma sayı -> bir düzeltme
 denemesi, yine olursa ANALYSIS_UNSAFE.
@@ -26,6 +30,7 @@ import hashlib
 import json
 import re
 import sqlite3
+import subprocess
 import time
 from datetime import datetime
 from pathlib import Path
@@ -39,6 +44,8 @@ from src.mcp_server.server import build_server
 from src.mcp_server.tools import data_ceiling
 
 QDB = Path("reports/question_log.sqlite")
+TRACE_VERSION = 1
+DATE_KEYS = ("start", "end", "date", "asof", "oos_start")      # araç parametrelerindeki tarih alanları
 MAX_CALLS = 6
 BUDGET_ERROR = "çağrı hakkı bitti"     # hak bitince çalıştırılmayan çağrının kayıttaki hata metni
 KEEP_ROWS = 20
@@ -285,7 +292,8 @@ async def _call_tool(client, names: set, call: dict) -> dict:
     if r.is_error:
         rec["error"] = text[:500]
         return rec
-    rec["ok"], rec["output"] = True, compact(call["name"], json.loads(text))
+    full = json.loads(text)
+    rec["ok"], rec["output"], rec["output_full"] = True, compact(call["name"], full), full
     return rec
 
 
@@ -294,51 +302,103 @@ async def list_tools(client) -> tuple:
     return tool_schemas(mcp_tools, max_desc=None), {t.name for t in mcp_tools}
 
 
-async def _converse(question: str, asof: str, llm, outputs: list) -> tuple:
-    """CALL_TOOLS -> ANSWER -> VALIDATE (+ bir düzeltme). (cevap, ham cevap, düzeltme sayısı, denetim, son durum)."""
+def _now() -> str:
+    return datetime.now().astimezone().isoformat(timespec="milliseconds")
+
+
+def _dates(args) -> dict:
+    return {k: args[k] for k in DATE_KEYS if isinstance(args, dict) and k in args}
+
+
+def _chat(llm, messages: list, tools, steps: list, phase: str) -> dict:
+    """llm.chat + iz adımı (zaman damgaları, modelin ürettiği metin ve araç istekleri). Hata da adım olarak kalır."""
+    t0, step = time.time(), dict(step=len(steps) + 1, type="llm", phase=phase, started_at=_now(),
+                                 n_input_messages=len(messages), tools_offered=bool(tools))
+    steps.append(step)
+    try:
+        r = llm.chat(messages, tools=tools)
+    except Exception as e:
+        step.update(ended_at=_now(), seconds=round(time.time() - t0, 2), error=f"{type(e).__name__}: {str(e)[:300]}")
+        raise
+    step.update(ended_at=_now(), seconds=round(time.time() - t0, 2), content=r["content"],
+                tool_calls=[dict(id=c["id"], name=c["name"], arguments=c["arguments"]) for c in r["tool_calls"]],
+                prompt_tokens=r.get("prompt_tokens"), completion_tokens=r.get("completion_tokens"))
+    return r
+
+
+def _harness_message(messages: list, steps: list, content: str, reason: str):
+    """Harness'ın modele eklediği kullanıcı mesajı (hak bitti / düzeltme isteği): istemin parçası, izde görünür."""
+    messages.append(dict(role="user", content=content))
+    steps.append(dict(step=len(steps) + 1, type="harness_message", reason=reason, at=_now(), content=content))
+
+
+async def _converse(question: str, asof: str, llm, outputs: list, trace: dict) -> tuple:
+    """CALL_TOOLS -> ANSWER -> VALIDATE (+ bir düzeltme). (cevap, ham cevap, düzeltme sayısı, denetim).
+    trace['steps'] her model/araç adımıyla, trace['tools'] modele sunulan araç tanımlarıyla dolar."""
     messages = first_messages(question, asof)
+    steps = trace["steps"]
     answer = None
     with data_ceiling(asof):
         async with Client(build_server()) as client:
             tools, names = await list_tools(client)
+            trace["tools"] = tools
             for _ in range(MAX_CALLS + 2):                             # CALL_TOOLS: model araç çağırabilir
-                r = llm.chat(messages, tools=tools)
+                r = _chat(llm, messages, tools, steps, "call_tools")
                 if not r["tool_calls"]:
                     answer = r["content"]
                     break
                 messages.append(_assistant(r))
                 for c in r["tool_calls"]:
+                    started = _now()
                     if len(outputs) >= MAX_CALLS:
                         content = f"HATA: en fazla {MAX_CALLS} araç çağrısı yapılabilir; bu çağrı yapılmadı."
-                        outputs.append(dict(name=c["name"], arguments=c["arguments"], ok=False, output=None,
-                                            error=BUDGET_ERROR, over_budget=True))
+                        rec = dict(name=c["name"], arguments=c["arguments"], ok=False, output=None,
+                                   error=BUDGET_ERROR, over_budget=True)
                     else:
                         rec = await _call_tool(client, names, c)
-                        outputs.append(rec)
                         content = json.dumps(rec["output"], ensure_ascii=False) if rec["ok"] else f"HATA: {rec['error']}"
+                    outputs.append(rec)
+                    steps.append(dict(step=len(steps) + 1, type="tool", call_index=len(outputs) - 1,
+                                      tool_call_id=c["id"], started_at=started, ended_at=_now(), name=rec["name"],
+                                      arguments=rec["arguments"], args=rec.get("args"), dates=_dates(rec.get("args")),
+                                      data_ceiling=asof, ok=rec["ok"], error=rec.get("error"),
+                                      over_budget=bool(rec.get("over_budget")), output_model=rec.get("output"),
+                                      output_full=rec.get("output_full"), message_to_model=content))
                     messages.append(dict(role="tool", tool_call_id=c["id"], content=content))
                 if len(outputs) >= MAX_CALLS:
                     break
             if answer is None:                                         # ANSWER: hak bitti, araçsız cevap iste
-                messages.append(dict(role="user", content=FORCE_TEXT))
-                answer = llm.chat(messages, tools=None)["content"]
+                _harness_message(messages, steps, FORCE_TEXT, "araç çağrı hakkı bitti")
+                answer = _chat(llm, messages, None, steps, "answer")["content"]
     raw, retries = answer, 0
     v = validate_answer(answer, question, outputs)                   # VALIDATE
+    steps.append(dict(step=len(steps) + 1, type="validate", at=_now(), problems=v["problems"],
+                      unsupported_numbers=v["numbers"]["unsupported"], advice=v["advice"], action=v["action"]))
     if v["problems"]:
         retries = 1
-        messages += [dict(role="assistant", content=answer),
-                     dict(role="user", content=RETRY_TEXT.format(problems="; ".join(v["problems"])))]
-        answer = llm.chat(messages, tools=None)["content"]
+        messages.append(dict(role="assistant", content=answer))
+        _harness_message(messages, steps, RETRY_TEXT.format(problems="; ".join(v["problems"])), "denetimden geçmedi")
+        answer = _chat(llm, messages, None, steps, "retry")["content"]
         v = validate_answer(answer, question, outputs)
+        steps.append(dict(step=len(steps) + 1, type="validate", at=_now(), problems=v["problems"],
+                          unsupported_numbers=v["numbers"]["unsupported"], advice=v["advice"], action=v["action"]))
     return answer, raw, retries, v
 
 
+def llm_info(llm) -> dict:
+    """Modelin kimliği ve üretim ayarları (LocalLLM.info; sahte modellerde yalnızca ad)."""
+    if hasattr(llm, "info"):
+        return llm.info()
+    return dict(name=getattr(llm, "name", "?"), temperature=getattr(llm, "temperature", None),
+                seed=getattr(llm, "seed", None), max_tokens=getattr(llm, "max_tokens", None))
+
+
 async def _run(question: str, asof: str, llm) -> dict:
-    t0 = time.time()
+    t0, started = time.time(), _now()
     calls0 = llm.calls          # aynı LLM nesnesi birçok soruda kullanılabilir (değerlendirme): bu sorunun çağrıları
-    outputs = []
+    outputs, trace = [], dict(steps=[], tools=None)
     try:
-        answer, raw, retries, v = await _converse(question, asof, llm, outputs)
+        answer, raw, retries, v = await _converse(question, asof, llm, outputs, trace)
         error = None
     except Exception as e:                       # model sunucusu düştü, bellek yetmedi vb.: çökme yok, güvenli durum
         while isinstance(e, BaseExceptionGroup) and e.exceptions:     # MCP istemcisi asıl hatayı grup içine sarar
@@ -370,15 +430,55 @@ async def _run(question: str, asof: str, llm) -> dict:
     return dict(question=question, asof=asof, model=getattr(llm, "name", "?"), action=action, action_source=source,
                 status=status, answer=answer, answer_raw=raw, tool_calls=outputs, validation=v, retries=retries,
                 invalid_tool_calls=sum(not o["ok"] for o in outputs), llm_calls=llm.calls - calls0, error=error,
-                latency=round(time.time() - t0, 1),
+                latency=round(time.time() - t0, 1), started_at=started, ended_at=_now(), llm_info=llm_info(llm),
+                steps=trace["steps"], tools_offered=trace["tools"],
                 states=["START", "SET_CEILING", "CALL_TOOLS", "ANSWER", "VALIDATE", "LOG_AND_CLOSE"])
 
 
-def run_question(question: str, asof: str, llm=None, db: Path = QDB, log: bool = True) -> dict:
+def run_question(question: str, asof: str, llm=None, db: Path = QDB, log: bool = True, trace_dir: Path = None) -> dict:
+    """log=True: soru günlüğüne (db) yazar ve tam iz kaydını trace_dir'e (varsayılan <db klasörü>/traces) koyar."""
     res = asyncio.run(_run(question, str(asof), llm or LocalLLM()))
     if log:
         res["qid"] = log_question(res, db)
+        res["trace"] = str(write_trace(res, Path(trace_dir) if trace_dir else Path(db).parent / "traces"))
     return res
+
+
+def _git() -> dict:
+    """Cevabı üreten kodun sürümü (commit + kaydedilmemiş değişiklik var mı)."""
+    try:
+        head = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip()
+        dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], capture_output=True,
+                               text=True, timeout=10).stdout.strip()
+        return dict(commit=head or None, uncommitted_changes=bool(dirty))
+    except (OSError, subprocess.SubprocessError):
+        return dict(commit=None, uncommitted_changes=None)
+
+
+def trace_record(res: dict) -> dict:
+    """Bir sorunun tam iz kaydı (JSON). Mesaj dizisi adımlardan birebir kurulabilir: sistem + kullanıcı istemi,
+    sonra sırayla model adımları, araç adımları (message_to_model = modele dönen metin) ve harness mesajları."""
+    info = res["llm_info"]
+    return dict(
+        trace_version=TRACE_VERSION, qid=res.get("qid"), started_at=res["started_at"], ended_at=res["ended_at"],
+        latency_seconds=res["latency"], model=info,
+        generation=dict(temperature=info.get("temperature"), seed=info.get("seed"), max_tokens=info.get("max_tokens"),
+                        max_tool_calls=MAX_CALLS, correction_rounds=1),
+        analysis_date=res["asof"], data_ceiling=res["asof"], code=_git(),
+        prompts=dict(system=system_prompt(res["asof"]), user=first_messages(res["question"], res["asof"])[1]["content"]),
+        question=res["question"], tools_offered=res["tools_offered"], steps=res["steps"],
+        final=dict(answer=res["answer"], action=res["action"], action_source=res["action_source"],
+                   status=res["status"], retries=res["retries"], llm_calls=res["llm_calls"], error=res["error"],
+                   n_tool_calls=len(res["tool_calls"]), invalid_tool_calls=res["invalid_tool_calls"],
+                   validation=res["validation"]),
+        first_answer=res["answer_raw"], states=res["states"])
+
+
+def write_trace(res: dict, trace_dir: Path) -> Path:
+    trace_dir.mkdir(parents=True, exist_ok=True)
+    f = trace_dir / f"{res['qid']}.json"
+    f.write_text(json.dumps(trace_record(res), ensure_ascii=False, indent=2, default=str))
+    return f
 
 
 # ---------------------------------------------------------------- günlük ve tekrar oynatma
@@ -440,7 +540,7 @@ def _print(res: dict):
     v = res["validation"]
     print(f"Eylem: {res['action']} ({res['action_source']}) | durum {res['status']} | düzeltme {res['retries']} | "
           f"sayı {v['numbers']['n_numbers']}, uydurma {len(v['numbers']['unsupported'])} | {res['latency']} sn | "
-          f"kayıt {res.get('qid', '-')}")
+          f"kayıt {res.get('qid', '-')}" + (f"\nİz kaydı: {res['trace']}" if res.get("trace") else ""))
 
 
 if __name__ == "__main__":
@@ -450,7 +550,8 @@ if __name__ == "__main__":
     ap.add_argument("--url", default=None, help="yerel OpenAI uyumlu sunucu (varsayılan http://127.0.0.1:8080/v1)")
     ap.add_argument("--model", default=None)
     ap.add_argument("--adapter", default=None,
-                    help="LoRA adaptör klasörü (varsayılan models/adapters/bist-qwen3-4b-v1); 'none' = taban model")
+                    help="LoRA adaptör klasörü (varsayılan models/adapters/bist-qwen3-4b-v4); 'none' = taban model")
+    ap.add_argument("--seed", type=int, default=None, help="sunucuya gönderilen seed (varsayılan 42)")
     ap.add_argument("--replay", default=None, help="kayıt kimliği: araç çağrılarını yeniden çalıştır ve karşılaştır")
     ap.add_argument("--no-log", action="store_true")
     a = ap.parse_args()
@@ -459,5 +560,5 @@ if __name__ == "__main__":
     else:
         if not (a.question and a.asof):
             ap.error("soru ve --asof gerekli")
-        _print(run_question(a.question, a.asof, LocalLLM(model=a.model, base_url=a.url, adapter=a.adapter),
+        _print(run_question(a.question, a.asof, LocalLLM(model=a.model, base_url=a.url, adapter=a.adapter, seed=a.seed),
                             log=not a.no_log))

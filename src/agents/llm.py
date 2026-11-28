@@ -104,9 +104,35 @@ class GeminiLLM:
 
 LOCAL_URL = "http://127.0.0.1:8080/v1"
 LOCAL_MODEL = "models/Qwen3-4B-Instruct-2507-4bit"   # yerelde üretilen 4-bit (mlx_lm.convert -q, 4,5 bit/ağırlık)
-LOCAL_ADAPTER = "models/adapters/bist-qwen3-4b-v1"   # 4. adımda eğitilen LoRA adaptörü (src/finetune/train_mlx.py)
+# Canlı varsayılan v4 (kullanıcı kararı, 28 Kasım 2026: eval_v4'te eylem doğruluğu v1 %53,3, v4 %68,3)
+LOCAL_ADAPTER = "models/adapters/bist-qwen3-4b-v4"
 BASE = "none"                                        # adaptörsüz taban model (karşılaştırma için)
 LOCAL_MAX_TOKENS = 3072                              # cevap başına en fazla üretilen token (S4 cevabı 2.000+)
+LOCAL_SEED = 42             # her istekte gönderilir ve iz kaydına yazılır; sıcaklık 0'da (açgözlü) sonucu değiştirmez
+BASE_REPO = "Qwen/Qwen3-4B-Instruct-2507"            # taban modelin kaynağı (Hugging Face)
+BASE_REVISION = "cdbee75f17c01a7cc42f958dc650907174af0554"   # src/finetune/train_gpu.BASE_REVISION ile aynı
+
+
+def sha256_file(path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _quantization(model_dir: str):
+    f = Path(model_dir) / "config.json"
+    try:
+        return json.loads(f.read_text()).get("quantization")
+    except (OSError, ValueError):
+        return None
+
+
+def _server_software():
+    """venv-llm içindeki mlx-lm sürümü (sunucu o ortamda çalışır; istemci ortamından içe aktarılamaz)."""
+    found = sorted(Path("venv-llm/lib").glob("python*/site-packages/mlx_lm-*.dist-info"))
+    return "mlx-lm " + found[-1].name[len("mlx_lm-"):-len(".dist-info")] if found else None
 
 
 class LocalLLM:
@@ -117,11 +143,12 @@ class LocalLLM:
     istekteki model adı 'default_model' iken uygular; gerçek model yolu gelince adaptörsüz tabanı sessizce yeniden
     yükler (ilk adaptör kontrolü bu yüzden aslında tabanı ölçtü). Sunucu adaptörsüz başlatılır, adaptörü istemci
     seçer; adı (name) soru günlüğüne yazılır, böylece cevabı hangi modelin verdiği kayıttan görülür.
-    adapter: None -> LOCAL_ADAPTER ortam değişkeni ya da varsayılan v1; 'none' -> taban model.
+    adapter: None -> LOCAL_ADAPTER ortam değişkeni ya da varsayılan v4; 'none' -> taban model.
+    seed: None -> LOCAL_SEED ortam değişkeni ya da 42; her istekte sunucuya gönderilir.
     """
 
     def __init__(self, model: str = None, base_url: str = None, temperature: float = 0.0,
-                 max_tokens: int = LOCAL_MAX_TOKENS, adapter: str = None):
+                 max_tokens: int = LOCAL_MAX_TOKENS, adapter: str = None, seed: int = None):
         from openai import OpenAI
         self.model = model or os.environ.get("LOCAL_MODEL", LOCAL_MODEL)
         self.base_url = base_url or os.environ.get("LOCAL_URL", LOCAL_URL)
@@ -132,11 +159,28 @@ class LocalLLM:
         self.name = f"local:{self.model}" + (f"+{self.adapter}" if self.adapter else "")
         self.client = OpenAI(api_key="yerel", base_url=self.base_url, timeout=600)
         self.temperature, self.max_tokens = temperature, max_tokens
+        self.seed = int(seed if seed is not None else os.environ.get("LOCAL_SEED", LOCAL_SEED))
         self.calls = self.cache_hits = 0
+        self._info = None
+
+    def info(self) -> dict:
+        """İz kaydındaki model kimliği (sunum duyurusu, 28 Kasım 2026): taban model + sürüm, ağırlıklar, adaptör ve
+        SHA-256 özeti, sunucu yazılımı, üretim ayarları. Özet bir kez hesaplanır (adaptör ~59 MB)."""
+        if self._info is None:
+            f = Path(self.adapter) / "adapters.safetensors" if self.adapter else None
+            self._info = dict(
+                name=self.name, base_model=BASE_REPO, base_revision=BASE_REVISION, weights=self.model,
+                weights_note="taban modelden yerelde mlx_lm.convert -q ile üretilen 4-bit ağırlıklar",
+                quantization=_quantization(self.model), adapter=self.adapter,
+                adapter_file=str(f) if f else None, adapter_sha256=sha256_file(f) if f else None,
+                server=self.base_url, server_software=_server_software(),
+                temperature=self.temperature, seed=self.seed, max_tokens=self.max_tokens)
+        return self._info
 
     def chat(self, messages: list, tools: list = None) -> dict:
         t0 = time.time()
-        kwargs = dict(model=self.model, messages=messages, temperature=self.temperature, max_tokens=self.max_tokens)
+        kwargs = dict(model=self.model, messages=messages, temperature=self.temperature, max_tokens=self.max_tokens,
+                      seed=self.seed)
         if tools:
             kwargs["tools"] = tools
         if self.adapter:                                 # mlx_lm.server isteğe özel alan: 'adapters'
